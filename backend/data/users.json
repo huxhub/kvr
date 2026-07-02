@@ -1,0 +1,37 @@
+[
+  {
+    "username": "admin",
+    "password": "admin1234",
+    "role": "ADMIN",
+    "name": "System Administrator",
+    "branch": "Perinthalmanna"
+  },
+  {
+    "username": "crm",
+    "password": "crm123",
+    "role": "CRM",
+    "name": "CRM Advisor",
+    "branch": "Perinthalmanna"
+  },
+  {
+    "username": "finance",
+    "password": "finance123",
+    "role": "FINANCE",
+    "name": "Finance Manager",
+    "branch": "Perinthalmanna"
+  },
+  {
+    "username": "accounts",
+    "password": "accounts123",
+    "role": "ACCOUNTS",
+    "name": "Accounts Auditor",
+    "branch": "Perinthalmanna"
+  },
+  {
+    "username": "mgmt",
+    "password": "mgmt123",
+    "role": "MANAGEMENT",
+    "name": "KVR General Manager",
+    "branch": "Perinthalmanna"
+  }
+]
