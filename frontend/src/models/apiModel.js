@@ -31,7 +31,7 @@ export const SECTIONS = {
     fields: [
       { name: 'ca', label: 'Customer Advisor (CA)', type: 'text', required: true },
       { name: 'tl', label: 'Team Leader (TL)', type: 'text', required: true },
-      { name: 'branch', label: 'Branch', type: 'select', options: ['Perinthalmanna'], required: true } // Locked to Perinthalmanna
+      { name: 'branch', label: 'Branch', type: 'select', options: ['Perinthalmanna'], required: true }
     ]
   },
   offer: {

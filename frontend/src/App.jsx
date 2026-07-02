@@ -4,7 +4,7 @@ import { initApp } from './controllers/mainController.js';
 
 export default function App() {
   const containerRef = useRef(null);
-  
+
   useEffect(() => {
     if (containerRef.current && !containerRef.current.hasInit) {
       containerRef.current.innerHTML = `
@@ -208,11 +208,13 @@ export default function App() {
               <input type="text" id="filter-global" class="global-search-input" placeholder="Search by customer name, mobile, order number, or chassis number...">
             </div>
 
-            <!-- LOCKED BRANCH FILTER -->
             <div class="filter-group">
-              <label for="filter-branch">Branch</label>
+              <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <label for="filter-branch">Branch Office</label>
+                <button id="btn-add-branch" class="btn-text" style="font-size: 0.75rem; color: var(--primary-blue); cursor: pointer; border: none; background: none; padding: 0; font-weight: 600;">+ Add Branch</button>
+              </div>
               <select id="filter-branch" class="filter-select">
-                <option value="Perinthalmanna">Perinthalmanna (Only)</option>
+                <option value="Perinthalmanna">Perinthalmanna</option>
               </select>
             </div>
 
@@ -227,6 +229,32 @@ export default function App() {
                 <option value="Ready for Delivery">Ready for Delivery</option>
                 <option value="Delivered">Delivered</option>
                 <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="filter-workflow">Workflow Filter</label>
+              <select id="filter-workflow" class="filter-select">
+                <option value="">All</option>
+                <option value="Booked">Booking / Booked</option>
+                <option value="Delivered">Delivered</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="filter-pending">Pending Filter</label>
+              <select id="filter-pending" class="filter-select">
+                <option value="">All Vehicles</option>
+                <option value="any">Any Pending Task</option>
+                <option value="finance">Finance Pending</option>
+                <option value="tma">TMA Pending</option>
+                <option value="file">File (Tally) Pending</option>
+                <option value="accounts">Accounts Pending</option>
+                <option value="insurance">Insurance Pending</option>
+                <option value="registration">Registration Pending</option>
+                <option value="tmga">TMGA Pending</option>
+                <option value="pdi">PDI Pending</option>
+                <option value="delivery">Delivery Pending</option>
               </select>
             </div>
 
@@ -318,10 +346,10 @@ export default function App() {
               New Booking
             </button>
             <div class="view-toggles">
-              <button class="view-btn active" id="btn-view-grid" title="Grid View">
+              <button class="view-btn" id="btn-view-grid" title="Grid View">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
               </button>
-              <button class="view-btn" id="btn-view-list" title="Table View">
+              <button class="view-btn active" id="btn-view-list" title="Table View">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
               </button>
             </div>
@@ -329,12 +357,12 @@ export default function App() {
         </div>
 
         <!-- GRID VIEW PANEL -->
-        <div id="grid-container" class="vehicle-grid">
+        <div id="grid-container" class="vehicle-grid" style="display: none;">
           <!-- Populated dynamically -->
         </div>
 
         <!-- LIST VIEW TABLE PANEL -->
-        <div id="list-container" class="list-view-container" style="display: none;">
+        <div id="list-container" class="list-view-container">
           <table class="table-master">
             <thead>
               <tr>
@@ -397,9 +425,38 @@ export default function App() {
         <div style="display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start;">
           <!-- Left side: Users list -->
           <div class="audit-log-container">
-            <div class="main-header" style="background-color: transparent; border-bottom: 1px solid var(--border-light); padding: 16px 20px;">
-              <h3>Active Employee Directory</h3>
-              <span class="list-info-text">Logins and permissions for Perinthalmanna branch</span>
+            <div class="main-header" style="background-color: transparent; border-bottom: 1px solid var(--border-light); padding: 16px 20px; display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 16px; flex-wrap: wrap;">
+                <div>
+                  <h3 style="margin: 0; font-size: 1.25rem;">Active Employee Directory</h3>
+                  <span class="list-info-text">Logins and permissions for the dealerships</span>
+                </div>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <label for="filter-user-role" style="font-size: 0.65rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Role / Dept</label>
+                    <select id="filter-user-role" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; border: 1.5px solid var(--border-light); outline: none; background: var(--bg-card); color: var(--text-dark); min-width: 130px; font-weight: 500;">
+                      <option value="">All Roles</option>
+                      <option value="ADMIN">ADMIN</option>
+                      <option value="CRM">CRM</option>
+                      <option value="FINANCE">FINANCE</option>
+                      <option value="TMA">TMA</option>
+                      <option value="ACCOUNTS">ACCOUNTS</option>
+                      <option value="INSURANCE">INSURANCE</option>
+                      <option value="REGISTRATION">REGISTRATION</option>
+                      <option value="TMGA">TMGA</option>
+                      <option value="PDI">PDI</option>
+                      <option value="DELIVERY">DELIVERY</option>
+                      <option value="MANAGEMENT">MANAGEMENT</option>
+                    </select>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <label for="filter-user-branch" style="font-size: 0.65rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Branch Office</label>
+                    <select id="filter-user-branch" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; border: 1.5px solid var(--border-light); outline: none; background: var(--bg-card); color: var(--text-dark); min-width: 140px; font-weight: 500;">
+                      <!-- Populated dynamically -->
+                    </select>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="audit-table-wrapper">
               <table class="audit-table">
@@ -408,6 +465,7 @@ export default function App() {
                     <th>Full Name</th>
                     <th>Username</th>
                     <th>Role / Department</th>
+                    <th>Assigned Branch</th>
                     <th>Password</th>
                     <th>Actions</th>
                   </tr>
@@ -454,8 +512,13 @@ export default function App() {
                 </select>
               </div>
               <div class="form-field">
-                <label>Branch (Locked)</label>
-                <input type="text" value="Perinthalmanna" disabled style="background-color: #f1f5f9; cursor: not-allowed; color: var(--text-muted); font-size: 0.85rem; padding: 8px 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <label for="inp-user-branch" style="margin-bottom: 0;">Assigned Branch *</label>
+                  <button type="button" id="btn-add-user-branch" style="background: none; border: none; color: var(--primary-blue); font-size: 0.75rem; font-weight: 600; cursor: pointer; padding: 0;">+ New Branch</button>
+                </div>
+                <select id="inp-user-branch" required style="padding: 8px 12px; font-size: 0.85rem;">
+                  <!-- Populated dynamically -->
+                </select>
               </div>
               <div style="display: flex; gap: 8px; margin-top: 10px;">
                 <button type="button" id="btn-user-cancel" class="btn-secondary" style="flex: 1; display: none; font-size: 0.8rem; padding: 8px;">Cancel</button>
@@ -601,11 +664,10 @@ export default function App() {
                 <label for="inp-sales-tl">Team Leader (TL) *</label>
                 <input type="text" id="inp-sales-tl" data-field="tl" required>
               </div>
-              <!-- LOCKED BRANCH OPTION -->
               <div class="form-field">
                 <label for="inp-sales-branch">Branch *</label>
                 <select id="inp-sales-branch" data-field="branch" required>
-                  <option value="Perinthalmanna">Perinthalmanna</option>
+                  <!-- Populated dynamically -->
                 </select>
               </div>
             </div>
@@ -1055,6 +1117,23 @@ export default function App() {
       </div>
     </div>
 
+    <!-- 7. CUSTOM POPUP DIALOG (Prompt/Confirm Replacement) -->
+    <div class="modal-overlay" id="custom-dialog-overlay" style="display: none; align-items: center; justify-content: center; z-index: 2000; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);">
+      <div class="modal-drawer" style="width: 100%; max-width: 400px; height: auto !important; padding: 24px; border-radius: 12px; border: 1px solid var(--border-light); transform: scale(0.95); transition: transform 0.2s ease, opacity 0.2s ease; box-shadow: var(--shadow-xl); background: var(--bg-card);">
+        <h3 id="dialog-title" style="margin-bottom: 12px; color: var(--primary-navy); font-weight: 700; font-size: 1.2rem;">Dialog Title</h3>
+        <p id="dialog-message" style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 18px; line-height: 1.5;"></p>
+        
+        <div id="dialog-input-container" style="margin-bottom: 18px; display: none;">
+          <input type="text" id="dialog-input" placeholder="Enter value..." style="width: 100%; padding: 10px 14px; border: 1.5px solid var(--border-light); border-radius: 8px; font-size: 0.9rem; outline: none; transition: border-color 0.2s ease; background-color: var(--bg-body); color: var(--text-dark);">
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+          <button type="button" class="btn-secondary" id="btn-dialog-cancel" style="padding: 8px 16px; font-size: 0.85rem; border-radius: 6px;">Cancel</button>
+          <button type="button" class="btn-primary" id="btn-dialog-confirm" style="padding: 8px 16px; font-size: 0.85rem; border-radius: 6px;">Confirm</button>
+        </div>
+      </div>
+    </div>
+
     <!-- 6. REAL-TIME TOASTS CONTAINER -->
     <div class="toast-container" id="toast-container">
       <!-- Toasts inserted dynamically -->
@@ -1069,6 +1148,6 @@ export default function App() {
       containerRef.current.hasInit = true;
     }
   }, []);
-  
+
   return <div ref={containerRef}></div>;
 }

@@ -2,7 +2,7 @@ import User from '../models/User.js';
 
 export const getUsers = async (req, res) => {
   try {
-    const users = await User.find({}, '-password -__v -createdAt -updatedAt');
+    const users = await User.find({}, '-__v -createdAt -updatedAt');
     res.json(users);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -13,7 +13,7 @@ export const createUser = async (req, res) => {
   try {
     const newUser = new User(req.body);
     const saved = await newUser.save();
-    const { password, __v, ...safe } = saved.toObject();
+    const { __v, ...safe } = saved.toObject();
     res.status(201).json(safe);
   } catch (error) {
     if (error.code === 11000) {
@@ -29,7 +29,7 @@ export const updateUser = async (req, res) => {
     const updated = await User.findOneAndUpdate(
       { username: username.toLowerCase() },
       { $set: req.body },
-      { new: true, select: '-password -__v' }
+      { new: true, select: '-__v' }
     );
 
     if (!updated) {
