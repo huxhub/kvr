@@ -29,7 +29,7 @@ export const updateVehicle = async (req, res) => {
     const updated = await Vehicle.findOneAndUpdate(
       { chassisNumber: id },
       { $set: req.body },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     ).lean();
 
     if (!updated) {

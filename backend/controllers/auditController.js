@@ -24,3 +24,12 @@ export const createAuditLog = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+export const clearAuditLogs = async (req, res) => {
+  try {
+    await Audit.deleteMany({});
+    res.json({ message: 'All audit logs cleared' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

@@ -29,7 +29,7 @@ export const updateUser = async (req, res) => {
     const updated = await User.findOneAndUpdate(
       { username: username.toLowerCase() },
       { $set: req.body },
-      { new: true, select: '-__v' }
+      { returnDocument: 'after', select: '-__v' }
     );
 
     if (!updated) {

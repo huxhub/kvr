@@ -33,5 +33,12 @@
     "role": "MANAGEMENT",
     "name": "KVR General Manager",
     "branch": "Perinthalmanna"
+  },
+  {
+    "username": "bm",
+    "password": "bm123",
+    "role": "BRANCH_MANAGER",
+    "name": "Branch Manager",
+    "branch": "Perinthalmanna"
   }
 ]
