@@ -547,6 +547,8 @@ h1, h2, h3, h4, h5, h6 {
   max-width: 1600px;
   margin: 0 auto;
   width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .tab-content {
@@ -554,7 +556,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .tab-content.active {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   animation: fadeIn var(--transition-normal);
 }
 
@@ -640,6 +644,9 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 24px;
   border: 1px solid var(--border-light);
   box-shadow: var(--shadow-sm);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .section-title-bar {
