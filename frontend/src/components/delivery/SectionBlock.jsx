@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { STATUS_VALUES } from '../../models/apiModel.js';
 
-export default function SectionBlock({ sectionKey, section, formData, handleChange }) {
+export default function SectionBlock({ sectionKey, section, formData, handleChange, forceEditable = false }) {
   const { user } = useAuth();
   
   // Logic to determine if section is editable based on user role
@@ -14,16 +14,20 @@ export default function SectionBlock({ sectionKey, section, formData, handleChan
   const statusField = section.statusField;
   const currentStatus = formData[statusField] || STATUS_VALUES.NOT_ATTENDED;
   
-  // Is this section locked entirely?
-  const isLocked = !isEditable || currentStatus === STATUS_VALUES.APPROVED || user.role === 'MANAGEMENT';
+  // Is this section locked entirely? (forceEditable bypasses all lock logic for new bookings; ADMIN bypasses all lock logic)
+  const isLocked = forceEditable ? false : (
+    user.role === 'ADMIN' ? false : (!isEditable || currentStatus === STATUS_VALUES.APPROVED || user.role === 'MANAGEMENT')
+  );
   
   // For branch manager, only remarks are editable
-  const isBranchManager = user.role === 'BRANCH_MANAGER';
-  const lockBadge = isBranchManager && section.fields.some(f => f.name.toLowerCase().includes('remark'))
-    ? <span className="status-badge" style={{ backgroundColor: 'var(--accent-blue)', color: 'white' }}>📝 Remarks Editable</span>
-    : isLocked
-      ? <span className="status-badge" style={{ backgroundColor: 'var(--border-light)', color: 'var(--text-dark)' }}>🔒 Locked</span>
-      : <span className="status-badge" style={{ backgroundColor: 'var(--success-green)', color: 'white' }}>✏️ Editable</span>;
+  const isBranchManager = !forceEditable && user.role === 'BRANCH_MANAGER';
+  const lockBadge = forceEditable
+    ? <span className="status-badge" style={{ backgroundColor: 'var(--success-green)', color: 'white' }}>✏️ Editable</span>
+    : isBranchManager && section.fields.some(f => f.name.toLowerCase().includes('remark'))
+      ? <span className="status-badge" style={{ backgroundColor: 'var(--accent-blue)', color: 'white' }}>📝 Remarks Editable</span>
+      : isLocked
+        ? <span className="status-badge" style={{ backgroundColor: 'var(--border-light)', color: 'var(--text-dark)' }}>🔒 Locked</span>
+        : <span className="status-badge" style={{ backgroundColor: 'var(--success-green)', color: 'white' }}>✏️ Editable</span>;
 
   return (
     <div className={`form-section ${isLocked && !isBranchManager ? 'locked-section' : ''}`}>
@@ -33,7 +37,9 @@ export default function SectionBlock({ sectionKey, section, formData, handleChan
       </div>
       <div className="section-grid">
         {section.fields.map(field => {
-          const isFieldDisabled = isLocked && !(isBranchManager && field.name.toLowerCase().includes('remark'));
+          const isFieldDisabled = 
+            (isLocked || (field.name === 'chassisNumber' && !forceEditable)) && 
+            !(isBranchManager && field.name.toLowerCase().includes('remark'));
           
           if (field.type === 'status' || field.type === 'select') {
             const options = field.options || Object.values(STATUS_VALUES);
