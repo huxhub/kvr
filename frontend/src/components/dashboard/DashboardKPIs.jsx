@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { DEPARTMENT_KEYS, SECTIONS, STATUS_VALUES } from '../../models/apiModel.js';
 import CustomDropdown from '../ui/DropdownMenu.jsx';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 const SIMULATED_TODAY = '2026-06-22'; // Keep simulation date consistent with original
 
@@ -39,6 +40,31 @@ export default function DashboardKPIs({ vehicles, activeBranch, setSelectedBranc
       stats
     };
   }, [filteredVehicles]);
+
+  // Analytics Data
+  const analyticsData = useMemo(() => {
+    // 1. Sales by Product Line
+    const plCounts = {};
+    filteredVehicles.forEach(v => {
+      const pl = v.pl || 'Other';
+      plCounts[pl] = (plCounts[pl] || 0) + 1;
+    });
+    const salesByProductLine = Object.keys(plCounts).map(key => ({
+      name: key,
+      bookings: plCounts[key]
+    })).sort((a, b) => b.bookings - a.bookings);
+
+    // 2. Recent Bookings (Top 5)
+    // Assuming v.date exists. If not, fallback to chassis as a proxy or just array order.
+    const recentBookings = [...filteredVehicles]
+      .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
+      .slice(0, 5);
+
+    return { salesByProductLine, recentBookings };
+  }, [filteredVehicles]);
+
+  // Colors for the bar chart
+  const COLORS = ['#1e293b', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b'];
 
   const dropdownOptions = [
     { value: '', label: 'All Branches' },
@@ -110,6 +136,54 @@ export default function DashboardKPIs({ vehicles, activeBranch, setSelectedBranc
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Analytics Widgets Section */}
+      <div className="analytics-section">
+        <div className="analytics-card chart-card">
+          <h3 className="analytics-card-title">Bookings by Product Line</h3>
+          <div className="chart-container" style={{ height: '250px', width: '100%', marginTop: '16px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={analyticsData.salesByProductLine} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                <Tooltip cursor={{ fill: '#f1f5f9' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} />
+                <Bar dataKey="bookings" radius={[4, 4, 0, 0]}>
+                  {analyticsData.salesByProductLine.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="analytics-card list-card">
+          <h3 className="analytics-card-title">Recent Registrations</h3>
+          <div className="recent-bookings-list">
+            {analyticsData.recentBookings.length > 0 ? (
+              analyticsData.recentBookings.map((v, i) => (
+                <div key={v.chassisNumber || i} className="recent-booking-item">
+                  <div className="rb-left">
+                    <div className="rb-avatar">{v.customerName ? v.customerName.charAt(0).toUpperCase() : '?'}</div>
+                    <div className="rb-info">
+                      <div className="rb-name">{v.customerName || 'Unknown Customer'}</div>
+                      <div className="rb-model">{v.pl} {v.variant ? `- ${v.variant}` : ''}</div>
+                    </div>
+                  </div>
+                  <div className="rb-right">
+                    <div className="rb-date">{v.date || 'No Date'}</div>
+                    <div className={`rb-status badge-mini ${v.vehicleStatus === 'Delivered' ? 'not-attended' : 'pending'}`}>
+                      {v.vehicleStatus || 'Booked'}
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div style={{ padding: '20px', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>No recent bookings found.</div>
+            )}
+          </div>
         </div>
       </div>
     </div>
