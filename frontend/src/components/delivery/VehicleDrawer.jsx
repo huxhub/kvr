@@ -106,7 +106,7 @@ export default function VehicleDrawer({ vehicle, branches, onClose }) {
             <div className="form-section editable" style={{ marginTop: '20px' }}>
               <div className="section-header">
                 <h4 className="section-title">Change Verification Remark</h4>
-                <span className="status-badge" style={{ backgroundColor: 'var(--status-approved-border)', color: 'white' }}>✏️ Required</span>
+                <span className="status-badge" style={{ backgroundColor: 'var(--status-approved-border)', color: 'white' }}>Required</span>
               </div>
               <div className="form-grid" style={{ gridTemplateColumns: '1fr' }}>
                 <div className="form-field">

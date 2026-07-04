@@ -22,12 +22,12 @@ export default function SectionBlock({ sectionKey, section, formData, handleChan
   // For branch manager, only remarks are editable
   const isBranchManager = !forceEditable && user.role === 'BRANCH_MANAGER';
   const lockBadge = forceEditable
-    ? <span className="status-badge" style={{ backgroundColor: 'var(--success-green)', color: 'white' }}>✏️ Editable</span>
+    ? <span className="status-badge" style={{ backgroundColor: 'var(--success-green)', color: 'white' }}>Editable</span>
     : isBranchManager && section.fields.some(f => f.name.toLowerCase().includes('remark'))
       ? <span className="status-badge" style={{ backgroundColor: 'var(--accent-blue)', color: 'white' }}>📝 Remarks Editable</span>
       : isLocked
         ? <span className="status-badge" style={{ backgroundColor: 'var(--border-light)', color: 'var(--text-dark)' }}>🔒 Locked</span>
-        : <span className="status-badge" style={{ backgroundColor: 'var(--success-green)', color: 'white' }}>✏️ Editable</span>;
+        : <span className="status-badge" style={{ backgroundColor: 'var(--success-green)', color: 'white' }}>Editable</span>;
 
   return (
     <div className={`form-section ${isLocked && !isBranchManager ? 'locked-section' : ''}`}>
