@@ -16,16 +16,34 @@ export const SECTIONS = {
     title: 'Vehicle Details',
     fields: [
       { name: 'vehicleStatus', label: 'Vehicle Status', type: 'select', options: ['Booked', 'Allotted', 'In-Transit', 'PDI Hold', 'Ready for Delivery', 'Delivered', 'Cancelled'], required: true },
-      { name: 'chassisNumber', label: 'Chassis Number', type: 'text', required: true }, // Primary Key
+      { name: 'chassisNumber', label: 'Chassis Number', type: 'text', required: true },
       { name: 'fuel', label: 'Fuel Type', type: 'select', options: ['Petrol', 'Diesel', 'CNG', 'EV'], required: true },
       { name: 'pl', label: 'Product Line (PL)', type: 'select', options: ['Tiago', 'Tigor', 'Altroz', 'Punch', 'Nexon', 'Harrier', 'Safari'], required: true },
       { name: 'variant', label: 'Variant', type: 'text', required: true },
       { name: 'colour', label: 'Colour', type: 'text', required: true },
+      { name: 'vc', label: 'Vehicle Code (VC)', type: 'text', required: false }
+    ]
+  },
+  sales: {
+    title: 'Sales Details',
+    fields: [
       { name: 'ca', label: 'Customer Advisor (CA)', type: 'text', required: true },
       { name: 'tl', label: 'Team Leader (TL)', type: 'text', required: true },
-      { name: 'branch', label: 'Sales Branch', type: 'text', required: false },
-      { name: 'corporateDsa', label: 'Corporate DSA', type: 'text', required: false },
-      { name: 'broker', label: 'Broker', type: 'text', required: false }
+      { name: 'branch', label: 'Branch', type: 'text', required: true }
+    ]
+  },
+  offer: {
+    title: 'Offer Details',
+    fields: [
+      { name: 'hypothecation', label: 'Hypothecation (Bank/Self)', type: 'text', required: false },
+      { name: 'cashDiscount', label: 'Cash Discount / Green Bonus (₹)', type: 'number', required: false },
+      { name: 'exchangeLoyalty', label: 'Exchange / Loyalty (₹)', type: 'number', required: false },
+      { name: 'corporate', label: 'Corporate Discount (₹)', type: 'number', required: false },
+      { name: 'sss', label: 'SSS Discount (₹)', type: 'number', required: false },
+      { name: 'kpkb', label: 'KPKB / Special Scheme (₹)', type: 'number', required: false },
+      { name: 'solarOffer', label: 'Solar Offer (₹)', type: 'number', required: false },
+      { name: 'priceDifference', label: 'Price Difference (₹)', type: 'number', required: false },
+      { name: 'offerRemark', label: 'Offer Remark', type: 'text', required: false }
     ]
   },
   finance: {
@@ -34,10 +52,13 @@ export const SECTIONS = {
     statusField: 'financeStatus',
     timestampField: 'financeTimestamp',
     fields: [
-      { name: 'hypothecation', label: 'Hypothecation', type: 'text', required: false },
-      { name: 'financierName', label: 'Financier Name', type: 'text', required: false },
-      { name: 'doAmount', label: 'DO Amount', type: 'number', required: false },
-      { name: 'doDate', label: 'DO Date', type: 'date', required: false },
+      { name: 'financeType', label: 'Finance Type', type: 'select', options: ['In-House', 'Outside Finance', 'Cash Booking', 'Self-Finance'], required: true },
+      { name: 'onRoadPrice', label: 'On Road Price (₹)', type: 'number', required: false },
+      { name: 'ip', label: 'Initial Payment (IP) (₹)', type: 'number', required: false },
+      { name: 'loanAmount', label: 'Loan Amount (₹)', type: 'number', required: false },
+      { name: 'balanceAmount', label: 'Balance Amount (₹)', type: 'number', required: false },
+      { name: 'fundPercentage', label: 'Fund Percentage (%)', type: 'number', required: false },
+      { name: 'loanAmountStatus', label: 'Loan Amount Status', type: 'select', options: ['Logged In', 'Sanctioned', 'Disbursed', 'Not Applicable'], required: false },
       { name: 'financeRemark', label: 'Finance Remark', type: 'text', required: false },
       { name: 'financeStatus', label: 'Finance Status', type: 'status', required: true },
       { name: 'financeTimestamp', label: 'Finance Timestamp', type: 'timestamp', required: false }
@@ -49,9 +70,10 @@ export const SECTIONS = {
     statusField: 'tmaStatus',
     timestampField: 'tmaTimestamp',
     fields: [
-      { name: 'oldCarMake', label: 'Old Car Make/Model', type: 'text', required: false },
-      { name: 'oldCarRc', label: 'Old Car RC Number', type: 'text', required: false },
-      { name: 'exchangeValue', label: 'Exchange Value', type: 'number', required: false },
+      { name: 'exchangeYesNo', label: 'Exchange (Yes/No)', type: 'select', options: ['Yes', 'No'], required: true },
+      { name: 'tmaType', label: 'TMA Type', type: 'text', required: false },
+      { name: 'makeAndModel', label: 'Make and Model', type: 'text', required: false },
+      { name: 'regNumber', label: 'Reg Number', type: 'text', required: false },
       { name: 'tmaRemark', label: 'TMA Remark', type: 'text', required: false },
       { name: 'tmaStatus', label: 'TMA Status', type: 'status', required: true },
       { name: 'tmaTimestamp', label: 'TMA Timestamp', type: 'timestamp', required: false }

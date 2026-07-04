@@ -20,9 +20,10 @@ export default function VehicleDrawer({ vehicle, branches, onClose }) {
       setFormData({ ...vehicle });
     } else {
       setFormData({
-        branch: user.branch || 'Perinthalmanna',
+        branch: user.branch || (branches && branches[0]) || '',
         ca: user.name,
-        vehicleStatus: 'Booked'
+        vehicleStatus: 'Booked',
+        year: new Date().getFullYear(),
       });
     }
     setAuditRemark('');
@@ -59,6 +60,10 @@ export default function VehicleDrawer({ vehicle, branches, onClose }) {
 
   const isViewOnly = user.role === 'MANAGEMENT';
 
+  // For new bookings: show core details + sales, offers, finance and tma
+  const newBookingSections = ['customer', 'vehicle', 'sales', 'offer', 'finance', 'tma'];
+  const editSections = Object.keys(SECTIONS);
+
   return (
     <div className="modal-overlay open" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <form className="modal-drawer" onSubmit={handleSubmit}>
@@ -71,58 +76,30 @@ export default function VehicleDrawer({ vehicle, branches, onClose }) {
         </div>
         
         <div className="modal-body">
-          {/* General Details Section */}
-          <div className="form-section-block editable">
-            <div className="form-section-header">
-              <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--primary-navy)', fontWeight: 600 }}>General Booking Details</h4>
-            </div>
-            <div className="form-grid">
-              <div className="form-field">
-                <label>Chassis Number *</label>
-                <input type="text" name="chassisNumber" value={formData.chassisNumber || ''} onChange={handleChange} required disabled={!isNew} />
-              </div>
-              <div className="form-field">
-                <label>Customer Name *</label>
-                <input type="text" name="customerName" value={formData.customerName || ''} onChange={handleChange} required disabled={!isNew && user.role !== 'ADMIN' && user.role !== 'CRM'} />
-              </div>
-              <div className="form-field">
-                <label>Mobile Number *</label>
-                <input type="text" name="mobileNumber" value={formData.mobileNumber || ''} onChange={handleChange} required disabled={!isNew && user.role !== 'ADMIN' && user.role !== 'CRM'} />
-              </div>
-              <div className="form-field">
-                <label>Sales Branch *</label>
-                <select 
-                  name="branch" 
-                  value={formData.branch || ''} 
-                  onChange={handleChange} 
-                  required 
-                  disabled={!isNew && user.role !== 'ADMIN'}
-                  style={{ 
-                    padding: '8px 12px', 
-                    borderRadius: '6px', 
-                    border: '1px solid #cbd5e1', 
-                    fontFamily: "'Poppins', sans-serif",
-                    fontSize: '0.85rem',
-                    color: '#0f172a',
-                    backgroundColor: '#ffffff'
-                  }}
-                >
-                  {branches.map(b => <option key={b} value={b}>{b}</option>)}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Department Sections */}
-          {!isNew && Object.keys(SECTIONS).map(key => (
-            <SectionBlock 
-              key={key} 
-              sectionKey={key} 
-              section={SECTIONS[key]} 
-              formData={formData} 
-              handleChange={handleChange} 
-            />
-          ))}
+          {isNew ? (
+            // New booking form: render specified core sections with forceEditable
+            newBookingSections.map(key => (
+              <SectionBlock 
+                key={key} 
+                sectionKey={key} 
+                section={SECTIONS[key]} 
+                formData={formData} 
+                handleChange={handleChange}
+                forceEditable={true}
+              />
+            ))
+          ) : (
+            // Edit booking form: render all sections based on roles and approval status
+            editSections.map(key => (
+              <SectionBlock 
+                key={key} 
+                sectionKey={key} 
+                section={SECTIONS[key]} 
+                formData={formData} 
+                handleChange={handleChange} 
+              />
+            ))
+          )}
         </div>
 
         <div className="modal-footer">
@@ -142,7 +119,7 @@ export default function VehicleDrawer({ vehicle, branches, onClose }) {
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginLeft: 'auto' }}>
             <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
             <button type="submit" className="btn-primary" disabled={isViewOnly || submitting}>
-              {isViewOnly ? 'View-Only Mode' : submitting ? 'Saving...' : 'Save Changes'}
+              {isViewOnly ? 'View-Only Mode' : submitting ? 'Saving...' : isNew ? 'Register Booking' : 'Save Changes'}
             </button>
           </div>
         </div>
