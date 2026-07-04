@@ -8,7 +8,7 @@ import { requireSession } from './middleware/requireSession.js';
 
 dotenv.config();
 
-// Connect to MongoDB
+
 connectDB();
 
 const app = express();
