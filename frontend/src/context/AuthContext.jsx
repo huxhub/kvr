@@ -1,11 +1,29 @@
-import React, { createContext, useContext, useState } from 'react';
-import { loginUser as apiLogin } from '../models/apiModel.js';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { loginUser as apiLogin, getSessionUser, logoutUser } from '../models/apiModel.js';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true); // Restoring session on mount
+
+  // On app load, check if a session cookie already exists (page refresh)
+  useEffect(() => {
+    async function restoreSession() {
+      try {
+        const sessionUser = await getSessionUser();
+        if (sessionUser) {
+          setUser(sessionUser);
+        }
+      } catch (_) {
+        // No active session — stay logged out
+      } finally {
+        setLoading(false);
+      }
+    }
+    restoreSession();
+  }, []);
 
   const login = async (username, password) => {
     try {
@@ -19,12 +37,18 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const logout = () => {
-    setUser(null);
+  const logout = async () => {
+    try {
+      await logoutUser();
+    } catch (_) {
+      // Ignore errors — clear local state regardless
+    } finally {
+      setUser(null);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, error }}>
+    <AuthContext.Provider value={{ user, login, logout, error, loading }}>
       {children}
     </AuthContext.Provider>
   );

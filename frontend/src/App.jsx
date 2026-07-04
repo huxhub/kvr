@@ -14,7 +14,7 @@ import Settings from './components/settings/Settings.jsx';
 import { useVehicles } from './hooks/useVehicles.js';
 
 function AppContent() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { vehicles, fetchVehicles } = useVehicles();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedVehicle, setSelectedVehicle] = useState(null);
@@ -32,11 +32,12 @@ function AppContent() {
     enableAlerts: true
   });
 
-  // Load Settings from Backend DB on mount
+  // Load Settings from Backend DB once user session is confirmed
   useEffect(() => {
+    if (!user) return;
     async function loadSettings() {
       try {
-        const res = await fetch('/api/settings');
+        const res = await fetch('/api/settings', { credentials: 'include' });
         if (res.ok) {
           const data = await res.json();
           setSettings(data);
@@ -49,7 +50,7 @@ function AppContent() {
       }
     }
     loadSettings();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (user) {
@@ -66,6 +67,16 @@ function AppContent() {
     vehicles.forEach(v => { if (v.branch) branchesSet.add(v.branch); });
     return Array.from(branchesSet).sort();
   }, [vehicles, user, settings.branches]);
+
+  // While session restore is in progress, show a minimal spinner
+  if (authLoading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#f8fafc', fontFamily: "'Poppins', sans-serif", color: '#475569', fontSize: '0.9rem', gap: '10px' }}>
+        <div style={{ width: '20px', height: '20px', border: '2px solid #cbd5e1', borderTop: '2px solid #003b71', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+        Loading session...
+      </div>
+    );
+  }
 
   if (!user) {
     return <LoginOverlay companyName={companyName} />;
