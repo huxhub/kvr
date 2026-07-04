@@ -61,6 +61,7 @@ const vehicleSchema = new mongoose.Schema({
   fileTimestamp: { type: String },
 
   // Accounts Details
+  tallyDate: { type: String },
   accountsRemark: { type: String },
   accountsStatus: { type: String, default: 'Not Attended' },
   accountsTimestamp: { type: String },
@@ -74,11 +75,18 @@ const vehicleSchema = new mongoose.Schema({
   insuranceTimestamp: { type: String },
 
   // Registration Details
+  registrationType: { type: String },
+  applicationNumber: { type: String },
+  taxPaidDate: { type: String },
+  registerNumber: { type: String },
+  hsrpStatus: { type: String },
   registrationRemark: { type: String },
   registrationStatus: { type: String, default: 'Not Attended' },
   registrationTimestamp: { type: String },
 
   // TMGA Details
+  tmgaValue: { type: Number, default: 0 },
+  vasValue: { type: Number, default: 0 },
   tmgaRemark: { type: String },
   tmgaStatus: { type: String, default: 'Not Attended' },
   tmgaTimestamp: { type: String },
