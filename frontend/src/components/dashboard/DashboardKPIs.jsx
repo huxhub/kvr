@@ -149,7 +149,7 @@ export default function DashboardKPIs({ vehicles, activeBranch, setSelectedBranc
                 <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
                 <Tooltip cursor={{ fill: '#f1f5f9' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} />
-                <Bar dataKey="bookings" radius={[4, 4, 0, 0]}>
+                <Bar dataKey="bookings" radius={[4, 4, 0, 0]} barSize={40}>
                   {analyticsData.salesByProductLine.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
