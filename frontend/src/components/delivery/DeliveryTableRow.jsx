@@ -1,36 +1,49 @@
 import React from 'react';
-import { calculateProgress, getPendingDepartment } from '../../utils/vehicleUtils.js';
+import { calculateProgress } from '../../utils/vehicleUtils.js';
 
 export default function DeliveryTableRow({ vehicle, openDrawer }) {
   const progress = calculateProgress(vehicle);
-  const pendingDept = getPendingDepartment(vehicle);
+
+  const renderStatusPill = (status, remark) => {
+    const displayStatus = status || 'Not Attended';
+    const statusClass = displayStatus.toLowerCase().replace(/\s+/g, '-');
+    const hasTooltip = remark && remark.trim().length > 0;
+
+    return (
+      <div className="status-pill-container" style={{ display: 'inline-flex' }}>
+        <span className={`badge-status ${statusClass}`}>
+          <span className="badge-dot"></span>
+          {displayStatus}
+        </span>
+        {hasTooltip && (
+          <span className="status-tooltip">
+            {remark}
+          </span>
+        )}
+      </div>
+    );
+  };
 
   return (
-    <tr onClick={() => openDrawer(vehicle)}>
-      <td>{vehicle.orderNumber}</td>
-      <td style={{ fontWeight: 600 }}>{vehicle.customerName}</td>
-      <td>{vehicle.mobileNumber}</td>
-      <td>{vehicle.pl} {vehicle.variant}</td>
-      <td>{vehicle.branch || 'Perinthalmanna'}</td>
-      <td>{vehicle.ca}</td>
-      <td>{vehicle.tl}</td>
-      <td><span className="vehicle-status-badge">{vehicle.vehicleStatus}</span></td>
+    <tr onClick={() => openDrawer(vehicle)} style={{ cursor: 'pointer' }}>
       <td>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div className="progress-bar-container" style={{ width: '60px', height: '6px' }}>
-            <div className={`progress-bar-fill ${progress === 100 ? 'all-approved' : ''}`} style={{ width: `${progress}%` }}></div>
-          </div>
-          <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>{progress}%</span>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <span style={{ fontWeight: 600, color: 'var(--primary-navy)' }}>{vehicle.pl}</span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{vehicle.variant}</span>
         </div>
       </td>
-      <td>
-        <span className={`pending-dept-value ${pendingDept.status.toLowerCase().replace(' ', '-')}`} style={{ padding: '2px 6px', fontSize: '0.7rem' }}>
-          {pendingDept.name}
-        </span>
-      </td>
+      <td>{vehicle.branch || 'Perinthalmanna'}</td>
       <td>{vehicle.expectedDeliveryDate || '-'}</td>
+      <td>{renderStatusPill(vehicle.financeStatus, vehicle.financeRemark)}</td>
+      <td>{renderStatusPill(vehicle.tmaStatus, vehicle.tmaRemark)}</td>
+      <td>{renderStatusPill(vehicle.accountsStatus, vehicle.accountsRemark)}</td>
+      <td>{renderStatusPill(vehicle.registrationStatus, vehicle.registrationRemark)}</td>
+      <td>{renderStatusPill(vehicle.pdiStatus, vehicle.pdiRemark)}</td>
+      <td>{renderStatusPill(vehicle.deliveryStatus, vehicle.cxoRemark)}</td>
       <td>
-        <button className="btn-secondary" style={{ padding: '4px 12px', fontSize: '0.75rem' }}>View</button>
+        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: progress === 100 ? 'var(--status-approved-text)' : 'var(--primary-blue)' }}>
+          {progress}%
+        </span>
       </td>
     </tr>
   );

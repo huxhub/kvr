@@ -95,18 +95,16 @@ export default function DeliveryTable({ vehicles, branches, openDrawer }) {
           <table className="table-master">
             <thead>
               <tr>
-                <th>Order #</th>
-                <th>Customer</th>
-                <th>Mobile</th>
-                <th>Model</th>
+                <th>PL / Variant</th>
                 <th>Branch</th>
-                <th>CA</th>
-                <th>TL</th>
-                <th>Status</th>
+                <th>Expected Delivery</th>
+                <th>Fin Status</th>
+                <th>TMA Status</th>
+                <th>Acc Status</th>
+                <th>Reg Status</th>
+                <th>PDI Status</th>
+                <th>Deliv Status</th>
                 <th>Progress</th>
-                <th>Pending Step</th>
-                <th>Exp. Delivery</th>
-                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
