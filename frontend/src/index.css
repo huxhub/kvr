@@ -60,6 +60,39 @@
   --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Theme Overrides */
+body.theme-light {
+  --sidebar-hover-bg: #f8fafc;
+  --sidebar-active-bg: #eef2ff;
+  --sidebar-active-color: #2563eb;
+}
+
+body.theme-indigo {
+  --primary-navy: #1e1b4b;
+  --primary-blue: #4f46e5;
+  --secondary-slate: #4338ca;
+  --bg-light: #f5f3ff;
+  --border-light: #e0e7ff;
+  --accent-cyan: #c7d2fe;
+  
+  --sidebar-hover-bg: #f5f3ff;
+  --sidebar-active-bg: #e0e7ff;
+  --sidebar-active-color: #4f46e5;
+}
+
+body.theme-emerald {
+  --primary-navy: #064e3b;
+  --primary-blue: #059669;
+  --secondary-slate: #047857;
+  --bg-light: #f0fdf4;
+  --border-light: #d1fae5;
+  --accent-cyan: #a7f3d0;
+  
+  --sidebar-hover-bg: #f0fdf4;
+  --sidebar-active-bg: #d1fae5;
+  --sidebar-active-color: #059669;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -152,13 +185,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .sidebar-btn:hover {
-  background-color: #f8fafc;
-  color: #6366f1;
+  background-color: var(--sidebar-hover-bg, #f8fafc);
+  color: var(--sidebar-active-color, #2563eb);
 }
 
 .sidebar-btn.active {
-  background-color: #eef2ff;
-  color: #4f46e5;
+  background-color: var(--sidebar-active-bg, #eef2ff);
+  color: var(--sidebar-active-color, #4f46e5);
   font-weight: 600;
 }
 
