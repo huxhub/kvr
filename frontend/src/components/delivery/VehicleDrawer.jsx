@@ -43,7 +43,7 @@ export default function VehicleDrawer({ vehicle, branches, onClose }) {
     
     let result;
     if (isNew) {
-      result = await createVehicle(formData);
+      result = await createVehicle(formData, auditRemark);
     } else {
       result = await saveVehicle(formData, auditRemark);
     }
@@ -60,8 +60,8 @@ export default function VehicleDrawer({ vehicle, branches, onClose }) {
 
   const isViewOnly = user.role === 'MANAGEMENT';
 
-  // For new bookings: show core details + sales, offers, finance and tma
-  const newBookingSections = ['customer', 'vehicle', 'sales', 'offer', 'finance', 'tma'];
+  // For new bookings: show all details sections
+  const newBookingSections = Object.keys(SECTIONS);
   const editSections = Object.keys(SECTIONS);
 
   return (
@@ -100,26 +100,35 @@ export default function VehicleDrawer({ vehicle, branches, onClose }) {
               />
             ))
           )}
-        </div>
 
-        <div className="modal-footer">
-          {!isNew && (
-            <div className="form-field" style={{ flex: 1, marginRight: '16px' }}>
-              <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Operation Reason / Audit Remark *</label>
-              <input 
-                type="text" 
-                value={auditRemark} 
-                onChange={(e) => setAuditRemark(e.target.value)} 
-                required={!isViewOnly} 
-                disabled={isViewOnly} 
-                placeholder="Describe changes made..." 
-              />
+          {/* Change Verification Remark section inside body */}
+          {!isViewOnly && (
+            <div className="form-section editable" style={{ marginTop: '20px' }}>
+              <div className="section-header">
+                <h4 className="section-title">Change Verification Remark</h4>
+                <span className="status-badge" style={{ backgroundColor: 'var(--status-approved-border)', color: 'white' }}>✏️ Required</span>
+              </div>
+              <div className="form-grid" style={{ gridTemplateColumns: '1fr' }}>
+                <div className="form-field">
+                  <label>Operation Reason / Audit Remark *</label>
+                  <input 
+                    type="text" 
+                    value={auditRemark} 
+                    onChange={(e) => setAuditRemark(e.target.value)} 
+                    required 
+                    placeholder="Describe the status updates made (e.g. Loan approved, tax paid)..." 
+                  />
+                </div>
+              </div>
             </div>
           )}
+        </div>
+
+        <div className="modal-footer" style={{ borderTop: '1px solid var(--border-light)', padding: '16px 24px' }}>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginLeft: 'auto' }}>
             <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
             <button type="submit" className="btn-primary" disabled={isViewOnly || submitting}>
-              {isViewOnly ? 'View-Only Mode' : submitting ? 'Saving...' : isNew ? 'Register Booking' : 'Save Changes'}
+              {isViewOnly ? 'View-Only Mode' : submitting ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </div>
