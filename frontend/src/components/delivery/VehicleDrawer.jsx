@@ -60,20 +60,23 @@ export default function VehicleDrawer({ vehicle, branches, onClose }) {
   const isViewOnly = user.role === 'MANAGEMENT';
 
   return (
-    <div className="drawer-overlay" style={{ display: 'flex' }}>
-      <div className="drawer" style={{ transform: 'translateX(0)' }}>
-        <div className="drawer-header">
-          <h2>{isNew ? 'Register New Booking' : `Edit Vehicle: ${vehicle.chassisNumber}`}</h2>
-          <button className="btn-close" onClick={onClose}>×</button>
+    <div className="modal-overlay open" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <form className="modal-drawer" onSubmit={handleSubmit}>
+        <div className="modal-header">
+          <div>
+            <h3>{isNew ? 'Register New Booking' : 'Edit Vehicle Booking'}</h3>
+            {!isNew && <p style={{ margin: 0, marginTop: '4px', fontSize: '0.85rem', color: '#64748b' }}>Chassis: {vehicle.chassisNumber}</p>}
+          </div>
+          <button type="button" className="close-btn" onClick={onClose}>×</button>
         </div>
         
-        <form className="drawer-content" onSubmit={handleSubmit}>
+        <div className="modal-body">
           {/* General Details Section */}
-          <div className="form-section">
-            <div className="section-header">
-              <h4 className="section-title">General Booking Details</h4>
+          <div className="form-section-block editable">
+            <div className="form-section-header">
+              <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--primary-navy)', fontWeight: 600 }}>General Booking Details</h4>
             </div>
-            <div className="section-grid">
+            <div className="form-grid">
               <div className="form-field">
                 <label>Chassis Number *</label>
                 <input type="text" name="chassisNumber" value={formData.chassisNumber || ''} onChange={handleChange} required disabled={!isNew} />
@@ -88,7 +91,22 @@ export default function VehicleDrawer({ vehicle, branches, onClose }) {
               </div>
               <div className="form-field">
                 <label>Sales Branch *</label>
-                <select name="branch" value={formData.branch || ''} onChange={handleChange} required disabled={!isNew && user.role !== 'ADMIN'}>
+                <select 
+                  name="branch" 
+                  value={formData.branch || ''} 
+                  onChange={handleChange} 
+                  required 
+                  disabled={!isNew && user.role !== 'ADMIN'}
+                  style={{ 
+                    padding: '8px 12px', 
+                    borderRadius: '6px', 
+                    border: '1px solid #cbd5e1', 
+                    fontFamily: "'Poppins', sans-serif",
+                    fontSize: '0.85rem',
+                    color: '#0f172a',
+                    backgroundColor: '#ffffff'
+                  }}
+                >
                   {branches.map(b => <option key={b} value={b}>{b}</option>)}
                 </select>
               </div>
@@ -105,31 +123,30 @@ export default function VehicleDrawer({ vehicle, branches, onClose }) {
               handleChange={handleChange} 
             />
           ))}
+        </div>
 
-          {/* Form Footer */}
-          <div className="drawer-footer">
-            {!isNew && (
-              <div className="form-field" style={{ width: '100%', marginBottom: '16px' }}>
-                <label>Operation Reason / Audit Remark *</label>
-                <input 
-                  type="text" 
-                  value={auditRemark} 
-                  onChange={(e) => setAuditRemark(e.target.value)} 
-                  required={!isViewOnly} 
-                  disabled={isViewOnly} 
-                  placeholder="Describe changes made..." 
-                />
-              </div>
-            )}
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', width: '100%' }}>
-              <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
-              <button type="submit" className="btn-primary" disabled={isViewOnly || submitting}>
-                {isViewOnly ? 'View-Only Mode' : submitting ? 'Saving...' : 'Save Changes'}
-              </button>
+        <div className="modal-footer">
+          {!isNew && (
+            <div className="form-field" style={{ flex: 1, marginRight: '16px' }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Operation Reason / Audit Remark *</label>
+              <input 
+                type="text" 
+                value={auditRemark} 
+                onChange={(e) => setAuditRemark(e.target.value)} 
+                required={!isViewOnly} 
+                disabled={isViewOnly} 
+                placeholder="Describe changes made..." 
+              />
             </div>
+          )}
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginLeft: 'auto' }}>
+            <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
+            <button type="submit" className="btn-primary" disabled={isViewOnly || submitting}>
+              {isViewOnly ? 'View-Only Mode' : submitting ? 'Saving...' : 'Save Changes'}
+            </button>
           </div>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   );
 }

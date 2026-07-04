@@ -119,3 +119,22 @@ export async function deleteUser(username, activeRole) {
     throw new Error(errorData.error || 'Failed to remove user');
   }
 }
+
+export async function getBackendSettings() {
+  const res = await fetch('/api/settings');
+  if (!res.ok) throw new Error('Failed to fetch settings from server');
+  return await res.json();
+}
+
+export async function saveBackendSettings(settingsData) {
+  const res = await fetch('/api/settings', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(settingsData)
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || 'Failed to save settings on server');
+  }
+  return await res.json();
+}

@@ -27,20 +27,20 @@ export default function AuditHistory() {
   return (
     <div id="audit-view" className="tab-content active">
       <div className="audit-log-container">
-        <div className="main-header" style={{ backgroundColor: 'transparent', borderBottom: '1px solid var(--border-light)', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--primary-navy)' }}>Global Audit History & System Logs</h3>
+        <div className="audit-header-bar">
+          <div className="audit-header-title">
+            <h3>Global Audit History & System Logs</h3>
           </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div className="audit-header-actions">
             <input 
               type="text" 
+              className="audit-search-input"
               placeholder="Filter logs by keyword..." 
-              style={{ width: '300px' }} 
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
             />
             {user.role === 'ADMIN' && (
-              <button className="btn-secondary" style={{ borderColor: '#cbd5e1', fontSize: '0.8rem' }} onClick={handleClear}>
+              <button className="btn-secondary audit-clear-btn" onClick={handleClear}>
                 Clear Audit Files
               </button>
             )}

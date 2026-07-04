@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { DEPARTMENT_KEYS, SECTIONS } from '../../models/constants.js';
+import CustomDropdown from '../ui/DropdownMenu.jsx';
 
 export default function DeliveryFilters({ filters, setFilters, branches, vehicles }) {
   const handleChange = (e) => {
@@ -18,6 +19,39 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
   const cas = useMemo(() => Array.from(new Set(vehicles.map(v => v.ca).filter(Boolean))).sort(), [vehicles]);
   const tls = useMemo(() => Array.from(new Set(vehicles.map(v => v.tl).filter(Boolean))).sort(), [vehicles]);
 
+  const branchOptions = [
+    { value: '', label: 'All Branches' },
+    ...branches.map(b => ({ value: b, label: b }))
+  ];
+
+  const statusOptions = [
+    { value: '', label: 'All Statuses' },
+    { value: 'Booked', label: 'Booked' },
+    { value: 'Allotted', label: 'Allotted' },
+    { value: 'In-Transit', label: 'In-Transit' },
+    { value: 'PDI Hold', label: 'PDI Hold' },
+    { value: 'Ready for Delivery', label: 'Ready for Delivery' },
+    { value: 'Delivered', label: 'Delivered' },
+    { value: 'Cancelled', label: 'Cancelled' }
+  ];
+
+  const caOptions = [
+    { value: '', label: 'All CAs' },
+    ...cas.map(ca => ({ value: ca, label: ca }))
+  ];
+
+  const tlOptions = [
+    { value: '', label: 'All TLs' },
+    ...tls.map(tl => ({ value: tl, label: tl }))
+  ];
+
+  const deptOptions = [
+    { value: '', label: 'Any' },
+    { value: 'Not Attended', label: 'Not Attended' },
+    { value: 'Pending', label: 'Pending' },
+    { value: 'Approved', label: 'Approved' }
+  ];
+
   return (
     <div className="filter-panel" id="delivery-filters">
       <div className="section-title-bar">
@@ -32,40 +66,42 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
 
         <div className="filter-group">
           <label htmlFor="filter-branch">BRANCH</label>
-          <select id="filter-branch" className="filter-select" value={filters.branch} onChange={handleChange}>
-            <option value="">All Branches</option>
-            {branches.map(b => <option key={b} value={b}>{b}</option>)}
-          </select>
+          <CustomDropdown 
+            id="filter-branch" 
+            value={filters.branch} 
+            onChange={handleChange} 
+            options={branchOptions} 
+          />
         </div>
 
         <div className="filter-group">
           <label htmlFor="filter-status">VEHICLE STATUS</label>
-          <select id="filter-status" className="filter-select" value={filters.status} onChange={handleChange}>
-            <option value="">All Statuses</option>
-            <option value="Booked">Booked</option>
-            <option value="Allotted">Allotted</option>
-            <option value="In-Transit">In-Transit</option>
-            <option value="PDI Hold">PDI Hold</option>
-            <option value="Ready for Delivery">Ready for Delivery</option>
-            <option value="Delivered">Delivered</option>
-            <option value="Cancelled">Cancelled</option>
-          </select>
+          <CustomDropdown 
+            id="filter-status" 
+            value={filters.status} 
+            onChange={handleChange} 
+            options={statusOptions} 
+          />
         </div>
 
         <div className="filter-group">
           <label htmlFor="filter-ca">CUSTOMER ADVISOR (CA)</label>
-          <select id="filter-ca" className="filter-select" value={filters.ca} onChange={handleChange}>
-            <option value="">All CAs</option>
-            {cas.map(ca => <option key={ca} value={ca}>{ca}</option>)}
-          </select>
+          <CustomDropdown 
+            id="filter-ca" 
+            value={filters.ca} 
+            onChange={handleChange} 
+            options={caOptions} 
+          />
         </div>
 
         <div className="filter-group">
           <label htmlFor="filter-tl">TEAM LEADER (TL)</label>
-          <select id="filter-tl" className="filter-select" value={filters.tl} onChange={handleChange}>
-            <option value="">All TLs</option>
-            {tls.map(tl => <option key={tl} value={tl}>{tl}</option>)}
-          </select>
+          <CustomDropdown 
+            id="filter-tl" 
+            value={filters.tl} 
+            onChange={handleChange} 
+            options={tlOptions} 
+          />
         </div>
 
         <div className="filter-group">
@@ -80,52 +116,52 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
 
         <div className="filter-group">
           <label htmlFor="filter-finStatus">FINANCE STATUS</label>
-          <select id="filter-finStatus" className="filter-select filter-dept-status" value={filters.finStatus} onChange={handleChange}>
-            <option value="">Any</option>
-            <option value="Not Attended">Not Attended</option>
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-          </select>
+          <CustomDropdown 
+            id="filter-finStatus" 
+            value={filters.finStatus} 
+            onChange={handleChange} 
+            options={deptOptions} 
+          />
         </div>
 
         <div className="filter-group">
           <label htmlFor="filter-tmaStatus">TMA STATUS</label>
-          <select id="filter-tmaStatus" className="filter-select filter-dept-status" value={filters.tmaStatus} onChange={handleChange}>
-            <option value="">Any</option>
-            <option value="Not Attended">Not Attended</option>
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-          </select>
+          <CustomDropdown 
+            id="filter-tmaStatus" 
+            value={filters.tmaStatus} 
+            onChange={handleChange} 
+            options={deptOptions} 
+          />
         </div>
 
         <div className="filter-group">
           <label htmlFor="filter-accStatus">ACCOUNTS STATUS</label>
-          <select id="filter-accStatus" className="filter-select filter-dept-status" value={filters.accStatus} onChange={handleChange}>
-            <option value="">Any</option>
-            <option value="Not Attended">Not Attended</option>
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-          </select>
+          <CustomDropdown 
+            id="filter-accStatus" 
+            value={filters.accStatus} 
+            onChange={handleChange} 
+            options={deptOptions} 
+          />
         </div>
 
         <div className="filter-group">
           <label htmlFor="filter-regStatus">REGISTRATION STATUS</label>
-          <select id="filter-regStatus" className="filter-select filter-dept-status" value={filters.regStatus} onChange={handleChange}>
-            <option value="">Any</option>
-            <option value="Not Attended">Not Attended</option>
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-          </select>
+          <CustomDropdown 
+            id="filter-regStatus" 
+            value={filters.regStatus} 
+            onChange={handleChange} 
+            options={deptOptions} 
+          />
         </div>
 
         <div className="filter-group">
           <label htmlFor="filter-pdiStatus">PDI STATUS</label>
-          <select id="filter-pdiStatus" className="filter-select filter-dept-status" value={filters.pdiStatus} onChange={handleChange}>
-            <option value="">Any</option>
-            <option value="Not Attended">Not Attended</option>
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-          </select>
+          <CustomDropdown 
+            id="filter-pdiStatus" 
+            value={filters.pdiStatus} 
+            onChange={handleChange} 
+            options={deptOptions} 
+          />
         </div>
 
       </div>

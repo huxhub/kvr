@@ -4,12 +4,13 @@ import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import { ToastProvider } from './context/ToastContext.jsx';
 import LoginOverlay from './components/auth/LoginOverlay.jsx';
 import Header from './components/layout/Header.jsx';
-import NavigationTabs from './components/layout/NavigationTabs.jsx';
+import Sidebar from './components/layout/Sidebar.jsx';
 import DashboardKPIs from './components/dashboard/DashboardKPIs.jsx';
 import DeliveryTable from './components/delivery/DeliveryTable.jsx';
 import AuditHistory from './components/audit/AuditHistory.jsx';
 import UserAdmin from './components/admin/UserAdmin.jsx';
 import VehicleDrawer from './components/delivery/VehicleDrawer.jsx';
+import Settings from './components/settings/Settings.jsx';
 import { useVehicles } from './hooks/useVehicles.js';
 
 function AppContent() {
@@ -18,23 +19,56 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState('');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [companyName, setCompanyName] = useState('KVR TATA');
+  const [settings, setSettings] = useState({
+    companyName: 'KVR TATA',
+    companyPhone: '+91 98470 12345',
+    companyEmail: 'support@kvrgroup.com',
+    companyAddress: 'KVR Group, NH 66, Perinthalmanna, Kerala',
+    branches: ['Perinthalmanna'],
+    theme: 'light',
+    enableAlerts: true
+  });
+
+  // Load Settings from Backend DB on mount
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const res = await fetch('/api/settings');
+        if (res.ok) {
+          const data = await res.json();
+          setSettings(data);
+          setCompanyName(data.companyName || 'KVR TATA');
+          // Apply theme to document.body
+          document.body.className = `theme-${data.theme || 'light'}`;
+        }
+      } catch (error) {
+        console.error("Failed to load settings from server:", error);
+      }
+    }
+    loadSettings();
+  }, []);
 
   useEffect(() => {
     if (user) {
       fetchVehicles();
+      if (user.branch) {
+        setSelectedBranch(user.branch);
+      }
     }
   }, [user, fetchVehicles]);
 
   const branches = useMemo(() => {
-    const customBranches = JSON.parse(localStorage.getItem('kvr_custom_branches')) || [];
-    const branchesSet = new Set(['Perinthalmanna', ...customBranches]);
+    const branchesSet = new Set(['Perinthalmanna', ...(settings.branches || [])]);
     if (user && user.branch) branchesSet.add(user.branch);
     vehicles.forEach(v => { if (v.branch) branchesSet.add(v.branch); });
     return Array.from(branchesSet).sort();
-  }, [vehicles, user]);
+  }, [vehicles, user, settings.branches]);
 
   if (!user) {
-    return <LoginOverlay />;
+    return <LoginOverlay companyName={companyName} />;
   }
 
   const handleOpenDrawer = (vehicle) => {
@@ -48,16 +82,42 @@ function AppContent() {
   };
 
   return (
-    <div className="app-container">
-      <Header />
-      <NavigationTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+    <div className="app-container" style={{ flexDirection: 'row' }}>
+      {isSidebarOpen && <div className="sidebar-backdrop" onClick={() => setIsSidebarOpen(false)} />}
       
-      <main className="content-wrapper" id="app-main">
-        {activeTab === 'dashboard' && <DashboardKPIs vehicles={vehicles} activeBranch={user.branch} />}
-        {activeTab === 'delivery' && <DeliveryTable vehicles={vehicles} branches={branches} openDrawer={handleOpenDrawer} />}
-        {activeTab === 'audit' && <AuditHistory />}
-        {activeTab === 'users' && user.role === 'ADMIN' && <UserAdmin branches={branches} />}
-      </main>
+      <Sidebar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+        companyName={companyName}
+      />
+      
+      <div className="main-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflowY: 'auto' }}>
+        <Header 
+          activeTab={activeTab} 
+          selectedBranch={selectedBranch} 
+          setSelectedBranch={setSelectedBranch} 
+          branches={branches} 
+          isSidebarOpen={isSidebarOpen}
+          setIsSidebarOpen={setIsSidebarOpen}
+        />
+        
+        <main className="content-wrapper" id="app-main">
+          {activeTab === 'dashboard' && (
+            <DashboardKPIs 
+              vehicles={vehicles} 
+              activeBranch={selectedBranch} 
+              setSelectedBranch={setSelectedBranch}
+              branches={branches}
+            />
+          )}
+          {activeTab === 'delivery' && <DeliveryTable vehicles={vehicles} branches={branches} openDrawer={handleOpenDrawer} />}
+          {activeTab === 'audit' && <AuditHistory />}
+          {activeTab === 'users' && user.role === 'ADMIN' && <UserAdmin branches={branches} />}
+          {activeTab === 'settings' && <Settings branches={branches} settings={settings} setSettings={setSettings} companyName={companyName} setCompanyName={setCompanyName} />}
+        </main>
+      </div>
 
       {isDrawerOpen && (
         <VehicleDrawer vehicle={selectedVehicle} branches={branches} onClose={handleCloseDrawer} />

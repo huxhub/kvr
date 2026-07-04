@@ -15,17 +15,29 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// Express API Request and Response Status Logger
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    console.log(`${req.method} ${req.originalUrl} - Status: ${res.statusCode} (${duration}ms)`);
+  });
+  next();
+});
+
 // Import Routes
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import vehicleRoutes from './routes/vehicles.js';
 import auditRoutes from './routes/audit.js';
+import settingsRoutes from './routes/settings.js';
 
 // Use Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/audit_logs', auditRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Basic health check
 app.get('/api/health', (req, res) => {

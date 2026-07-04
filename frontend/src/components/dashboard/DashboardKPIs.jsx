@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react';
 import { DEPARTMENT_KEYS, SECTIONS, STATUS_VALUES } from '../../models/apiModel.js';
+import CustomDropdown from '../ui/DropdownMenu.jsx';
 
 const SIMULATED_TODAY = '2026-06-22'; // Keep simulation date consistent with original
 
-export default function DashboardKPIs({ vehicles, activeBranch }) {
+export default function DashboardKPIs({ vehicles, activeBranch, setSelectedBranch, branches = [] }) {
   const filteredVehicles = useMemo(() => {
     return vehicles.filter(v => {
       const vBranch = v.branch || 'Perinthalmanna';
@@ -39,8 +40,22 @@ export default function DashboardKPIs({ vehicles, activeBranch }) {
     };
   }, [filteredVehicles]);
 
+  const dropdownOptions = [
+    { value: '', label: 'All Branches' },
+    ...branches.map(branch => ({ value: branch, label: branch }))
+  ];
+
   return (
     <div id="dashboard-view" className="tab-content active">
+      <div className="mobile-branch-selector-container">
+        <span className="mobile-branch-label">Branch:</span>
+        <CustomDropdown 
+          value={activeBranch || ''}
+          onChange={(e) => setSelectedBranch(e.target.value)}
+          options={dropdownOptions}
+        />
+      </div>
+
       <div className="kpi-container">
         <div className="kpi-card">
           <div className="kpi-icon">
