@@ -1236,6 +1236,7 @@ h1, h2, h3, h4, h5, h6 {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  white-space: nowrap;
 }
 
 .badge-status.approved {
@@ -2509,6 +2510,7 @@ body.theme-emerald {
   line-height: 1;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  white-space: nowrap;
 }
 
 /* Tooltip styles for workflow table status pills */
