@@ -24,6 +24,34 @@ export default function AuditHistory() {
     }
   };
 
+  const formatTimestamp = (ts) => {
+    if (!ts) return '-';
+    if (typeof ts === 'string' && ts.length === 19 && ts.includes('-') && ts.includes(':')) {
+      return ts;
+    }
+    try {
+      const d = new Date(ts);
+      if (isNaN(d.getTime())) return ts;
+      return d.toISOString().replace('T', ' ').substring(0, 19);
+    } catch {
+      return ts;
+    }
+  };
+
+  const renderStatus = (status) => {
+    if (!status) return '-';
+    const clean = status.trim();
+    if (clean === 'Approved' || clean === 'Pending' || clean === 'Not Attended') {
+      const cls = clean.toLowerCase().replace(/\s+/g, '-');
+      return (
+        <span className={`badge-status ${cls}`} style={{ fontSize: '0.72rem', padding: '3px 8px' }}>
+          {clean}
+        </span>
+      );
+    }
+    return <span style={{ color: 'var(--text-dark)', fontWeight: 500 }}>{clean}</span>;
+  };
+
   return (
     <div id="audit-view" className="tab-content active">
       <div className="audit-log-container">
@@ -55,7 +83,7 @@ export default function AuditHistory() {
                 <th>Chassis Number</th>
                 <th>Customer Name</th>
                 <th>Changed By</th>
-                <th>Department / Section</th>
+                <th>Department Section</th>
                 <th>Previous Status</th>
                 <th>New Status</th>
                 <th>Remarks</th>
@@ -69,27 +97,21 @@ export default function AuditHistory() {
               ) : (
                 auditLogs.map(log => (
                   <tr key={log._id || log.id}>
-                    <td style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                      {new Date(log.timestamp).toISOString().replace('T', ' ').substring(0, 19)}
+                    <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+                      {formatTimestamp(log.timestamp)}
                     </td>
-                    <td style={{ fontFamily: 'monospace', fontWeight: 600 }}>{log.chassisNumber}</td>
+                    <td style={{ fontFamily: 'var(--font-mono, monospace)', fontWeight: 600, fontSize: '0.82rem', letterSpacing: '0.02em' }}>
+                      {log.chassisNumber}
+                    </td>
                     <td>{log.customerName}</td>
                     <td>
-                      <span className="role-badge" style={{ backgroundColor: 'var(--bg-alt)', color: 'var(--primary-navy)', border: '1px solid var(--border-light)' }}>
+                      <span className="role-badge">
                         {log.updatedBy}
                       </span>
                     </td>
-                    <td style={{ fontWeight: 600 }}>{log.department}</td>
-                    <td>
-                      <span className={`status-badge status-${log.previousStatus?.toLowerCase().replace(' ', '-')}`}>
-                        {log.previousStatus}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`status-badge status-${log.newStatus?.toLowerCase().replace(' ', '-')}`}>
-                        {log.newStatus}
-                      </span>
-                    </td>
+                    <td style={{ fontWeight: 600, color: 'var(--primary-navy)' }}>{log.department}</td>
+                    <td>{renderStatus(log.previousStatus)}</td>
+                    <td>{renderStatus(log.newStatus)}</td>
                     <td style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                       {log.remarks}
                     </td>
