@@ -1,7 +1,7 @@
 import React from 'react';
 import { calculateCardBorderClass, calculateProgress, getPendingDepartment } from '../../utils/vehicleUtils.js';
 
-export default function DeliveryGridItem({ vehicle, openDrawer }) {
+export default function DeliveryGridItem({ vehicle, openDrawer, index }) {
   const borderClass = calculateCardBorderClass(vehicle);
   const progress = calculateProgress(vehicle);
   const pendingDept = getPendingDepartment(vehicle);
@@ -10,7 +10,10 @@ export default function DeliveryGridItem({ vehicle, openDrawer }) {
     <div className={`vehicle-card ${borderClass}`} onClick={() => openDrawer(vehicle)}>
       <div className="card-header-info">
         <div className="card-title-group">
-          <h4>{vehicle.customerName}</h4>
+          <h4 style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '0.8rem', background: 'var(--border-light)', color: '#475569', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>#{index}</span>
+            {vehicle.customerName}
+          </h4>
           <div className="card-subtitle">{vehicle.pl} {vehicle.variant}</div>
         </div>
         <span className="vehicle-status-badge">{vehicle.vehicleStatus}</span>

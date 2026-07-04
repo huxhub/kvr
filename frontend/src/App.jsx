@@ -15,7 +15,7 @@ import { useVehicles } from './hooks/useVehicles.js';
 
 function AppContent() {
   const { user, loading: authLoading } = useAuth();
-  const { vehicles, fetchVehicles } = useVehicles();
+  const { vehicles, totalVehicles, currentPage, fetchVehicles } = useVehicles();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -54,7 +54,7 @@ function AppContent() {
 
   useEffect(() => {
     if (user) {
-      fetchVehicles();
+      fetchVehicles(1, 25);
       // Default to 'All Branches' ('') instead of user.branch on load
       setSelectedBranch('');
     }
@@ -122,10 +122,19 @@ function AppContent() {
               branches={branches}
             />
           )}
-          {activeTab === 'delivery' && <DeliveryTable vehicles={vehicles} branches={branches} openDrawer={handleOpenDrawer} />}
+          {activeTab === 'delivery' && (
+            <DeliveryTable 
+              vehicles={vehicles} 
+              branches={branches} 
+              openDrawer={handleOpenDrawer} 
+              totalVehicles={totalVehicles}
+              currentPage={currentPage}
+              fetchVehicles={fetchVehicles}
+            />
+          )}
           {activeTab === 'audit' && <AuditHistory />}
           {activeTab === 'users' && user.role === 'ADMIN' && <UserAdmin branches={branches} />}
-          {activeTab === 'settings' && <Settings branches={branches} settings={settings} setSettings={setSettings} companyName={companyName} setCompanyName={setCompanyName} />}
+          {activeTab === 'settings' && <Settings branches={branches} settings={settings} setSettings={setSettings} companyName={companyName} setCompanyName={setCompanyName} vehicles={vehicles} />}
         </main>
       </div>
 

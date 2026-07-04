@@ -3,13 +3,14 @@ import { useUsers } from '../../hooks/useUsers.js';
 import { useToast } from '../../context/ToastContext.jsx';
 
 export default function UserAdmin({ branches }) {
-  const { users, fetchUsers, createUser, updateUser, deleteUser, loading } = useUsers();
+  const { users, totalUsers, currentPage, fetchUsers, createUser, updateUser, deleteUser, loading } = useUsers();
   const { showToast } = useToast();
-  const [formData, setFormData] = useState({ name: '', username: '', role: '', branch: '', password: '' });
+  const [formData, setFormData] = useState({ name: '', username: '', role: '', branch: '', email: '', password: '' });
+  const [originalUsername, setOriginalUsername] = useState('');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   
   useEffect(() => {
-    fetchUsers();
+    fetchUsers(1, 15);
   }, [fetchUsers]);
 
   const handleChange = (e) => {
@@ -18,13 +19,14 @@ export default function UserAdmin({ branches }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const isEdit = users.some(u => u.username === formData.username);
+    const isEdit = !!originalUsername;
     
-    const result = isEdit ? await updateUser(formData.username, formData) : await createUser(formData);
+    const result = isEdit ? await updateUser(originalUsername, formData) : await createUser(formData);
     
     if (result.success) {
       showToast('Success', isEdit ? 'User updated successfully' : 'User created successfully');
-      setFormData({ name: '', username: '', role: '', branch: '', password: '' });
+      setFormData({ name: '', username: '', role: '', branch: '', email: '', password: '' });
+      setOriginalUsername('');
       setIsDrawerOpen(false);
     } else {
       showToast('Error', result.error, 'error');
@@ -40,12 +42,14 @@ export default function UserAdmin({ branches }) {
   };
 
   const handleEdit = (user) => {
-    setFormData({ ...user, password: '' });
+    setFormData({ ...user, email: user.email || '', password: '' });
+    setOriginalUsername(user.username);
     setIsDrawerOpen(true);
   };
 
   const handleAddNew = () => {
-    setFormData({ name: '', username: '', role: '', branch: '', password: '' });
+    setFormData({ name: '', username: '', role: '', branch: '', email: '', password: '' });
+    setOriginalUsername('');
     setIsDrawerOpen(true);
   };
 
@@ -61,8 +65,10 @@ export default function UserAdmin({ branches }) {
             <table className="audit-table">
             <thead>
               <tr>
+                <th style={{ width: '40px', paddingLeft: '16px' }}>#</th>
                 <th>Name</th>
                 <th>Username</th>
+                <th>Email</th>
                 <th>Role</th>
                 <th>Branch</th>
                 <th>Password</th>
@@ -70,10 +76,12 @@ export default function UserAdmin({ branches }) {
               </tr>
             </thead>
             <tbody>
-              {loading ? <tr><td colSpan="6">Loading...</td></tr> : users.map(u => (
+              {loading ? <tr><td colSpan="8">Loading...</td></tr> : users.map((u, index) => (
                 <tr key={u.username}>
+                  <td style={{ color: '#64748b', fontWeight: 600, fontSize: '0.8rem', paddingLeft: '16px' }}>{(currentPage - 1) * 15 + index + 1}</td>
                   <td>{u.name}</td>
                   <td>{u.username}</td>
+                  <td>{u.email || '-'}</td>
                   <td>{u.role}</td>
                   <td>{u.branch}</td>
                   <td>{u.password ? '******' : ''}</td>
@@ -86,6 +94,35 @@ export default function UserAdmin({ branches }) {
             </tbody>
           </table>
           </div>
+          
+          {/* Pagination Controls */}
+          {totalUsers > 15 && (
+            <div className="pagination-controls" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '24px', padding: '16px 0', borderTop: '1px solid var(--border-light)' }}>
+              <button 
+                type="button"
+                className="btn-secondary" 
+                disabled={currentPage === 1} 
+                onClick={() => fetchUsers(currentPage - 1, 15)}
+                style={{ padding: '8px 16px', fontSize: '0.8rem', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', opacity: currentPage === 1 ? 0.5 : 1 }}
+              >
+                Previous
+              </button>
+              
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600 }}>
+                Page {currentPage} of {Math.ceil(totalUsers / 15)}
+              </span>
+              
+              <button 
+                type="button"
+                className="btn-secondary" 
+                disabled={currentPage >= Math.ceil(totalUsers / 15)} 
+                onClick={() => fetchUsers(currentPage + 1, 15)}
+                style={{ padding: '8px 16px', fontSize: '0.8rem', cursor: currentPage >= Math.ceil(totalUsers / 15) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', opacity: currentPage >= Math.ceil(totalUsers / 15) ? 0.5 : 1 }}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -94,7 +131,7 @@ export default function UserAdmin({ branches }) {
           <form className="modal-drawer" onSubmit={handleSubmit}>
             <div className="modal-header">
               <div>
-                <h3>{formData.username && users.some(u => u.username === formData.username) ? 'Edit Employee Account' : 'Register Employee Account'}</h3>
+                <h3>{originalUsername ? 'Edit Employee Account' : 'Register Employee Account'}</h3>
               </div>
               <button type="button" className="close-btn" onClick={() => setIsDrawerOpen(false)}>×</button>
             </div>
@@ -109,6 +146,11 @@ export default function UserAdmin({ branches }) {
                 <div className="form-field">
                   <label>Username *</label>
                   <input type="text" name="username" placeholder="e.g. finance_clerk" required value={formData.username} onChange={handleChange} />
+                </div>
+
+                <div className="form-field">
+                  <label>Email Address</label>
+                  <input type="email" name="email" placeholder="e.g. employee@kvrgroup.com" value={formData.email} onChange={handleChange} />
                 </div>
                 
                 <div className="form-field">
@@ -146,7 +188,7 @@ export default function UserAdmin({ branches }) {
             </div>
 
             <div className="modal-footer" style={{ display: 'flex', gap: '12px', padding: '16px 24px', borderTop: '1px solid var(--border-light)' }}>
-              <button type="button" className="btn-secondary" style={{ flex: 1 }} onClick={() => setFormData({ name: '', username: '', role: '', branch: '', password: '' })}>Clear</button>
+              <button type="button" className="btn-secondary" style={{ flex: 1 }} onClick={() => setFormData({ name: '', username: '', role: '', branch: '', email: '', password: '' })}>Clear</button>
               <button type="submit" className="btn-primary" style={{ flex: 2, justifyContent: 'center' }}>Save Account</button>
             </div>
           </form>

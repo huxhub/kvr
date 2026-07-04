@@ -1,7 +1,7 @@
 import React from 'react';
 import { calculateProgress } from '../../utils/vehicleUtils.js';
 
-export default function DeliveryTableRow({ vehicle, openDrawer }) {
+export default function DeliveryTableRow({ vehicle, openDrawer, index }) {
   const progress = calculateProgress(vehicle);
 
   const renderStatusPill = (status, remark) => {
@@ -26,6 +26,7 @@ export default function DeliveryTableRow({ vehicle, openDrawer }) {
 
   return (
     <tr onClick={() => openDrawer(vehicle)} style={{ cursor: 'pointer' }}>
+      <td style={{ color: '#64748b', fontWeight: 600, fontSize: '0.8rem', paddingLeft: '16px' }}>{index}</td>
       <td>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <span style={{ fontWeight: 600, color: 'var(--primary-navy)' }}>{vehicle.pl}</span>

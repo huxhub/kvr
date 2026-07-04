@@ -5,15 +5,19 @@ import { addAuditLog } from '../models/auditModel.js';
 
 export function useVehicles() {
   const [vehicles, setVehicles] = useState([]);
+  const [totalVehicles, setTotalVehicles] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const { user } = useAuth();
 
-  const fetchVehicles = useCallback(async () => {
+  const fetchVehicles = useCallback(async (page = 1, limit = 25) => {
     setLoading(true);
     try {
-      const data = await apiGetVehicles();
-      setVehicles(data);
+      const { vehicles: fetchedVehicles, totalCount } = await apiGetVehicles(page, limit);
+      setVehicles(fetchedVehicles);
+      setTotalVehicles(totalCount);
+      setCurrentPage(page);
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -33,7 +37,7 @@ export function useVehicles() {
         }
       }
 
-      await fetchVehicles();
+      await fetchVehicles(currentPage);
       return { success: true, auditEntries };
     } catch (err) {
       return { success: false, error: err.message };
@@ -60,7 +64,7 @@ export function useVehicles() {
         console.error("Failed to save initial audit log:", auditErr);
       }
 
-      await fetchVehicles();
+      await fetchVehicles(currentPage);
       return { success: true };
     } catch (err) {
       return { success: false, error: err.message };
@@ -70,12 +74,12 @@ export function useVehicles() {
   const deleteVehicle = async (chassisNumber) => {
     try {
       await apiDeleteVehicle(chassisNumber, user.role);
-      await fetchVehicles();
+      await fetchVehicles(currentPage);
       return { success: true };
     } catch (err) {
       return { success: false, error: err.message };
     }
   };
 
-  return { vehicles, loading, error, fetchVehicles, saveVehicle, createVehicle, deleteVehicle };
+  return { vehicles, totalVehicles, currentPage, loading, error, fetchVehicles, saveVehicle, createVehicle, deleteVehicle };
 }

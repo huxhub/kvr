@@ -4,13 +4,13 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 
 export default function AuditHistory() {
-  const { auditLogs, fetchAuditLogs, clearAuditLogs, loading } = useAuditLogs();
+  const { auditLogs, totalAudits, currentPage, fetchAuditLogs, clearAuditLogs, loading } = useAuditLogs();
   const { user } = useAuth();
   const { showToast } = useToast();
   const [keyword, setKeyword] = useState('');
 
   useEffect(() => {
-    fetchAuditLogs(keyword);
+    fetchAuditLogs(1, 25, keyword);
   }, [fetchAuditLogs, keyword]);
 
   const handleClear = async () => {
@@ -79,6 +79,7 @@ export default function AuditHistory() {
           <table className="audit-table">
             <thead>
               <tr>
+                <th style={{ width: '40px', paddingLeft: '16px' }}>#</th>
                 <th>Timestamp</th>
                 <th>Chassis Number</th>
                 <th>Customer Name</th>
@@ -91,12 +92,15 @@ export default function AuditHistory() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>Loading...</td></tr>
+                <tr><td colSpan="9" style={{ textAlign: 'center', padding: '20px' }}>Loading...</td></tr>
               ) : auditLogs.length === 0 ? (
-                <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>No audit logs found.</td></tr>
+                <tr><td colSpan="9" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>No audit logs found.</td></tr>
               ) : (
-                auditLogs.map(log => (
+                auditLogs.map((log, index) => (
                   <tr key={log._id || log.id}>
+                    <td style={{ color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.8rem', paddingLeft: '16px' }}>
+                      {(currentPage - 1) * 25 + index + 1}
+                    </td>
                     <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
                       {formatTimestamp(log.timestamp)}
                     </td>
@@ -121,6 +125,35 @@ export default function AuditHistory() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        {totalAudits > 25 && (
+          <div className="pagination-controls" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '24px', padding: '10px 0' }}>
+            <button 
+              type="button"
+              className="btn-secondary" 
+              disabled={currentPage === 1} 
+              onClick={() => fetchAuditLogs(currentPage - 1, 25, keyword)}
+              style={{ padding: '8px 16px', fontSize: '0.8rem', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', opacity: currentPage === 1 ? 0.5 : 1 }}
+            >
+              Previous
+            </button>
+            
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600 }}>
+              Page {currentPage} of {Math.ceil(totalAudits / 25)}
+            </span>
+            
+            <button 
+              type="button"
+              className="btn-secondary" 
+              disabled={currentPage >= Math.ceil(totalAudits / 25)} 
+              onClick={() => fetchAuditLogs(currentPage + 1, 25, keyword)}
+              style={{ padding: '8px 16px', fontSize: '0.8rem', cursor: currentPage >= Math.ceil(totalAudits / 25) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', opacity: currentPage >= Math.ceil(totalAudits / 25) ? 0.5 : 1 }}
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

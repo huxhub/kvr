@@ -1,11 +1,13 @@
 // KVR Tata Delivery Tracker - Audit Log Utilities (audit.js)
 
-export async function getAuditLogs() {
-  const res = await fetch('/api/audit_logs');
+export async function getAuditLogs(page = 1, limit = 25) {
+  const res = await fetch(`/api/audit_logs?page=${page}&limit=${limit}`);
   if (!res.ok) {
     throw new Error('Failed to retrieve audit logs from server');
   }
-  return await res.json();
+  const logs = await res.json();
+  const totalCount = parseInt(res.headers.get('X-Total-Count'), 10) || logs.length;
+  return { logs, totalCount };
 }
 
 export async function addAuditLog(entry) {
@@ -25,7 +27,7 @@ export async function addAuditLog(entry) {
 }
 
 export async function getAuditLogsForVehicle(chassisNumber) {
-  const logs = await getAuditLogs();
+  const { logs } = await getAuditLogs(1, 25);
   return logs.filter(log => log.chassisNumber === chassisNumber);
 }
 

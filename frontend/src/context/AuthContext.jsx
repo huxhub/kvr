@@ -25,10 +25,10 @@ export function AuthProvider({ children }) {
     restoreSession();
   }, []);
 
-  const login = async (username, password) => {
+  const login = async (email, password) => {
     try {
       setError(null);
-      const userData = await apiLogin(username, password);
+      const userData = await apiLogin(email, password);
       setUser(userData);
       return true;
     } catch (err) {

@@ -4,7 +4,7 @@ import DeliveryGridItem from './DeliveryGridItem.jsx';
 import DeliveryTableRow from './DeliveryTableRow.jsx';
 import { DEPARTMENT_KEYS, SECTIONS, STATUS_VALUES } from '../../models/apiModel.js';
 
-export default function DeliveryTable({ vehicles, branches, openDrawer }) {
+export default function DeliveryTable({ vehicles, branches, openDrawer, totalVehicles = 0, currentPage = 1, fetchVehicles }) {
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [filters, setFilters] = useState({
     global: '', branch: '', status: '', pending: '',
@@ -62,7 +62,7 @@ export default function DeliveryTable({ vehicles, branches, openDrawer }) {
       
       <div className="list-header-controls">
         <div className="list-info-text">
-          Showing <span id="lbl-result-count">{filteredVehicles.length}</span> of <span id="lbl-total-count">{vehicles.length}</span> Vehicles
+          Showing <span id="lbl-result-count">{filteredVehicles.length}</span> of <span id="lbl-total-count">{totalVehicles || vehicles.length}</span> Vehicles
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <button className="btn-primary" onClick={() => openDrawer(null)}>
@@ -87,7 +87,7 @@ export default function DeliveryTable({ vehicles, branches, openDrawer }) {
               <p style={{ fontWeight: 600 }}>No vehicle records match current filters.</p>
             </div>
           ) : (
-            filteredVehicles.map(v => <DeliveryGridItem key={v.chassisNumber} vehicle={v} openDrawer={openDrawer} />)
+            filteredVehicles.map((v, i) => <DeliveryGridItem key={v.chassisNumber} vehicle={v} openDrawer={openDrawer} index={(currentPage - 1) * 25 + i + 1} />)
           )}
         </div>
       ) : (
@@ -95,6 +95,7 @@ export default function DeliveryTable({ vehicles, branches, openDrawer }) {
           <table className="table-master">
             <thead>
               <tr>
+                <th style={{ width: '40px', paddingLeft: '16px' }}>#</th>
                 <th>PL / Variant</th>
                 <th>Branch</th>
                 <th>Expected Delivery</th>
@@ -115,10 +116,39 @@ export default function DeliveryTable({ vehicles, branches, openDrawer }) {
                   </td>
                 </tr>
               ) : (
-                filteredVehicles.map(v => <DeliveryTableRow key={v.chassisNumber} vehicle={v} openDrawer={openDrawer} />)
+                filteredVehicles.map((v, i) => <DeliveryTableRow key={v.chassisNumber} vehicle={v} openDrawer={openDrawer} index={(currentPage - 1) * 25 + i + 1} />)
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {totalVehicles > 25 && (
+        <div className="pagination-controls" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '24px', padding: '10px 0' }}>
+          <button 
+            type="button"
+            className="btn-secondary" 
+            disabled={currentPage === 1} 
+            onClick={() => fetchVehicles(currentPage - 1, 25)}
+            style={{ padding: '8px 16px', fontSize: '0.8rem', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', opacity: currentPage === 1 ? 0.5 : 1 }}
+          >
+            Previous
+          </button>
+          
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600 }}>
+            Page {currentPage} of {Math.ceil(totalVehicles / 25)}
+          </span>
+          
+          <button 
+            type="button"
+            className="btn-secondary" 
+            disabled={currentPage >= Math.ceil(totalVehicles / 25)} 
+            onClick={() => fetchVehicles(currentPage + 1, 25)}
+            style={{ padding: '8px 16px', fontSize: '0.8rem', cursor: currentPage >= Math.ceil(totalVehicles / 25) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', opacity: currentPage >= Math.ceil(totalVehicles / 25) ? 0.5 : 1 }}
+          >
+            Next
+          </button>
         </div>
       )}
     </div>

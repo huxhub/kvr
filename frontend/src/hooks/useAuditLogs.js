@@ -3,17 +3,20 @@ import { getAuditLogs as apiGetAuditLogs } from '../models/auditModel.js';
 
 export function useAuditLogs() {
   const [auditLogs, setAuditLogs] = useState([]);
+  const [totalAudits, setTotalAudits] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchAuditLogs = useCallback(async (keyword = '') => {
+  const fetchAuditLogs = useCallback(async (page = 1, limit = 25, keyword = '') => {
     setLoading(true);
     try {
-      let logs = await apiGetAuditLogs();
+      const { logs, totalCount } = await apiGetAuditLogs(page, limit);
       
+      let filtered = logs;
       if (keyword) {
         const kw = keyword.toLowerCase();
-        logs = logs.filter(log => 
+        filtered = logs.filter(log => 
           (log.chassisNumber && log.chassisNumber.toLowerCase().includes(kw)) ||
           (log.customerName && log.customerName.toLowerCase().includes(kw)) ||
           (log.department && log.department.toLowerCase().includes(kw)) ||
@@ -21,7 +24,9 @@ export function useAuditLogs() {
         );
       }
       
-      setAuditLogs(logs);
+      setAuditLogs(filtered);
+      setTotalAudits(totalCount);
+      setCurrentPage(page);
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -33,12 +38,12 @@ export function useAuditLogs() {
   const clearAuditLogs = async () => {
     try {
       await fetch('/api/audit_logs', { method: 'DELETE' });
-      await fetchAuditLogs();
+      await fetchAuditLogs(1, 25);
       return { success: true };
     } catch (err) {
       return { success: false, error: err.message };
     }
   };
 
-  return { auditLogs, loading, error, fetchAuditLogs, clearAuditLogs };
+  return { auditLogs, totalAudits, currentPage, loading, error, fetchAuditLogs, clearAuditLogs };
 }

@@ -1,10 +1,25 @@
 import bcrypt from 'bcrypt';
-import User from '../models/User.js';
+import * as User from '../models/User.js';
 
 export const getUsers = async (req, res) => {
   try {
-    // Never return the password field to the client
-    const users = await User.find({}, '-password -__v -createdAt -updatedAt');
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 15;
+    
+    // Enforce strict limit <= 15
+    const activeLimit = Math.min(15, Math.max(1, limit));
+
+    const [users, totalCount] = await Promise.all([
+      User.findAll(page, activeLimit),
+      User.countAll()
+    ]);
+
+    // Expose headers for cross-origin or local clients
+    res.setHeader('Access-Control-Expose-Headers', 'X-Total-Count, X-Page, X-Limit');
+    res.setHeader('X-Total-Count', totalCount.toString());
+    res.setHeader('X-Page', page.toString());
+    res.setHeader('X-Limit', activeLimit.toString());
+
     res.json(users);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -22,12 +37,11 @@ export const createUser = async (req, res) => {
     // Hash password before storing
     data.password = await bcrypt.hash(data.password, 12);
 
-    const newUser = new User(data);
-    const saved = await newUser.save();
-    const { password, __v, ...safe } = saved.toObject();
-    res.status(201).json(safe);
+    const saved = await User.create(data);
+    res.status(201).json(saved);
   } catch (error) {
-    if (error.code === 11000) {
+    // MySQL ER_DUP_ENTRY error code = 1062
+    if (error.code === 'ER_DUP_ENTRY') {
       return res.status(400).json({ error: 'Username already exists' });
     }
     res.status(500).json({ error: error.message });
@@ -44,14 +58,21 @@ export const updateUser = async (req, res) => {
       data.password = await bcrypt.hash(data.password, 12);
     }
 
-    const updated = await User.findOneAndUpdate(
-      { username: username.toLowerCase() },
-      { $set: data },
-      { returnDocument: 'after', select: '-password -__v' }
-    );
+    const updated = await User.updateByUsername(username, data);
 
     if (!updated) {
       return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Sync session user if updating their own profile
+    if (req.session && req.session.user && req.session.user.username.toLowerCase() === username.toLowerCase()) {
+      req.session.user = {
+        username: updated.username,
+        role: updated.role,
+        name: updated.name,
+        branch: updated.branch,
+        email: updated.email || '',
+      };
     }
 
     res.json(updated);
@@ -63,9 +84,9 @@ export const updateUser = async (req, res) => {
 export const deleteUser = async (req, res) => {
   try {
     const { username } = req.params;
-    const result = await User.findOneAndDelete({ username: username.toLowerCase() });
+    const deleted = await User.deleteByUsername(username);
 
-    if (!result) {
+    if (!deleted) {
       return res.status(404).json({ error: 'User not found' });
     }
 

@@ -1,111 +1,118 @@
-import mongoose from 'mongoose';
+import { pool } from '../config/db.js';
 
-const vehicleSchema = new mongoose.Schema({
-  // Customer Details
-  date: { type: String },
-  customerName: { type: String, required: true, trim: true },
-  mobileNumber: { type: String },
-  orderNumber: { type: String },
-  invoiceNumber: { type: String },
-  source: { type: String },
-  year: { type: Number },
+/**
+ * Vehicle model — MySQL query functions replacing Mongoose model.
+ * Primary key: chassisNumber (VARCHAR)
+ */
 
-  // Vehicle Details
-  vehicleStatus: { type: String },
-  chassisNumber: { type: String, required: true, unique: true, trim: true },
-  fuel: { type: String },
-  pl: { type: String },
-  variant: { type: String },
-  colour: { type: String },
-  vc: { type: String },
+// All vehicle columns (excluding auto-managed created_at/updated_at)
+const VEHICLE_COLUMNS = [
+  'chassisNumber', 'date', 'customerName', 'mobileNumber', 'orderNumber',
+  'invoiceNumber', 'source', 'year', 'vehicleStatus', 'fuel', 'pl',
+  'variant', 'colour', 'vc', 'ca', 'tl', 'branch', 'hypothecation',
+  'cashDiscount', 'exchangeLoyalty', 'corporate', 'sss', 'kpkb',
+  'solarOffer', 'priceDifference', 'offerRemark', 'financeType',
+  'onRoadPrice', 'ip', 'loanAmount', 'balanceAmount', 'fundPercentage',
+  'loanAmountStatus', 'financeRemark', 'financeStatus', 'financeTimestamp',
+  'exchangeYesNo', 'tmaType', 'makeAndModel', 'regNumber', 'tmaRemark',
+  'tmaStatus', 'tmaTimestamp', 'fileStatus', 'fileTimestamp', 'tallyDate',
+  'accountsRemark', 'accountsStatus', 'accountsTimestamp', 'insuranceName',
+  'insuranceType', 'insurancePremium', 'insuranceRemark', 'insuranceStatus',
+  'insuranceTimestamp', 'registrationType', 'applicationNumber', 'taxPaidDate',
+  'registerNumber', 'hsrpStatus', 'registrationRemark', 'registrationStatus',
+  'registrationTimestamp', 'tmgaValue', 'vasValue', 'tmgaRemark', 'tmgaStatus',
+  'tmgaTimestamp', 'pdiRemark', 'pdiStatus', 'pdiTimestamp', 'cxoRemark',
+  'expectedDeliveryDate', 'actualDeliveryDate', 'homeVisit14DayStatus',
+  'deliveryStatus', 'deliveryTimestamp'
+];
 
-  // Sales Details
-  ca: { type: String },
-  tl: { type: String },
-  branch: { type: String, default: 'Perinthalmanna' },
+/** Get all vehicles (paginated) */
+export async function findAll(page = 1, limit = 25) {
+  const activeLimit = Math.min(25, Math.max(1, parseInt(limit, 10) || 25));
+  const activePage = Math.max(1, parseInt(page, 10) || 1);
+  const offset = (activePage - 1) * activeLimit;
 
-  // Offer Details
-  hypothecation: { type: String },
-  cashDiscount: { type: Number, default: 0 },
-  exchangeLoyalty: { type: Number, default: 0 },
-  corporate: { type: Number, default: 0 },
-  sss: { type: Number, default: 0 },
-  kpkb: { type: Number, default: 0 },
-  solarOffer: { type: Number, default: 0 },
-  priceDifference: { type: Number, default: 0 },
-  offerRemark: { type: String },
+  // Parameterized limit & offset need to be passed as strings in execute
+  const [rows] = await pool.execute(
+    'SELECT * FROM vehicles LIMIT ? OFFSET ?',
+    [activeLimit.toString(), offset.toString()]
+  );
+  return rows;
+}
 
-  // Finance Details
-  financeType: { type: String },
-  onRoadPrice: { type: Number, default: 0 },
-  ip: { type: Number, default: 0 },
-  loanAmount: { type: Number, default: 0 },
-  balanceAmount: { type: Number, default: 0 },
-  fundPercentage: { type: Number, default: 0 },
-  loanAmountStatus: { type: String },
-  financeRemark: { type: String },
-  financeStatus: { type: String, default: 'Not Attended' },
-  financeTimestamp: { type: String },
+/** Get total count of vehicles */
+export async function countAll() {
+  const [rows] = await pool.execute('SELECT COUNT(*) as count FROM vehicles');
+  return rows[0].count;
+}
 
-  // TMA Details
-  exchangeYesNo: { type: String },
-  tmaType: { type: String },
-  makeAndModel: { type: String },
-  regNumber: { type: String },
-  tmaRemark: { type: String },
-  tmaStatus: { type: String, default: 'Not Attended' },
-  tmaTimestamp: { type: String },
+/** Find a single vehicle by chassisNumber */
+export async function findByChassis(chassisNumber) {
+  const [rows] = await pool.execute(
+    'SELECT * FROM vehicles WHERE chassisNumber = ? LIMIT 1',
+    [chassisNumber]
+  );
+  return rows[0] || null;
+}
 
-  // File Details
-  fileStatus: { type: String, default: 'Not Attended' },
-  fileTimestamp: { type: String },
+/** Create a new vehicle from request body */
+export async function create(data) {
+  // Only pick columns that exist in the table
+  const cols = [];
+  const placeholders = [];
+  const values = [];
 
-  // Accounts Details
-  tallyDate: { type: String },
-  accountsRemark: { type: String },
-  accountsStatus: { type: String, default: 'Not Attended' },
-  accountsTimestamp: { type: String },
+  for (const col of VEHICLE_COLUMNS) {
+    if (data[col] !== undefined) {
+      cols.push(col);
+      placeholders.push('?');
+      values.push(data[col]);
+    }
+  }
 
-  // Insurance Details
-  insuranceName: { type: String },
-  insuranceType: { type: String },
-  insurancePremium: { type: Number, default: 0 },
-  insuranceRemark: { type: String },
-  insuranceStatus: { type: String, default: 'Not Attended' },
-  insuranceTimestamp: { type: String },
+  const [result] = await pool.execute(
+    `INSERT INTO vehicles (${cols.join(', ')}) VALUES (${placeholders.join(', ')})`,
+    values
+  );
 
-  // Registration Details
-  registrationType: { type: String },
-  applicationNumber: { type: String },
-  taxPaidDate: { type: String },
-  registerNumber: { type: String },
-  hsrpStatus: { type: String },
-  registrationRemark: { type: String },
-  registrationStatus: { type: String, default: 'Not Attended' },
-  registrationTimestamp: { type: String },
+  // Return the inserted row
+  return findByChassis(data.chassisNumber);
+}
 
-  // TMGA Details
-  tmgaValue: { type: Number, default: 0 },
-  vasValue: { type: Number, default: 0 },
-  tmgaRemark: { type: String },
-  tmgaStatus: { type: String, default: 'Not Attended' },
-  tmgaTimestamp: { type: String },
+/** Update a vehicle by chassisNumber. Only updates provided fields. */
+export async function updateByChassis(chassisNumber, data) {
+  const fields = [];
+  const values = [];
 
-  // PDI Details
-  pdiRemark: { type: String },
-  pdiStatus: { type: String, default: 'Not Attended' },
-  pdiTimestamp: { type: String },
+  for (const col of VEHICLE_COLUMNS) {
+    // Don't allow changing the primary key via update
+    if (col === 'chassisNumber') continue;
+    if (data[col] !== undefined) {
+      fields.push(`${col} = ?`);
+      values.push(data[col]);
+    }
+  }
 
-  // Delivery Details
-  cxoRemark: { type: String },
-  expectedDeliveryDate: { type: String },
-  actualDeliveryDate: { type: String },
-  homeVisit14DayStatus: { type: String },
-  deliveryStatus: { type: String, default: 'Not Attended' },
-  deliveryTimestamp: { type: String }
+  if (fields.length === 0) return null;
 
-}, { timestamps: true });
+  values.push(chassisNumber);
 
-const Vehicle = mongoose.model('Vehicle', vehicleSchema);
+  const [result] = await pool.execute(
+    `UPDATE vehicles SET ${fields.join(', ')} WHERE chassisNumber = ?`,
+    values
+  );
 
-export default Vehicle;
+  if (result.affectedRows === 0) return null;
+
+  // Return the updated row
+  return findByChassis(chassisNumber);
+}
+
+/** Delete a vehicle by chassisNumber */
+export async function deleteByChassis(chassisNumber) {
+  const [result] = await pool.execute(
+    'DELETE FROM vehicles WHERE chassisNumber = ?',
+    [chassisNumber]
+  );
+  return result.affectedRows > 0;
+}

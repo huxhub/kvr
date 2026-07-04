@@ -1,19 +1,19 @@
 import bcrypt from 'bcrypt';
-import User from '../models/User.js';
+import * as User from '../models/User.js';
 
 // POST /api/auth/login
 export const login = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Missing username or password' });
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Missing email or password' });
     }
 
-    const user = await User.findOne({ username: username.toLowerCase() });
+    const user = await User.findByEmail(email);
 
     if (!user) {
-      return res.status(401).json({ error: 'Invalid username or password' });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     // Support both bcrypt hashes and legacy plain-text passwords during migration
@@ -26,13 +26,13 @@ export const login = async (req, res) => {
       passwordValid = (user.password === password);
       if (passwordValid) {
         const hash = await bcrypt.hash(password, 12);
-        await User.updateOne({ _id: user._id }, { $set: { password: hash } });
+        await User.updatePassword(user.username, hash);
         console.log(`[Auth] Auto-upgraded plain-text password to bcrypt hash for user: ${user.username}`);
       }
     }
 
     if (!passwordValid) {
-      return res.status(401).json({ error: 'Invalid username or password' });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     const sessionUser = {
@@ -40,6 +40,7 @@ export const login = async (req, res) => {
       role: user.role,
       name: user.name,
       branch: user.branch,
+      email: user.email || '',
     };
 
     // Regenerate session ID on privilege change to prevent session fixation

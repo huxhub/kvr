@@ -1,9 +1,11 @@
 export * from './constants.js';
 
-export async function getVehicles() {
-  const res = await fetch('/api/vehicles', { credentials: 'include' });
+export async function getVehicles(page = 1, limit = 25) {
+  const res = await fetch(`/api/vehicles?page=${page}&limit=${limit}`, { credentials: 'include' });
   if (!res.ok) throw new Error('Failed to fetch vehicle records');
-  return await res.json();
+  const vehicles = await res.json();
+  const totalCount = parseInt(res.headers.get('X-Total-Count'), 10) || vehicles.length;
+  return { vehicles, totalCount };
 }
 
 export async function saveVehicle(updatedVehicle, changedByRole, remarks) {
@@ -65,12 +67,12 @@ export async function resetDatabase() {
   return await getVehicles();
 }
 
-export async function loginUser(username, password) {
+export async function loginUser(email, password) {
   const res = await fetch('/api/auth/login', {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password })
+    body: JSON.stringify({ email, password })
   });
 
   if (!res.ok) {
@@ -94,8 +96,8 @@ export async function logoutUser() {
   if (!res.ok) throw new Error('Logout failed');
 }
 
-export async function getUsers(activeRole) {
-  const res = await fetch('/api/users', {
+export async function getUsers(activeRole, page = 1, limit = 15) {
+  const res = await fetch(`/api/users?page=${page}&limit=${limit}`, {
     credentials: 'include',
     headers: { 'X-Role': activeRole }
   });
@@ -103,7 +105,9 @@ export async function getUsers(activeRole) {
     const errorData = await res.json();
     throw new Error(errorData.error || 'Failed to retrieve users');
   }
-  return await res.json();
+  const users = await res.json();
+  const totalCount = parseInt(res.headers.get('X-Total-Count'), 10) || users.length;
+  return { users, totalCount };
 }
 
 export async function createUser(userData, activeRole) {
@@ -130,6 +134,7 @@ export async function updateUser(username, userData, activeRole) {
     const errorData = await res.json();
     throw new Error(errorData.error || 'Failed to update user');
   }
+  return await res.json();
 }
 
 export async function deleteUser(username, activeRole) {

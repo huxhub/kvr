@@ -23,15 +23,20 @@ export default function Sidebar({ activeTab, setActiveTab, isSidebarOpen, setIsS
 
   return (
     <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
-      <div className="sidebar-brand" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-        <h2>{companyName}</h2>
-        <button 
-          className="sidebar-close-btn" 
-          onClick={() => setIsSidebarOpen(false)}
-          title="Close Menu"
-        >
-          <X size={20} />
-        </button>
+      <div className="sidebar-brand" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%', gap: '4px', paddingBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <h2 style={{ margin: 0 }}>{companyName}</h2>
+          <button 
+            className="sidebar-close-btn" 
+            onClick={() => setIsSidebarOpen(false)}
+            title="Close Menu"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        <p style={{ margin: 0, fontSize: '0.65rem', color: '#64748b', fontWeight: '500', letterSpacing: '0.3px', whiteSpace: 'nowrap' }}>
+          Vehicle Delivery Tracker
+        </p>
       </div>
       
       <nav className="sidebar-nav">

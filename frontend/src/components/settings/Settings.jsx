@@ -10,9 +10,20 @@ export default function Settings({ branches, settings, setSettings, companyName,
   const [activeSubTab, setActiveSubTab] = useState('profile');
 
   // Profile Settings States
+  const [profileUsername, setProfileUsername] = useState(user?.username || '');
   const [displayName, setDisplayName] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email || '');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  // Sync profile fields if user object changes (e.g. on loading/restoring session)
+  useEffect(() => {
+    if (user) {
+      setProfileUsername(user.username || '');
+      setDisplayName(user.name || '');
+      setEmail(user.email || '');
+    }
+  }, [user]);
 
   // Branch Manager States
   const [customBranches, setCustomBranches] = useState([]);
@@ -48,13 +59,21 @@ export default function Settings({ branches, settings, setSettings, companyName,
       return;
     }
     try {
-      const payload = { name: displayName.trim() };
+      const payload = { 
+        name: displayName.trim(),
+        username: profileUsername.trim().toLowerCase(),
+        email: email.trim()
+      };
       if (newPassword) payload.password = newPassword;
 
-      await updateUser(user.username, payload, user.role);
+      const updated = await updateUser(user.username, payload, user.role);
 
-      // Update the in-memory session so the sidebar name changes immediately
-      updateUserProfile({ name: displayName.trim() });
+      // Update the in-memory session so changes take effect immediately
+      updateUserProfile({ 
+        username: updated.username || profileUsername.trim().toLowerCase(),
+        name: updated.name || displayName.trim(),
+        email: updated.email || email.trim()
+      });
 
       showToast('Success', 'Profile updated successfully.');
       setNewPassword('');
@@ -279,12 +298,16 @@ export default function Settings({ branches, settings, setSettings, companyName,
           {activeSubTab === 'profile' && (
             <div style={{ animation: 'fadeIn 0.2s ease' }}>
               <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--primary-navy)', marginBottom: '4px', marginTop: 0 }}>My Profile Settings</h3>
-              <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '20px', marginTop: 0 }}>Manage your account display name and password.</p>
+              <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '20px', marginTop: 0 }}>Manage your account settings, username, email, and password.</p>
               
               <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '400px' }}>
                 <div className="form-field">
-                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', marginBottom: '4px' }}>Username (Read-Only)</label>
-                  <input type="text" value={user?.username || ''} disabled style={{ backgroundColor: '#f1f5f9', color: '#64748b', cursor: 'not-allowed', borderRadius: '6px', border: '1px solid #cbd5e1', padding: '10px 12px' }} />
+                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', marginBottom: '4px' }}>Username</label>
+                  <input type="text" value={profileUsername} onChange={(e) => setProfileUsername(e.target.value)} required style={{ borderRadius: '6px', border: '1px solid #cbd5e1', padding: '10px 12px', fontFamily: "'Poppins', sans-serif" }} />
+                </div>
+                <div className="form-field">
+                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', marginBottom: '4px' }}>Email Address</label>
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={{ borderRadius: '6px', border: '1px solid #cbd5e1', padding: '10px 12px', fontFamily: "'Poppins', sans-serif" }} />
                 </div>
                 <div className="form-field">
                   <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', marginBottom: '4px' }}>Role</label>

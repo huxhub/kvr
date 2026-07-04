@@ -1,9 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import session from 'express-session';
-import MongoStore from 'connect-mongo';
+import mysqlSessionFactory from 'express-mysql-session';
 import dotenv from 'dotenv';
-import connectDB from './config/db.js';
+import connectDB, { pool } from './config/db.js';
 import { requireSession } from './middleware/requireSession.js';
 
 dotenv.config();
@@ -40,17 +40,21 @@ app.use(cors({
 
 app.use(express.json());
 
+// Session store: MySQL via express-mysql-session (replaces connect-mongo MongoStore)
+const MySQLStore = mysqlSessionFactory(session);
+const sessionStore = new MySQLStore({
+  clearExpired: true,
+  checkExpirationInterval: 900000,  // 15 min
+  expiration: 8 * 60 * 60 * 1000,  // 8 hours (matches cookie maxAge)
+  createDatabaseTable: true,        // auto-creates `sessions` table if missing
+}, pool);
+
 app.use(session({
   name: 'kvr.sid',
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGO_URI,
-    collectionName: 'sessions',
-    ttl: 60 * 60 * 8,       
-    autoRemove: 'native',    
-  }),
+  store: sessionStore,
   cookie: {
     httpOnly: true,                         
     secure: isProd,                         
@@ -83,7 +87,7 @@ app.use('/api/audit_logs', requireSession, auditRoutes);
 app.use('/api/settings',   requireSession, settingsRoutes);
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Backend is running with MongoDB' });
+  res.json({ status: 'ok', message: 'Backend is running with MySQL' });
 });
 
 app.listen(PORT, () => {
