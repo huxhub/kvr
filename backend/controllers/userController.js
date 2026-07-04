@@ -1,8 +1,10 @@
+import bcrypt from 'bcrypt';
 import User from '../models/User.js';
 
 export const getUsers = async (req, res) => {
   try {
-    const users = await User.find({}, '-__v -createdAt -updatedAt');
+    // Never return the password field to the client
+    const users = await User.find({}, '-password -__v -createdAt -updatedAt');
     res.json(users);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -11,9 +13,18 @@ export const getUsers = async (req, res) => {
 
 export const createUser = async (req, res) => {
   try {
-    const newUser = new User(req.body);
+    const data = { ...req.body };
+
+    if (!data.password) {
+      return res.status(400).json({ error: 'Password is required' });
+    }
+
+    // Hash password before storing
+    data.password = await bcrypt.hash(data.password, 12);
+
+    const newUser = new User(data);
     const saved = await newUser.save();
-    const { __v, ...safe } = saved.toObject();
+    const { password, __v, ...safe } = saved.toObject();
     res.status(201).json(safe);
   } catch (error) {
     if (error.code === 11000) {
@@ -26,10 +37,17 @@ export const createUser = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { username } = req.params;
+    const data = { ...req.body };
+
+    // If a new password is provided, hash it before saving
+    if (data.password) {
+      data.password = await bcrypt.hash(data.password, 12);
+    }
+
     const updated = await User.findOneAndUpdate(
       { username: username.toLowerCase() },
-      { $set: req.body },
-      { returnDocument: 'after', select: '-__v' }
+      { $set: data },
+      { returnDocument: 'after', select: '-password -__v' }
     );
 
     if (!updated) {

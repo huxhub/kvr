@@ -20,6 +20,7 @@ const DATA_DIR = path.join(__dirname, '../data');
 import User from '../models/User.js';
 import Vehicle from '../models/Vehicle.js';
 import Audit from '../models/Audit.js';
+import bcrypt from 'bcrypt';
 
 const readJSON = (filename) => {
   const filePath = path.join(DATA_DIR, filename);
@@ -42,9 +43,16 @@ const seed = async () => {
     // ── USERS ─────────────────────────────────────────────────────
     const usersData = readJSON('users.json');
     if (usersData.length > 0) {
+      // Hash plain-text passwords from the JSON seed file
+      const hashedUsers = await Promise.all(
+        usersData.map(async (u) => ({
+          ...u,
+          password: await bcrypt.hash(u.password, 12),
+        }))
+      );
       await User.deleteMany({});
-      await User.insertMany(usersData, { ordered: false });
-      console.log(`✅ Seeded ${usersData.length} users`);
+      await User.insertMany(hashedUsers, { ordered: false });
+      console.log(`✅ Seeded ${usersData.length} users (passwords bcrypt-hashed)`);
     }
 
     // ── VEHICLES ──────────────────────────────────────────────────
