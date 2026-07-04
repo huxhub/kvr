@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { Settings as SettingsIcon, User, Layers, Shield, Plus, Trash2, Download, Building } from 'lucide-react';
-import { saveBackendSettings } from '../../models/apiModel.js';
+import { saveBackendSettings, updateUser } from '../../models/apiModel.js';
 
 export default function Settings({ branches, settings, setSettings, companyName, setCompanyName, vehicles }) {
-  const { user } = useAuth();
+  const { user, updateUserProfile } = useAuth();
   const { showToast } = useToast();
   const [activeSubTab, setActiveSubTab] = useState('profile');
 
@@ -41,16 +41,27 @@ export default function Settings({ branches, settings, setSettings, companyName,
     }
   }, [settings]);
 
-  const handleUpdateProfile = (e) => {
+  const handleUpdateProfile = async (e) => {
     e.preventDefault();
     if (newPassword && newPassword !== confirmPassword) {
       showToast('Error', 'Passwords do not match.', 'error');
       return;
     }
-    // Mock profile update
-    showToast('Success', 'Profile settings updated successfully.');
-    setNewPassword('');
-    setConfirmPassword('');
+    try {
+      const payload = { name: displayName.trim() };
+      if (newPassword) payload.password = newPassword;
+
+      await updateUser(user.username, payload, user.role);
+
+      // Update the in-memory session so the sidebar name changes immediately
+      updateUserProfile({ name: displayName.trim() });
+
+      showToast('Success', 'Profile updated successfully.');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      showToast('Error', err.message || 'Failed to update profile.', 'error');
+    }
   };
 
   const handleAddBranch = async (e) => {
@@ -136,6 +147,79 @@ export default function Settings({ branches, settings, setSettings, companyName,
     downloadAnchor.click();
     downloadAnchor.remove();
     showToast('Export Started', 'Vehicle database downloaded.', 'info');
+  };
+
+  const handleExportExcel = () => {
+    if (!vehicles || vehicles.length === 0) {
+      showToast('No Data', 'There are no vehicle records to export.', 'warning');
+      return;
+    }
+
+    const columns = [
+      { key: 'chassisNumber', label: 'Chassis Number' },
+      { key: 'date', label: 'Booking Date' },
+      { key: 'customerName', label: 'Customer Name' },
+      { key: 'mobileNumber', label: 'Mobile Number' },
+      { key: 'orderNumber', label: 'Order Number' },
+      { key: 'invoiceNumber', label: 'Invoice Number' },
+      { key: 'source', label: 'Booking Source' },
+      { key: 'year', label: 'Manufacturing Year' },
+      { key: 'vehicleStatus', label: 'Vehicle Status' },
+      { key: 'fuel', label: 'Fuel Type' },
+      { key: 'pl', label: 'Product Line (PL)' },
+      { key: 'variant', label: 'Variant' },
+      { key: 'colour', label: 'Colour' },
+      { key: 'vc', label: 'Vehicle Code (VC)' },
+      { key: 'ca', label: 'Customer Advisor (CA)' },
+      { key: 'tl', label: 'Team Leader (TL)' },
+      { key: 'branch', label: 'Branch' },
+      { key: 'hypothecation', label: 'Hypothecation' },
+      { key: 'cashDiscount', label: 'Cash Discount / Green Bonus' },
+      { key: 'exchangeLoyalty', label: 'Exchange / Loyalty' },
+      { key: 'corporate', label: 'Corporate Discount' },
+      { key: 'sss', label: 'SSS Discount' },
+      { key: 'kpkb', label: 'KPKB / Special Scheme' },
+      { key: 'solarOffer', label: 'Solar Offer' },
+      { key: 'priceDifference', label: 'Price Difference' },
+      { key: 'offerRemark', label: 'Offer Remark' },
+      { key: 'financeType', label: 'Finance Type' },
+      { key: 'onRoadPrice', label: 'On Road Price' },
+      { key: 'ip', label: 'Initial Payment (IP)' },
+      { key: 'loanAmount', label: 'Loan Amount' },
+      { key: 'balanceAmount', label: 'Balance Amount' },
+      { key: 'fundPercentage', label: 'Fund Percentage' },
+      { key: 'loanAmountStatus', label: 'Loan Amount Status' },
+      { key: 'financeStatus', label: 'Finance Status' },
+      { key: 'tmaStatus', label: 'TMA Status' },
+      { key: 'fileStatus', label: 'Tally File Status' },
+      { key: 'accountsStatus', label: 'Accounts Status' },
+      { key: 'insuranceStatus', label: 'Insurance Status' },
+      { key: 'registrationStatus', label: 'Registration Status' },
+      { key: 'tmgaStatus', label: 'TMGA Status' },
+      { key: 'pdiStatus', label: 'PDI Status' },
+      { key: 'deliveryStatus', label: 'Delivery Status' }
+    ];
+
+    const headerRow = columns.map(col => `"${col.label.replace(/"/g, '""')}"`).join(',');
+    const dataRows = vehicles.map(v => {
+      return columns.map(col => {
+        const val = v[col.key] !== undefined && v[col.key] !== null ? String(v[col.key]) : '';
+        return `"${val.replace(/"/g, '""')}"`;
+      }).join(',');
+    });
+
+    const csvContent = '\uFEFF' + [headerRow, ...dataRows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", url);
+    downloadAnchor.setAttribute("download", `${companyName.toLowerCase().replace(/\s+/g, '_')}_vehicles_backup_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+    URL.revokeObjectURL(url);
+    
+    showToast('Export Started', 'Vehicles backup saved as Excel CSV.', 'info');
   };
 
   return (
@@ -392,18 +476,29 @@ export default function Settings({ branches, settings, setSettings, companyName,
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '600px' }}>
                 <div style={{ padding: '16px', background: '#eff6ff', borderRadius: '8px', border: '1px solid #bfdbfe', color: '#1e3a8a', fontSize: '0.85rem', lineHeight: '1.5' }}>
-                  <strong>Exporting Data Backup:</strong> Downloading backup data extracts the entire current vehicle delivery master list from local storage as a JSON document. This can be stored or loaded back in case of system re-installations.
+                  <strong>Exporting Data Backup:</strong> Export the entire current vehicle delivery master list either as a raw JSON backup or as a compatibility-friendly Excel CSV spreadsheet.
                 </div>
 
-                <button 
-                  type="button" 
-                  className="btn-primary" 
-                  onClick={handleExportData}
-                  style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '8px' }}
-                >
-                  <Download size={16} />
-                  Download Vehicles JSON Backup
-                </button>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  <button 
+                    type="button" 
+                    className="btn-primary" 
+                    onClick={handleExportExcel}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                  >
+                    <Download size={16} />
+                    Download Vehicles Excel Backup
+                  </button>
+                  <button 
+                    type="button" 
+                    className="btn-secondary" 
+                    onClick={handleExportData}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                  >
+                    <Download size={16} />
+                    Download JSON Backup
+                  </button>
+                </div>
               </div>
             </div>
           )}
