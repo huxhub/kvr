@@ -69,6 +69,7 @@
 
 body {
   font-family: var(--font-body);
+  font-size: 13px;
   background-color: var(--bg-light);
   color: var(--text-dark);
   line-height: 1.5;
@@ -90,7 +91,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Sidebar Styles */
 .sidebar {
-  width: 260px;
+  width: 230px;
   background: white;
   color: var(--text-dark);
   display: flex;
@@ -99,7 +100,7 @@ h1, h2, h3, h4, h5, h6 {
   border-right: 1px solid var(--border-light);
   z-index: 101;
   height: 100vh;
-  padding: 24px 16px;
+  padding: 20px 14px;
   box-sizing: border-box;
   position: sticky;
   top: 0;
@@ -112,7 +113,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .sidebar-brand h2 {
   color: var(--primary-navy);
-  font-size: 1.35rem;
+  font-size: 1.1rem;
   font-weight: 800;
   margin-bottom: 4px;
   letter-spacing: -0.5px;
@@ -135,15 +136,15 @@ h1, h2, h3, h4, h5, h6 {
 .sidebar-btn {
   background: none;
   border: none;
-  padding: 12px 16px;
+  padding: 9px 12px;
   font-family: var(--font-body);
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   color: #475569;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   text-align: left;
   transition: all 0.2s ease;
   width: 100%;
@@ -206,7 +207,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .sidebar-profile-name {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #0f172a;
   white-space: nowrap;
@@ -215,7 +216,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .sidebar-profile-role {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   color: #64748b;
   font-weight: 600;
   text-transform: uppercase;
@@ -248,7 +249,7 @@ h1, h2, h3, h4, h5, h6 {
 .role-simulator-bar {
   background: #ffffff;
   color: #0f172a;
-  padding: 16px 24px;
+  padding: 12px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -259,6 +260,21 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: var(--shadow-sm);
 }
 
+.role-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.role-logo {
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 0.82rem !important;
+  font-weight: 700;
+  color: var(--primary-navy);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .header-branch-select-wrapper {
   display: flex;
   align-items: center;
@@ -267,7 +283,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .header-branch-label {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: #64748b;
 }
@@ -312,8 +328,8 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 8px 12px;
-  font-size: 0.85rem;
+  padding: 6px 10px;
+  font-size: 0.75rem;
   font-weight: 600;
   color: #0f172a;
   background-color: #ffffff;
@@ -1435,7 +1451,7 @@ h1, h2, h3, h4, h5, h6 {
 /* 9. NOTIFICATIONS & TOASTS */
 .toast-container {
   position: fixed;
-  bottom: 24px;
+  top: 24px;
   right: 24px;
   z-index: 2000;
   display: flex;
@@ -1454,7 +1470,7 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  transform: translateY(20px);
+  transform: translateY(-20px);
   opacity: 0;
   animation: toastIn 0.3s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);
   position: relative;
