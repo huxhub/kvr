@@ -23,7 +23,16 @@ export default function Header({
     settings: 'System Settings'
   };
 
+  const tabSubtitles = {
+    dashboard: 'System Overview & Department Bottlenecks',
+    delivery: 'Complete vehicle records and delivery tracking',
+    audit: 'Review and track system changes',
+    users: 'Registered employees and permissions',
+    settings: 'Global configuration and database tools'
+  };
+
   const displayTitle = tabTitles[activeTab] || 'Dashboard';
+  const displaySubtitle = tabSubtitles[activeTab] || 'System Overview & Department Bottlenecks';
 
   const dropdownOptions = [
     { value: '', label: 'All Branches' },
@@ -40,7 +49,12 @@ export default function Header({
         >
           {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
-        <span className="role-logo">{displayTitle}</span>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <span className="role-logo">{displayTitle}</span>
+          <span className="role-subtitle" style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 500, marginTop: '2px', textTransform: 'none', letterSpacing: 'normal' }}>
+            {displaySubtitle}
+          </span>
+        </div>
       </div>
       
       <div className="header-branch-select-wrapper">
