@@ -55,9 +55,8 @@ function AppContent() {
   useEffect(() => {
     if (user) {
       fetchVehicles();
-      if (user.branch) {
-        setSelectedBranch(user.branch);
-      }
+      // Default to 'All Branches' ('') instead of user.branch on load
+      setSelectedBranch('');
     }
   }, [user, fetchVehicles]);
 
