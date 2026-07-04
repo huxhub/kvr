@@ -80,15 +80,12 @@ export const SECTIONS = {
     ]
   },
   file: {
-    title: 'File Details',
+    title: 'Tally File Details',
     isDepartment: true,
     statusField: 'fileStatus',
     timestampField: 'fileTimestamp',
     fields: [
-      { name: 'kycStatus', label: 'KYC Documents Status', type: 'select', options: ['Pending', 'Received', 'Verified'], required: false },
-      { name: 'nomineeDetails', label: 'Nominee Details', type: 'text', required: false },
-      { name: 'fileRemark', label: 'File Checking Remark', type: 'text', required: false },
-      { name: 'fileStatus', label: 'File Status', type: 'status', required: true },
+      { name: 'fileStatus', label: 'Tally File Status', type: 'status', required: true },
       { name: 'fileTimestamp', label: 'File Timestamp', type: 'timestamp', required: false }
     ]
   },
@@ -98,9 +95,7 @@ export const SECTIONS = {
     statusField: 'accountsStatus',
     timestampField: 'accountsTimestamp',
     fields: [
-      { name: 'receiptNumber', label: 'Receipt Number(s)', type: 'text', required: false },
-      { name: 'marginMoneyReceived', label: 'Margin Money Received', type: 'number', required: false },
-      { name: 'amountPending', label: 'Amount Pending', type: 'number', required: false },
+      { name: 'tallyDate', label: 'Tally Voucher Date', type: 'date', required: false },
       { name: 'accountsRemark', label: 'Accounts Remark', type: 'text', required: false },
       { name: 'accountsStatus', label: 'Accounts Status', type: 'status', required: true },
       { name: 'accountsTimestamp', label: 'Accounts Timestamp', type: 'timestamp', required: false }
@@ -112,9 +107,7 @@ export const SECTIONS = {
     statusField: 'insuranceStatus',
     timestampField: 'insuranceTimestamp',
     fields: [
-      { name: 'insuranceProvider', label: 'Insurance Provider', type: 'text', required: false },
-      { name: 'policyNumber', label: 'Policy Number', type: 'text', required: false },
-      { name: 'insuranceAmount', label: 'Insurance Amount', type: 'number', required: false },
+      { name: 'insuranceType', label: 'Insurance Type', type: 'select', options: ['In-House (Tata Motors)', 'Outside Broker'], required: true },
       { name: 'insuranceRemark', label: 'Insurance Remark', type: 'text', required: false },
       { name: 'insuranceStatus', label: 'Insurance Status', type: 'status', required: true },
       { name: 'insuranceTimestamp', label: 'Insurance Timestamp', type: 'timestamp', required: false }
@@ -126,9 +119,11 @@ export const SECTIONS = {
     statusField: 'registrationStatus',
     timestampField: 'registrationTimestamp',
     fields: [
-      { name: 'rtoName', label: 'RTO Office Name', type: 'text', required: false },
-      { name: 'temporaryRegistration', label: 'Temp Registration No.', type: 'text', required: false },
-      { name: 'permanentRegistration', label: 'Permanent Registration No.', type: 'text', required: false },
+      { name: 'registrationType', label: 'Registration Type', type: 'select', options: ['Temporary', 'Permanent', 'Outside'], required: true },
+      { name: 'applicationNumber', label: 'Application Number', type: 'text', required: false },
+      { name: 'taxPaidDate', label: 'Tax Paid Date', type: 'date', required: false },
+      { name: 'registerNumber', label: 'Registration Number', type: 'text', required: false },
+      { name: 'hsrpStatus', label: 'HSRP Status', type: 'select', options: ['Not Ordered', 'Ordered', 'Fitted'], required: false },
       { name: 'registrationRemark', label: 'Registration Remark', type: 'text', required: false },
       { name: 'registrationStatus', label: 'Registration Status', type: 'status', required: true },
       { name: 'registrationTimestamp', label: 'Registration Timestamp', type: 'timestamp', required: false }
@@ -140,9 +135,8 @@ export const SECTIONS = {
     statusField: 'tmgaStatus',
     timestampField: 'tmgaTimestamp',
     fields: [
-      { name: 'accessoriesFitted', label: 'Accessories Fitted', type: 'text', required: false },
-      { name: 'extendedWarranty', label: 'Extended Warranty Opted', type: 'select', options: ['Yes', 'No'], required: false },
-      { name: 'amcOpted', label: 'AMC Opted', type: 'select', options: ['Yes', 'No'], required: false },
+      { name: 'tmgaValue', label: 'TMGA Value (₹)', type: 'number', required: false },
+      { name: 'vasValue', label: 'VAS Value (₹)', type: 'number', required: false },
       { name: 'tmgaRemark', label: 'TMGA Remark', type: 'text', required: false },
       { name: 'tmgaStatus', label: 'TMGA Status', type: 'status', required: true },
       { name: 'tmgaTimestamp', label: 'TMGA Timestamp', type: 'timestamp', required: false }

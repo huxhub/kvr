@@ -40,9 +40,26 @@ export function useVehicles() {
     }
   };
 
-  const createVehicle = async (submissionData) => {
+  const createVehicle = async (submissionData, remarks) => {
     try {
       await apiCreateVehicle(submissionData, user.role);
+      
+      // Save initial audit log entry
+      const auditEntry = {
+        chassisNumber: submissionData.chassisNumber,
+        customerName: submissionData.customerName,
+        updatedBy: user.role,
+        department: 'Customer Booking',
+        previousStatus: 'None',
+        newStatus: 'Booked',
+        remarks: remarks || 'Initial customer booking files generated.'
+      };
+      try {
+        await addAuditLog(auditEntry);
+      } catch (auditErr) {
+        console.error("Failed to save initial audit log:", auditErr);
+      }
+
       await fetchVehicles();
       return { success: true };
     } catch (err) {

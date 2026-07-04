@@ -47,8 +47,13 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // Patch local user state (e.g. after display name update)
+  const updateUserProfile = (patch) => {
+    setUser(prev => prev ? { ...prev, ...patch } : prev);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, error, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUserProfile, error, loading }}>
       {children}
     </AuthContext.Provider>
   );
