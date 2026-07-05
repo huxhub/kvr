@@ -11,5 +11,23 @@ export default defineConfig({
         changeOrigin: true
       }
     }
+  },
+  build: {
+    // Warn at 600KiB per chunk to catch future bloat early
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        // Vite 8 (rolldown) requires manualChunks as a function
+        manualChunks(id) {
+          if (id.includes('node_modules/recharts') || id.includes('node_modules/d3')) {
+            return 'vendor-recharts';
+          }
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
+            return 'vendor-react';
+          }
+        }
+      }
+    }
   }
 })
+

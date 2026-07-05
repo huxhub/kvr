@@ -1,17 +1,31 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import './index.css';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import { ToastProvider } from './context/ToastContext.jsx';
 import LoginOverlay from './components/auth/LoginOverlay.jsx';
 import Header from './components/layout/Header.jsx';
 import Sidebar from './components/layout/Sidebar.jsx';
-import DashboardKPIs from './components/dashboard/DashboardKPIs.jsx';
-import DeliveryTable from './components/delivery/DeliveryTable.jsx';
-import AuditHistory from './components/audit/AuditHistory.jsx';
-import UserAdmin from './components/admin/UserAdmin.jsx';
-import VehicleDrawer from './components/delivery/VehicleDrawer.jsx';
-import Settings from './components/settings/Settings.jsx';
 import { useVehicles } from './hooks/useVehicles.js';
+
+// Lazy-load all heavy route-level components — they are not needed until the user
+// is authenticated and actively navigates to that tab. This removes recharts (4.8MB)
+// and other large chunks from the initial JS bundle entirely.
+const DashboardKPIs   = lazy(() => import('./components/dashboard/DashboardKPIs.jsx'));
+const DeliveryTable   = lazy(() => import('./components/delivery/DeliveryTable.jsx'));
+const AuditHistory    = lazy(() => import('./components/audit/AuditHistory.jsx'));
+const UserAdmin       = lazy(() => import('./components/admin/UserAdmin.jsx'));
+const VehicleDrawer   = lazy(() => import('./components/delivery/VehicleDrawer.jsx'));
+const Settings        = lazy(() => import('./components/settings/Settings.jsx'));
+
+// Minimal inline fallback — a spinner that uses only inline styles (zero extra CSS needed)
+function TabLoader() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px', gap: '10px', color: '#64748b', fontSize: '0.9rem' }}>
+      <div style={{ width: '18px', height: '18px', border: '2px solid #cbd5e1', borderTop: '2px solid #003b71', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+      Loading...
+    </div>
+  );
+}
 
 function AppContent() {
   const { user, loading: authLoading } = useAuth();
@@ -32,32 +46,29 @@ function AppContent() {
     enableAlerts: true
   });
 
-  // Load Settings from Backend DB once user session is confirmed
+  // Fire both data fetches in parallel with Promise.all so neither waits on the other
   useEffect(() => {
     if (!user) return;
-    async function loadSettings() {
+
+    async function loadInitialData() {
       try {
-        const res = await fetch('/api/settings', { credentials: 'include' });
-        if (res.ok) {
-          const data = await res.json();
-          setSettings(data);
-          setCompanyName(data.companyName || 'KVR TATA');
-          // Apply theme to document.body
-          document.body.className = `theme-${data.theme || 'light'}`;
+        const [, settingsData] = await Promise.all([
+          fetchVehicles(1, 25),
+          fetch('/api/settings', { credentials: 'include' }).then(r => r.ok ? r.json() : null)
+        ]);
+
+        if (settingsData) {
+          setSettings(settingsData);
+          setCompanyName(settingsData.companyName || 'KVR TATA');
+          document.body.className = `theme-${settingsData.theme || 'light'}`;
         }
       } catch (error) {
-        console.error("Failed to load settings from server:", error);
+        console.error('Failed to load initial app data:', error);
       }
     }
-    loadSettings();
-  }, [user]);
 
-  useEffect(() => {
-    if (user) {
-      fetchVehicles(1, 25);
-      // Default to 'All Branches' ('') instead of user.branch on load
-      setSelectedBranch('');
-    }
+    loadInitialData();
+    setSelectedBranch('');
   }, [user, fetchVehicles]);
 
   const branches = useMemo(() => {
@@ -114,34 +125,39 @@ function AppContent() {
         />
         
         <main className="content-wrapper" id="app-main">
-          {activeTab === 'dashboard' && (
-            <DashboardKPIs 
-              vehicles={vehicles} 
-              activeBranch={selectedBranch} 
-              setSelectedBranch={setSelectedBranch}
-              branches={branches}
-            />
-          )}
-          {activeTab === 'delivery' && (
-            <DeliveryTable 
-              vehicles={vehicles} 
-              branches={branches} 
-              openDrawer={handleOpenDrawer} 
-              totalVehicles={totalVehicles}
-              currentPage={currentPage}
-              fetchVehicles={fetchVehicles}
-            />
-          )}
-          {activeTab === 'audit' && <AuditHistory />}
-          {activeTab === 'users' && user.role === 'ADMIN' && <UserAdmin branches={branches} />}
-          {activeTab === 'settings' && <Settings branches={branches} settings={settings} setSettings={setSettings} companyName={companyName} setCompanyName={setCompanyName} vehicles={vehicles} />}
+          <Suspense fallback={<TabLoader />}>
+            {activeTab === 'dashboard' && (
+              <DashboardKPIs 
+                vehicles={vehicles} 
+                activeBranch={selectedBranch} 
+                setSelectedBranch={setSelectedBranch}
+                branches={branches}
+              />
+            )}
+            {activeTab === 'delivery' && (
+              <DeliveryTable 
+                vehicles={vehicles} 
+                branches={branches} 
+                openDrawer={handleOpenDrawer} 
+                totalVehicles={totalVehicles}
+                currentPage={currentPage}
+                fetchVehicles={fetchVehicles}
+              />
+            )}
+            {activeTab === 'audit' && <AuditHistory />}
+            {activeTab === 'users' && user.role === 'ADMIN' && <UserAdmin branches={branches} />}
+            {activeTab === 'settings' && <Settings branches={branches} settings={settings} setSettings={setSettings} companyName={companyName} setCompanyName={setCompanyName} vehicles={vehicles} />}
+          </Suspense>
         </main>
       </div>
 
       {isDrawerOpen && (
-        <VehicleDrawer vehicle={selectedVehicle} branches={branches} onClose={handleCloseDrawer} />
+        <Suspense fallback={null}>
+          <VehicleDrawer vehicle={selectedVehicle} branches={branches} onClose={handleCloseDrawer} />
+        </Suspense>
       )}
     </div>
+
   );
 }
 

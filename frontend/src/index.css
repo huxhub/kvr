@@ -1,5 +1,5 @@
 /* KVR Tata Delivery Tracker & Workflow Management System - Styles (styles.css) */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+/* Google Fonts (Poppins 400/500/600) is loaded via <link> in index.html with preconnect for faster delivery */
 
 @keyframes spin {
   to { transform: rotate(360deg); }
@@ -2659,3 +2659,133 @@ body.theme-emerald {
   text-transform: uppercase;
 }
 
+/* ─────────────────────────────────────────────
+   USER ADMIN — MOBILE CARD LIST
+   Table shows on desktop; cards show on mobile.
+───────────────────────────────────────────── */
+
+/* Desktop: show table, hide cards */
+.user-table-desktop { display: block; }
+.user-cards-mobile  { display: none; }
+
+@media (max-width: 640px) {
+  /* Flip visibility */
+  .user-table-desktop { display: none !important; }
+  .user-cards-mobile  { display: flex; flex-direction: column; gap: 12px; padding: 12px 16px 16px; }
+
+  /* Individual card */
+  .user-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: var(--bg-white, #fff);
+    border: 1px solid var(--border-light, #e2e8f0);
+    border-radius: 12px;
+    padding: 14px 14px 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    animation: fadeIn 0.2s ease;
+  }
+
+  /* Avatar circle */
+  .user-card-avatar {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--primary-navy, #003b71);
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Content area */
+  .user-card-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Top row: name + index number */
+  .user-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .user-card-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-dark, #1e293b);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .user-card-sub {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .user-card-number {
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #94a3b8;
+  }
+
+  /* Badges row */
+  .user-card-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .user-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+  }
+
+  .user-badge.role {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+  }
+
+  .user-badge.branch {
+    background: #f0fdf4;
+    color: #15803d;
+    border-color: #bbf7d0;
+  }
+
+  /* Actions row */
+  .user-card-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .user-card-actions .btn-edit-mini,
+  .user-card-actions .btn-danger-mini {
+    flex: 1;
+    justify-content: center;
+    text-align: center;
+    padding: 7px 0;
+    font-size: 0.78rem;
+  }
+}

@@ -61,7 +61,8 @@ export default function UserAdmin({ branches }) {
             <h3 style={{ margin: 0 }}>Registered Employees</h3>
             <button className="btn-primary" onClick={handleAddNew}>+ Add Employee</button>
           </div>
-          <div className="audit-table-wrapper">
+          {/* ── Desktop table (hidden on mobile via CSS) ── */}
+          <div className="audit-table-wrapper user-table-desktop">
             <table className="audit-table">
             <thead>
               <tr>
@@ -94,6 +95,39 @@ export default function UserAdmin({ branches }) {
             </tbody>
           </table>
           </div>
+
+          {/* ── Mobile card list (hidden on desktop via CSS) ── */}
+          <div className="user-cards-mobile">
+            {loading ? (
+              <div style={{ padding: '24px', textAlign: 'center', color: '#64748b' }}>Loading...</div>
+            ) : users.map((u, index) => (
+              <div key={u.username} className="user-card">
+                <div className="user-card-avatar">
+                  {u.name ? u.name.charAt(0).toUpperCase() : '?'}
+                </div>
+                <div className="user-card-body">
+                  <div className="user-card-top">
+                    <div>
+                      <div className="user-card-name">{u.name}</div>
+                      <div className="user-card-sub">@{u.username}{u.email ? ` · ${u.email}` : ''}</div>
+                    </div>
+                    <span className="user-card-number">#{(currentPage - 1) * 15 + index + 1}</span>
+                  </div>
+                  <div className="user-card-badges">
+                    <span className="user-badge role">{u.role}</span>
+                    <span className="user-badge branch">{u.branch}</span>
+                  </div>
+                  <div className="user-card-actions">
+                    <button className="btn-edit-mini" onClick={() => handleEdit(u)}>Edit</button>
+                    {u.username !== 'admin' && (
+                      <button className="btn-danger-mini" onClick={() => handleDelete(u.username)}>Delete</button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
           
           {/* Pagination Controls */}
           {totalUsers > 15 && (
