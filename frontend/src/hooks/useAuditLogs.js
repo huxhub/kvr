@@ -39,7 +39,7 @@ export function useAuditLogs() {
 
   const clearAuditLogs = async () => {
     try {
-      await fetch(`${API_BASE_URL}/api/audit_logs`, { method: 'DELETE' });
+      await fetch(`${API_BASE_URL}/api/audit_logs`, { method: 'DELETE', credentials: 'include' });
       await fetchAuditLogs(1, 25);
       return { success: true };
     } catch (err) {

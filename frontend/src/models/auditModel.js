@@ -3,7 +3,7 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 export async function getAuditLogs(page = 1, limit = 25) {
-  const res = await fetch(`${API_BASE_URL}/api/audit_logs?page=${page}&limit=${limit}`);
+  const res = await fetch(`${API_BASE_URL}/api/audit_logs?page=${page}&limit=${limit}`, { credentials: 'include' });
   if (!res.ok) {
     throw new Error('Failed to retrieve audit logs from server');
   }
@@ -15,6 +15,7 @@ export async function getAuditLogs(page = 1, limit = 25) {
 export async function addAuditLog(entry) {
   const res = await fetch(`${API_BASE_URL}/api/audit_logs`, {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json'
     },
