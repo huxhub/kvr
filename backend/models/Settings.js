@@ -25,6 +25,12 @@ export async function findByKey(key = 'global') {
   const row = rows[0];
   // Map enableAlerts from TINYINT(1) back to boolean
   row.enableAlerts = !!row.enableAlerts;
+  // Safely parse branches: mysql2 parses JSON columns automatically,
+  // but if the column is TEXT, it comes back as a string — parse manually.
+  if (typeof row.branches === 'string') {
+    try { row.branches = JSON.parse(row.branches); } catch { row.branches = ['Perinthalmanna']; }
+  }
+  if (!Array.isArray(row.branches)) row.branches = ['Perinthalmanna'];
   // Map setting_key to key for API compatibility
   row.key = row.setting_key;
   return row;
