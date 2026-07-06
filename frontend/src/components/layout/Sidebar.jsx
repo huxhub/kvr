@@ -1,8 +1,8 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { LogOut, X, Settings } from 'lucide-react';
+import { LogOut, X, Settings, Plus } from 'lucide-react';
 
-export default function Sidebar({ activeTab, setActiveTab, isSidebarOpen, setIsSidebarOpen, companyName = 'KVR TATA' }) {
+export default function Sidebar({ activeTab, setActiveTab, isSidebarOpen, setIsSidebarOpen, companyName = 'KVR TATA', onNewBooking }) {
   const { user, logout } = useAuth();
 
   if (!user) return null;
@@ -53,6 +53,16 @@ export default function Sidebar({ activeTab, setActiveTab, isSidebarOpen, setIsS
         >
           <svg className="tab-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
           Delivery Master List
+        </button>
+
+        {/* New Booking quick-action button */}
+        <button
+          className="sidebar-new-booking-btn"
+          onClick={() => { if (onNewBooking) { onNewBooking(); } if (setIsSidebarOpen) setIsSidebarOpen(false); }}
+          title="Register a new vehicle booking"
+        >
+          <Plus size={15} strokeWidth={2.5} />
+          New Booking
         </button>
         <button 
           className={`sidebar-btn ${activeTab === 'audit' ? 'active' : ''}`} 

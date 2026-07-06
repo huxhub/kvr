@@ -119,6 +119,7 @@ function AppContent() {
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
         companyName={companyName}
+        onNewBooking={() => { setActiveTab('delivery'); handleOpenDrawer(null); }}
       />
       
       <div className="main-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflowY: 'auto' }}>
