@@ -62,7 +62,7 @@ export default function Sidebar({ activeTab, setActiveTab, isSidebarOpen, setIsS
           title="Register a new vehicle booking"
         >
           <Plus size={15} strokeWidth={2.5} />
-          CRM
+          New Booking
         </button>
         <button 
           className={`sidebar-btn ${activeTab === 'audit' ? 'active' : ''}`} 
