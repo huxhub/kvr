@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { DEPARTMENT_KEYS, SECTIONS, STATUS_VALUES } from '../../models/apiModel.js';
 import CustomDropdown from '../ui/DropdownMenu.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 const SIMULATED_TODAY = '2026-06-22'; // Keep simulation date consistent with original
@@ -63,13 +64,19 @@ export default function DashboardKPIs({ vehicles, activeBranch, setSelectedBranc
     return { salesByProductLine, recentBookings };
   }, [filteredVehicles]);
 
+  const { user } = useAuth();
+  const isBranchManager = user?.role === 'BRANCH_MANAGER';
+
   // Colors for the bar chart
   const COLORS = ['#1e293b', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b'];
 
-  const dropdownOptions = [
-    { value: '', label: 'All Branches' },
-    ...branches.map(branch => ({ value: branch, label: branch }))
-  ];
+  // BRANCH_MANAGER: dropdown locked to their branch only
+  const dropdownOptions = isBranchManager
+    ? branches.map(branch => ({ value: branch, label: branch }))
+    : [
+        { value: '', label: 'All Branches' },
+        ...branches.map(branch => ({ value: branch, label: branch }))
+      ];
 
   return (
     <div id="dashboard-view" className="tab-content active">
@@ -77,8 +84,9 @@ export default function DashboardKPIs({ vehicles, activeBranch, setSelectedBranc
         <span className="mobile-branch-label">Branch:</span>
         <CustomDropdown 
           value={activeBranch || ''}
-          onChange={(e) => setSelectedBranch(e.target.value)}
+          onChange={(e) => !isBranchManager && setSelectedBranch(e.target.value)}
           options={dropdownOptions}
+          disabled={isBranchManager}
         />
       </div>
 

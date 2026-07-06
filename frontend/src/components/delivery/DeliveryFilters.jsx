@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { DEPARTMENT_KEYS, SECTIONS } from '../../models/constants.js';
 import CustomDropdown from '../ui/DropdownMenu.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 export default function DeliveryFilters({ filters, setFilters, branches, vehicles }) {
   const handleChange = (e) => {
@@ -19,10 +20,16 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
   const cas = useMemo(() => Array.from(new Set(vehicles.map(v => v.ca).filter(Boolean))).sort(), [vehicles]);
   const tls = useMemo(() => Array.from(new Set(vehicles.map(v => v.tl).filter(Boolean))).sort(), [vehicles]);
 
-  const branchOptions = [
-    { value: '', label: 'All Branches' },
-    ...branches.map(b => ({ value: b, label: b }))
-  ];
+  const { user } = useAuth();
+  const isBranchManager = user?.role === 'BRANCH_MANAGER';
+
+  // BRANCH_MANAGER: only show their own branch
+  const branchOptions = isBranchManager
+    ? branches.map(b => ({ value: b, label: b }))
+    : [
+        { value: '', label: 'All Branches' },
+        ...branches.map(b => ({ value: b, label: b }))
+      ];
 
   const statusOptions = [
     { value: '', label: 'All Statuses' },

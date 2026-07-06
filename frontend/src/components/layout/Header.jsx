@@ -34,10 +34,15 @@ export default function Header({
   const displayTitle = tabTitles[activeTab] || 'Dashboard';
   const displaySubtitle = tabSubtitles[activeTab] || 'System Overview & Department Bottlenecks';
 
-  const dropdownOptions = [
-    { value: '', label: 'All Branches' },
-    ...branches.map(branch => ({ value: branch, label: branch }))
-  ];
+  const isBranchManager = user?.role === 'BRANCH_MANAGER';
+
+  // BRANCH_MANAGER sees only their branch; other roles see 'All Branches' + full list
+  const dropdownOptions = isBranchManager
+    ? branches.map(branch => ({ value: branch, label: branch }))
+    : [
+        { value: '', label: 'All Branches' },
+        ...branches.map(branch => ({ value: branch, label: branch }))
+      ];
 
   return (
     <header className="role-simulator-bar" id="app-header">
@@ -61,8 +66,9 @@ export default function Header({
         <span className="header-branch-label">Branch:</span>
         <CustomDropdown 
           value={selectedBranch || ''} 
-          onChange={(e) => setSelectedBranch(e.target.value)} 
-          options={dropdownOptions} 
+          onChange={(e) => !isBranchManager && setSelectedBranch(e.target.value)} 
+          options={dropdownOptions}
+          disabled={isBranchManager}
         />
       </div>
     </header>

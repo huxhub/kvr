@@ -70,10 +70,15 @@ function AppContent() {
     }
 
     loadInitialData();
-    setSelectedBranch('');
+    // BRANCH_MANAGER: lock to their own branch; others default to 'All Branches'
+    setSelectedBranch(user?.role === 'BRANCH_MANAGER' && user?.branch ? user.branch : '');
   }, [user, fetchVehicles]);
 
   const branches = useMemo(() => {
+    // BRANCH_MANAGER: only show their own branch in the dropdown
+    if (user?.role === 'BRANCH_MANAGER' && user?.branch) {
+      return [user.branch];
+    }
     const branchesSet = new Set(['Perinthalmanna', ...(settings.branches || [])]);
     if (user && user.branch) branchesSet.add(user.branch);
     vehicles.forEach(v => { if (v.branch) branchesSet.add(v.branch); });
