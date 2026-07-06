@@ -7,6 +7,8 @@ import Header from './components/layout/Header.jsx';
 import Sidebar from './components/layout/Sidebar.jsx';
 import { useVehicles } from './hooks/useVehicles.js';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+
 // Lazy-load all heavy route-level components — they are not needed until the user
 // is authenticated and actively navigates to that tab. This removes recharts (4.8MB)
 // and other large chunks from the initial JS bundle entirely.
@@ -54,7 +56,7 @@ function AppContent() {
       try {
         const [, settingsData] = await Promise.all([
           fetchVehicles(1, 25),
-          fetch('/api/settings', { credentials: 'include' }).then(r => r.ok ? r.json() : null)
+          fetch(`${API_BASE_URL}/api/settings`, { credentials: 'include' }).then(r => r.ok ? r.json() : null)
         ]);
 
         if (settingsData) {

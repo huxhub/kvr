@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react';
 import { getAuditLogs as apiGetAuditLogs } from '../models/auditModel.js';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+
 export function useAuditLogs() {
   const [auditLogs, setAuditLogs] = useState([]);
   const [totalAudits, setTotalAudits] = useState(0);
@@ -37,7 +39,7 @@ export function useAuditLogs() {
 
   const clearAuditLogs = async () => {
     try {
-      await fetch('/api/audit_logs', { method: 'DELETE' });
+      await fetch(`${API_BASE_URL}/api/audit_logs`, { method: 'DELETE' });
       await fetchAuditLogs(1, 25);
       return { success: true };
     } catch (err) {

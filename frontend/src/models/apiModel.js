@@ -1,7 +1,9 @@
 export * from './constants.js';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+
 export async function getVehicles(page = 1, limit = 25) {
-  const res = await fetch(`/api/vehicles?page=${page}&limit=${limit}`, { credentials: 'include' });
+  const res = await fetch(`${API_BASE_URL}/api/vehicles?page=${page}&limit=${limit}`, { credentials: 'include' });
   if (!res.ok) throw new Error('Failed to fetch vehicle records');
   const vehicles = await res.json();
   const totalCount = parseInt(res.headers.get('X-Total-Count'), 10) || vehicles.length;
@@ -9,7 +11,7 @@ export async function getVehicles(page = 1, limit = 25) {
 }
 
 export async function saveVehicle(updatedVehicle, changedByRole, remarks) {
-  const res = await fetch(`/api/vehicles/${updatedVehicle.chassisNumber}`, {
+  const res = await fetch(`${API_BASE_URL}/api/vehicles/${updatedVehicle.chassisNumber}`, {
     method: 'PUT',
     credentials: 'include',
     headers: {
@@ -30,7 +32,7 @@ export async function saveVehicle(updatedVehicle, changedByRole, remarks) {
 }
 
 export async function createVehicle(newVehicle, changedByRole) {
-  const res = await fetch('/api/vehicles', {
+  const res = await fetch(`${API_BASE_URL}/api/vehicles`, {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -49,7 +51,7 @@ export async function createVehicle(newVehicle, changedByRole) {
 }
 
 export async function deleteVehicle(chassisNumber, changedByRole) {
-  const res = await fetch(`/api/vehicles/${chassisNumber}`, {
+  const res = await fetch(`${API_BASE_URL}/api/vehicles/${chassisNumber}`, {
     method: 'DELETE',
     credentials: 'include',
     headers: { 'X-Role': changedByRole }
@@ -62,13 +64,13 @@ export async function deleteVehicle(chassisNumber, changedByRole) {
 }
 
 export async function resetDatabase() {
-  const res = await fetch('/api/reset', { method: 'POST', credentials: 'include' });
+  const res = await fetch(`${API_BASE_URL}/api/reset`, { method: 'POST', credentials: 'include' });
   if (!res.ok) throw new Error('Failed to run backend seed operation');
   return await getVehicles();
 }
 
 export async function loginUser(email, password) {
-  const res = await fetch('/api/auth/login', {
+  const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
@@ -83,13 +85,13 @@ export async function loginUser(email, password) {
 }
 
 export async function getSessionUser() {
-  const res = await fetch('/api/auth/me', { credentials: 'include' });
+  const res = await fetch(`${API_BASE_URL}/api/auth/me`, { credentials: 'include' });
   if (!res.ok) return null;
   return await res.json();
 }
 
 export async function logoutUser() {
-  const res = await fetch('/api/auth/logout', {
+  const res = await fetch(`${API_BASE_URL}/api/auth/logout`, {
     method: 'POST',
     credentials: 'include'
   });
@@ -97,7 +99,7 @@ export async function logoutUser() {
 }
 
 export async function getUsers(activeRole, page = 1, limit = 15) {
-  const res = await fetch(`/api/users?page=${page}&limit=${limit}`, {
+  const res = await fetch(`${API_BASE_URL}/api/users?page=${page}&limit=${limit}`, {
     credentials: 'include',
     headers: { 'X-Role': activeRole }
   });
@@ -111,7 +113,7 @@ export async function getUsers(activeRole, page = 1, limit = 15) {
 }
 
 export async function createUser(userData, activeRole) {
-  const res = await fetch('/api/users', {
+  const res = await fetch(`${API_BASE_URL}/api/users`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', 'X-Role': activeRole },
@@ -124,7 +126,7 @@ export async function createUser(userData, activeRole) {
 }
 
 export async function updateUser(username, userData, activeRole) {
-  const res = await fetch(`/api/users/${username}`, {
+  const res = await fetch(`${API_BASE_URL}/api/users/${username}`, {
     method: 'PUT',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', 'X-Role': activeRole },
@@ -138,7 +140,7 @@ export async function updateUser(username, userData, activeRole) {
 }
 
 export async function deleteUser(username, activeRole) {
-  const res = await fetch(`/api/users/${username}`, {
+  const res = await fetch(`${API_BASE_URL}/api/users/${username}`, {
     method: 'DELETE',
     credentials: 'include',
     headers: { 'X-Role': activeRole }
@@ -150,13 +152,13 @@ export async function deleteUser(username, activeRole) {
 }
 
 export async function getBackendSettings() {
-  const res = await fetch('/api/settings', { credentials: 'include' });
+  const res = await fetch(`${API_BASE_URL}/api/settings`, { credentials: 'include' });
   if (!res.ok) throw new Error('Failed to fetch settings from server');
   return await res.json();
 }
 
 export async function saveBackendSettings(settingsData) {
-  const res = await fetch('/api/settings', {
+  const res = await fetch(`${API_BASE_URL}/api/settings`, {
     method: 'PUT',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
