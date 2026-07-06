@@ -11,7 +11,7 @@ export function useUsers() {
   const { user } = useAuth();
 
   const fetchUsers = useCallback(async (page = 1, limit = 15) => {
-    if (!user || user.role !== 'ADMIN') return;
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'BRANCH_MANAGER')) return;
     
     setLoading(true);
     try {

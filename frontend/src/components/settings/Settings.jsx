@@ -265,14 +265,16 @@ export default function Settings({ branches, settings, setSettings, companyName,
               Company Settings
             </button>
           )}
-          <button 
-            type="button"
-            className={`settings-tab-btn ${activeSubTab === 'branches' ? 'active' : ''}`}
-            onClick={() => setActiveSubTab('branches')}
-          >
-            <Layers size={16} />
-            Manage Branches
-          </button>
+          {user.role !== 'CRM' && (
+            <button 
+              type="button"
+              className={`settings-tab-btn ${activeSubTab === 'branches' ? 'active' : ''}`}
+              onClick={() => setActiveSubTab('branches')}
+            >
+              <Layers size={16} />
+              Manage Branches
+            </button>
+          )}
           <button 
             type="button"
             className={`settings-tab-btn ${activeSubTab === 'preferences' ? 'active' : ''}`}

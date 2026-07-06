@@ -145,7 +145,7 @@ function AppContent() {
               />
             )}
             {activeTab === 'audit' && <AuditHistory />}
-            {activeTab === 'users' && user.role === 'ADMIN' && <UserAdmin branches={branches} />}
+            {activeTab === 'users' && (user.role === 'ADMIN' || user.role === 'BRANCH_MANAGER') && <UserAdmin branches={branches} />}
             {activeTab === 'settings' && <Settings branches={branches} settings={settings} setSettings={setSettings} companyName={companyName} setCompanyName={setCompanyName} vehicles={vehicles} />}
           </Suspense>
         </main>

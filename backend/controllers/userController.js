@@ -3,15 +3,22 @@ import * as User from '../models/User.js';
 
 export const getUsers = async (req, res) => {
   try {
+    if (!req.session.user || (req.session.user.role !== 'ADMIN' && req.session.user.role !== 'BRANCH_MANAGER')) {
+      return res.status(403).json({ error: 'Forbidden: You do not have permission to view users.' });
+    }
+
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 15;
     
     // Enforce strict limit <= 15
     const activeLimit = Math.min(15, Math.max(1, limit));
 
+    const isBranchManager = req.session.user.role === 'BRANCH_MANAGER';
+    const branchFilter = isBranchManager ? req.session.user.branch : null;
+
     const [users, totalCount] = await Promise.all([
-      User.findAll(page, activeLimit),
-      User.countAll()
+      User.findAll(page, activeLimit, branchFilter),
+      User.countAll(branchFilter)
     ]);
 
     // Expose headers for cross-origin or local clients
@@ -28,6 +35,10 @@ export const getUsers = async (req, res) => {
 
 export const createUser = async (req, res) => {
   try {
+    if (!req.session.user || req.session.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Forbidden: Only Administrator can manage users' });
+    }
+
     const data = { ...req.body };
 
     if (!data.password) {
@@ -51,6 +62,13 @@ export const createUser = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { username } = req.params;
+    const isSelfUpdate = req.session.user && req.session.user.username.toLowerCase() === username.toLowerCase();
+    const isAdmin = req.session.user && req.session.user.role === 'ADMIN';
+
+    if (!isSelfUpdate && !isAdmin) {
+      return res.status(403).json({ error: 'Forbidden: Only Administrator can manage users' });
+    }
+
     const data = { ...req.body };
 
     // If a new password is provided, hash it before saving
@@ -83,6 +101,10 @@ export const updateUser = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
   try {
+    if (!req.session.user || req.session.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Forbidden: Only Administrator can manage users' });
+    }
+
     const { username } = req.params;
     const deleted = await User.deleteByUsername(username);
 

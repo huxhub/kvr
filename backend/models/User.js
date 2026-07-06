@@ -23,23 +23,36 @@ export async function findByEmail(email) {
   return rows[0] || null;
 }
 
-/** Get all users (paginated, excludes password for client safety) */
-export async function findAll(page = 1, limit = 15) {
+/** Get all users (paginated, excludes password for client safety, optionally filtered by branch) */
+export async function findAll(page = 1, limit = 15, branch = null) {
   const activeLimit = Math.min(15, Math.max(1, parseInt(limit, 10) || 15));
   const activePage = Math.max(1, parseInt(page, 10) || 1);
   const offset = (activePage - 1) * activeLimit;
 
-  const [rows] = await pool.execute(
-    'SELECT username, role, name, branch, email FROM users LIMIT ? OFFSET ?',
-    [activeLimit.toString(), offset.toString()]
-  );
-  return rows;
+  if (branch) {
+    const [rows] = await pool.execute(
+      "SELECT username, role, name, branch, email FROM users WHERE branch = ? AND role != 'ADMIN' LIMIT ? OFFSET ?",
+      [branch, activeLimit.toString(), offset.toString()]
+    );
+    return rows;
+  } else {
+    const [rows] = await pool.execute(
+      'SELECT username, role, name, branch, email FROM users LIMIT ? OFFSET ?',
+      [activeLimit.toString(), offset.toString()]
+    );
+    return rows;
+  }
 }
 
-/** Get total count of users */
-export async function countAll() {
-  const [rows] = await pool.execute('SELECT COUNT(*) as count FROM users');
-  return rows[0].count;
+/** Get total count of users, optionally filtered by branch */
+export async function countAll(branch = null) {
+  if (branch) {
+    const [rows] = await pool.execute("SELECT COUNT(*) as count FROM users WHERE branch = ? AND role != 'ADMIN'", [branch]);
+    return rows[0].count;
+  } else {
+    const [rows] = await pool.execute('SELECT COUNT(*) as count FROM users');
+    return rows[0].count;
+  }
 }
 
 /** Create a new user */

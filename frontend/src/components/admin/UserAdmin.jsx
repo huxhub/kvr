@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useUsers } from '../../hooks/useUsers.js';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 export default function UserAdmin({ branches }) {
   const { users, totalUsers, currentPage, fetchUsers, createUser, updateUser, deleteUser, loading } = useUsers();
   const { showToast } = useToast();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({ name: '', username: '', role: '', branch: '', email: '', password: '' });
   const [originalUsername, setOriginalUsername] = useState('');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  
+  const isReadOnly = user?.role !== 'ADMIN';
   
   useEffect(() => {
     fetchUsers(1, 15);
@@ -59,7 +63,7 @@ export default function UserAdmin({ branches }) {
         <div className="audit-log-container">
           <div className="main-header" style={{ backgroundColor: 'transparent', borderBottom: '1px solid var(--border-light)', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 style={{ margin: 0 }}>Registered Employees</h3>
-            <button className="btn-primary" onClick={handleAddNew}>+ Add Employee</button>
+            {!isReadOnly && <button className="btn-primary" onClick={handleAddNew}>+ Add Employee</button>}
           </div>
           {/* ── Desktop table (hidden on mobile via CSS) ── */}
           <div className="audit-table-wrapper user-table-desktop">
@@ -70,10 +74,10 @@ export default function UserAdmin({ branches }) {
                 <th>Name</th>
                 <th>Username</th>
                 <th>Email</th>
-                <th>Role</th>
+                 <th>Role</th>
                 <th>Branch</th>
                 <th>Password</th>
-                <th>Actions</th>
+                {!isReadOnly && <th>Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -86,10 +90,12 @@ export default function UserAdmin({ branches }) {
                   <td>{u.role}</td>
                   <td>{u.branch}</td>
                   <td>{u.password ? '******' : ''}</td>
-                  <td className="user-admin-actions">
-                    <button className="btn-edit-mini" onClick={() => handleEdit(u)}>Edit</button>
-                    {u.username !== 'admin' && <button className="btn-danger-mini" onClick={() => handleDelete(u.username)}>Delete</button>}
-                  </td>
+                  {!isReadOnly && (
+                    <td className="user-admin-actions">
+                      <button className="btn-edit-mini" onClick={() => handleEdit(u)}>Edit</button>
+                      {u.username !== 'admin' && <button className="btn-danger-mini" onClick={() => handleDelete(u.username)}>Delete</button>}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -117,12 +123,14 @@ export default function UserAdmin({ branches }) {
                     <span className="user-badge role">{u.role}</span>
                     <span className="user-badge branch">{u.branch}</span>
                   </div>
-                  <div className="user-card-actions">
-                    <button className="btn-edit-mini" onClick={() => handleEdit(u)}>Edit</button>
-                    {u.username !== 'admin' && (
-                      <button className="btn-danger-mini" onClick={() => handleDelete(u.username)}>Delete</button>
-                    )}
-                  </div>
+                  {!isReadOnly && (
+                    <div className="user-card-actions">
+                      <button className="btn-edit-mini" onClick={() => handleEdit(u)}>Edit</button>
+                      {u.username !== 'admin' && (
+                        <button className="btn-danger-mini" onClick={() => handleDelete(u.username)}>Delete</button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

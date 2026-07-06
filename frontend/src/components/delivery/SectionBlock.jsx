@@ -8,15 +8,16 @@ export default function SectionBlock({ sectionKey, section, formData, handleChan
   // Logic to determine if section is editable based on user role
   const isEditable = 
     user.role === 'ADMIN' || 
+    user.role === 'CRM' ||
     user.role === section.title.replace(' Details', '') ||
     user.role === 'MANAGEMENT'; // MANAGEMENT is handled specifically later for view-only
 
   const statusField = section.statusField;
   const currentStatus = formData[statusField] || STATUS_VALUES.NOT_ATTENDED;
   
-  // Is this section locked entirely? (forceEditable bypasses all lock logic for new bookings; ADMIN bypasses all lock logic)
+  // Is this section locked entirely? (forceEditable bypasses all lock logic for new bookings; ADMIN/CRM bypasses all lock logic)
   const isLocked = forceEditable ? false : (
-    user.role === 'ADMIN' ? false : (!isEditable || currentStatus === STATUS_VALUES.APPROVED || user.role === 'MANAGEMENT')
+    (user.role === 'ADMIN' || user.role === 'CRM') ? false : (!isEditable || currentStatus === STATUS_VALUES.APPROVED || user.role === 'MANAGEMENT')
   );
   
   // For branch manager, only remarks are editable
