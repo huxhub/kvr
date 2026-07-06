@@ -46,6 +46,28 @@ export async function countAll() {
   return rows[0].count;
 }
 
+/** Get vehicles filtered by branch (paginated) — for BRANCH_MANAGER role */
+export async function findByBranch(branch, page = 1, limit = 25) {
+  const activeLimit = Math.min(25, Math.max(1, parseInt(limit, 10) || 25));
+  const activePage = Math.max(1, parseInt(page, 10) || 1);
+  const offset = (activePage - 1) * activeLimit;
+
+  const [rows] = await pool.execute(
+    'SELECT * FROM vehicles WHERE branch = ? LIMIT ? OFFSET ?',
+    [branch, activeLimit.toString(), offset.toString()]
+  );
+  return rows;
+}
+
+/** Get count of vehicles filtered by branch */
+export async function countByBranch(branch) {
+  const [rows] = await pool.execute(
+    'SELECT COUNT(*) as count FROM vehicles WHERE branch = ?',
+    [branch]
+  );
+  return rows[0].count;
+}
+
 /** Find a single vehicle by chassisNumber */
 export async function findByChassis(chassisNumber) {
   const [rows] = await pool.execute(

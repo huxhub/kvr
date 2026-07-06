@@ -8,10 +8,25 @@ export const getAuditLogs = async (req, res) => {
     // Enforce strict limit <= 25
     const activeLimit = Math.min(25, Math.max(1, limit));
 
-    const [logs, totalCount] = await Promise.all([
-      Audit.findAll(page, activeLimit),
-      Audit.countAll()
-    ]);
+    const sessionUser = req.session.user;
+    const isBranchManager = sessionUser?.role === 'BRANCH_MANAGER';
+    const userBranch = sessionUser?.branch;
+
+    let logs, totalCount;
+
+    if (isBranchManager && userBranch) {
+      // BRANCH_MANAGER: only see audit logs for their branch's vehicles
+      [logs, totalCount] = await Promise.all([
+        Audit.findByBranch(userBranch, page, activeLimit),
+        Audit.countByBranch(userBranch)
+      ]);
+    } else {
+      // ADMIN, CRM, etc.: see all audit logs
+      [logs, totalCount] = await Promise.all([
+        Audit.findAll(page, activeLimit),
+        Audit.countAll()
+      ]);
+    }
 
     // Expose headers for cross-origin or local clients
     res.setHeader('Access-Control-Expose-Headers', 'X-Total-Count, X-Page, X-Limit');

@@ -29,6 +29,33 @@ export async function countAll() {
   return rows[0].count;
 }
 
+/** Get audit logs filtered by branch (via vehicles join) — for BRANCH_MANAGER */
+export async function findByBranch(branch, page = 1, limit = 25) {
+  const activeLimit = Math.min(25, Math.max(1, parseInt(limit, 10) || 25));
+  const activePage = Math.max(1, parseInt(page, 10) || 1);
+  const offset = (activePage - 1) * activeLimit;
+
+  const [rows] = await pool.execute(
+    `SELECT a.* FROM audit_logs a
+     INNER JOIN vehicles v ON a.chassisNumber = v.chassisNumber
+     WHERE v.branch = ?
+     ORDER BY a.timestamp DESC LIMIT ? OFFSET ?`,
+    [branch, activeLimit.toString(), offset.toString()]
+  );
+  return rows;
+}
+
+/** Count audit logs filtered by branch */
+export async function countByBranch(branch) {
+  const [rows] = await pool.execute(
+    `SELECT COUNT(*) as count FROM audit_logs a
+     INNER JOIN vehicles v ON a.chassisNumber = v.chassisNumber
+     WHERE v.branch = ?`,
+    [branch]
+  );
+  return rows[0].count;
+}
+
 /** Insert one or many audit log records */
 export async function insertMany(logs) {
   if (!Array.isArray(logs) || logs.length === 0) return 0;

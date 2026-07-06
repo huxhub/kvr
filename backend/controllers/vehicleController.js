@@ -8,10 +8,25 @@ export const getVehicles = async (req, res) => {
     // Enforce strict limit <= 25
     const activeLimit = Math.min(25, Math.max(1, limit));
 
-    const [vehicles, totalCount] = await Promise.all([
-      Vehicle.findAll(page, activeLimit),
-      Vehicle.countAll()
-    ]);
+    const sessionUser = req.session.user;
+    const isBranchManager = sessionUser?.role === 'BRANCH_MANAGER';
+    const userBranch = sessionUser?.branch;
+
+    let vehicles, totalCount;
+
+    if (isBranchManager && userBranch) {
+      // BRANCH_MANAGER: only see their own branch's vehicles
+      [vehicles, totalCount] = await Promise.all([
+        Vehicle.findByBranch(userBranch, page, activeLimit),
+        Vehicle.countByBranch(userBranch)
+      ]);
+    } else {
+      // ADMIN, CRM, etc.: see all vehicles
+      [vehicles, totalCount] = await Promise.all([
+        Vehicle.findAll(page, activeLimit),
+        Vehicle.countAll()
+      ]);
+    }
 
     // Expose headers for cross-origin or local clients
     res.setHeader('Access-Control-Expose-Headers', 'X-Total-Count, X-Page, X-Limit');
