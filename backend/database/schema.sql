@@ -32,7 +32,9 @@ CREATE TABLE IF NOT EXISTS vehicles (
   date                VARCHAR(30)  DEFAULT '',
   customerName        VARCHAR(150) NOT NULL,
   mobileNumber        VARCHAR(20)  DEFAULT '',
+  optyId              VARCHAR(50)  DEFAULT '',
   orderNumber         VARCHAR(50)  DEFAULT '',
+  sapOrderNo          VARCHAR(50)  DEFAULT '',
   invoiceNumber       VARCHAR(50)  DEFAULT '',
   source              VARCHAR(50)  DEFAULT '',
   year                INT          DEFAULT NULL,
@@ -43,12 +45,18 @@ CREATE TABLE IF NOT EXISTS vehicles (
   pl                  VARCHAR(50)  DEFAULT '',
   variant             VARCHAR(80)  DEFAULT '',
   colour              VARCHAR(50)  DEFAULT '',
+  bdStatus            VARCHAR(50)  DEFAULT '',
+  bdDate              VARCHAR(30)  DEFAULT '',
   vc                  VARCHAR(50)  DEFAULT '',
 
   -- Sales Details
   ca                  VARCHAR(80)  DEFAULT '',
   tl                  VARCHAR(80)  DEFAULT '',
   branch              VARCHAR(80)  NOT NULL DEFAULT 'Perinthalmanna',
+  region              VARCHAR(50)  DEFAULT '',
+  crmBookingStatus    VARCHAR(100) DEFAULT '',
+  branchStatus        VARCHAR(50)  DEFAULT '',
+  branchRemark        VARCHAR(255) DEFAULT '',
 
   -- Offer Details
   hypothecation       VARCHAR(80)  DEFAULT '',

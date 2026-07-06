@@ -7,9 +7,10 @@ import { pool } from '../config/db.js';
 
 // All vehicle columns (excluding auto-managed created_at/updated_at)
 const VEHICLE_COLUMNS = [
-  'chassisNumber', 'date', 'customerName', 'mobileNumber', 'orderNumber',
+  'chassisNumber', 'date', 'customerName', 'mobileNumber', 'optyId', 'orderNumber', 'sapOrderNo',
   'invoiceNumber', 'source', 'year', 'vehicleStatus', 'fuel', 'pl',
-  'variant', 'colour', 'vc', 'ca', 'tl', 'branch', 'hypothecation',
+  'variant', 'colour', 'bdStatus', 'bdDate', 'vc', 'ca', 'tl', 'branch', 'region', 
+  'crmBookingStatus', 'branchStatus', 'branchRemark', 'hypothecation',
   'cashDiscount', 'exchangeLoyalty', 'corporate', 'sss', 'kpkb',
   'solarOffer', 'priceDifference', 'offerRemark', 'financeType',
   'onRoadPrice', 'ip', 'loanAmount', 'balanceAmount', 'fundPercentage',
@@ -46,7 +47,6 @@ export async function countAll() {
   return rows[0].count;
 }
 
-/** Get vehicles filtered by branch (paginated) — for BRANCH_MANAGER role */
 export async function findByBranch(branch, page = 1, limit = 25) {
   const activeLimit = Math.min(25, Math.max(1, parseInt(limit, 10) || 25));
   const activePage = Math.max(1, parseInt(page, 10) || 1);

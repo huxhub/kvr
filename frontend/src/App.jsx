@@ -17,6 +17,7 @@ const DeliveryTable   = lazy(() => import('./components/delivery/DeliveryTable.j
 const AuditHistory    = lazy(() => import('./components/audit/AuditHistory.jsx'));
 const UserAdmin       = lazy(() => import('./components/admin/UserAdmin.jsx'));
 const VehicleDrawer   = lazy(() => import('./components/delivery/VehicleDrawer.jsx'));
+const NewBookingDrawer = lazy(() => import('./components/delivery/NewBookingDrawer.jsx'));
 const Settings        = lazy(() => import('./components/settings/Settings.jsx'));
 
 // Minimal inline fallback — a spinner that uses only inline styles (zero extra CSS needed)
@@ -35,6 +36,7 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isNewBookingOpen, setIsNewBookingOpen] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [companyName, setCompanyName] = useState('KVR TATA');
@@ -109,6 +111,14 @@ function AppContent() {
     setSelectedVehicle(null);
   };
 
+  const handleOpenNewBooking = () => {
+    setIsNewBookingOpen(true);
+  };
+
+  const handleCloseNewBooking = () => {
+    setIsNewBookingOpen(false);
+  };
+
   return (
     <div className="app-container" style={{ flexDirection: 'row' }}>
       {isSidebarOpen && <div className="sidebar-backdrop" onClick={() => setIsSidebarOpen(false)} />}
@@ -119,7 +129,7 @@ function AppContent() {
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
         companyName={companyName}
-        onNewBooking={() => { setActiveTab('delivery'); handleOpenDrawer(null); }}
+        onNewBooking={() => { setActiveTab('delivery'); handleOpenNewBooking(); }}
       />
       
       <div className="main-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflowY: 'auto' }}>
@@ -146,7 +156,8 @@ function AppContent() {
               <DeliveryTable 
                 vehicles={vehicles} 
                 branches={branches} 
-                openDrawer={handleOpenDrawer} 
+                openDrawer={handleOpenDrawer}
+                openNewBooking={handleOpenNewBooking}
                 totalVehicles={totalVehicles}
                 currentPage={currentPage}
                 fetchVehicles={fetchVehicles}
@@ -162,6 +173,12 @@ function AppContent() {
       {isDrawerOpen && (
         <Suspense fallback={null}>
           <VehicleDrawer vehicle={selectedVehicle} branches={branches} onClose={handleCloseDrawer} />
+        </Suspense>
+      )}
+
+      {isNewBookingOpen && (
+        <Suspense fallback={null}>
+          <NewBookingDrawer branches={branches} onClose={handleCloseNewBooking} />
         </Suspense>
       )}
     </div>

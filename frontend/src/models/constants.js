@@ -4,9 +4,11 @@ export const SECTIONS = {
     title: 'Customer Details',
     fields: [
       { name: 'date', label: 'Booking Date', type: 'date', required: true },
-      { name: 'customerName', label: 'Customer Name', type: 'text', required: true },
-      { name: 'mobileNumber', label: 'Mobile Number', type: 'tel', required: true },
-      { name: 'orderNumber', label: 'Order Number', type: 'text', required: true },
+      { name: 'customerName', label: 'Full Name', type: 'text', required: true },
+      { name: 'mobileNumber', label: 'Mobile No', type: 'tel', required: true },
+      { name: 'optyId', label: 'OPTY ID', type: 'text', required: false },
+      { name: 'orderNumber', label: 'BKG ORDER NO', type: 'text', required: true },
+      { name: 'sapOrderNo', label: 'SAP ORDER NO', type: 'text', required: false },
       { name: 'invoiceNumber', label: 'Invoice Number', type: 'text', required: false },
       { name: 'source', label: 'Booking Source', type: 'select', options: ['Walk-in', 'Referral', 'Digital Ads', 'Social Media', 'Exchange Event', 'Co-operative Society'], required: false },
       { name: 'year', label: 'Manufacturing Year', type: 'number', required: true, default: 2026 }
@@ -18,9 +20,11 @@ export const SECTIONS = {
       { name: 'vehicleStatus', label: 'Vehicle Status', type: 'select', options: ['Booked', 'Allotted', 'In-Transit', 'PDI Hold', 'Ready for Delivery', 'Delivered', 'Cancelled'], required: true },
       { name: 'chassisNumber', label: 'Chassis Number', type: 'text', required: true },
       { name: 'fuel', label: 'Fuel Type', type: 'select', options: ['Petrol', 'Diesel', 'CNG', 'EV'], required: true },
-      { name: 'pl', label: 'Product Line (PL)', type: 'select', options: ['Tiago', 'Tigor', 'Altroz', 'Punch', 'Nexon', 'Harrier', 'Safari'], required: true },
-      { name: 'variant', label: 'Variant', type: 'text', required: true },
-      { name: 'colour', label: 'Colour', type: 'text', required: true },
+      { name: 'pl', label: 'PPL', type: 'select', options: ['Tiago', 'Tigor', 'Altroz', 'Punch', 'Nexon', 'Harrier', 'Safari'], required: true },
+      { name: 'variant', label: 'PL (Variant)', type: 'text', required: true },
+      { name: 'colour', label: 'Color', type: 'text', required: true },
+      { name: 'bdStatus', label: 'BD STATUS', type: 'select', options: ['BD DONE', 'BD PENDING', 'IN STOCK', 'DROP DOWN LIST'], required: false },
+      { name: 'bdDate', label: 'BD DATE', type: 'date', required: false },
       { name: 'vc', label: 'Vehicle Code (VC)', type: 'text', required: false }
     ]
   },
@@ -29,7 +33,11 @@ export const SECTIONS = {
     fields: [
       { name: 'ca', label: 'Customer Advisor (CA)', type: 'text', required: true },
       { name: 'tl', label: 'Team Leader (TL)', type: 'text', required: true },
-      { name: 'branch', label: 'Branch', type: 'text', required: true }
+      { name: 'branch', label: 'Branch', type: 'text', required: true },
+      { name: 'region', label: 'Region', type: 'select', options: ['R1', 'R2', 'TD'], required: false },
+      { name: 'crmBookingStatus', label: 'CRM - Booking Status', type: 'select', options: ['CRM /RETAIL DONE', 'CRM REQUESTED/CHASSIS BLOCKED', 'CANCELLED WITHOUT DOCUMENT/REFUND', 'REFUND OK-CRM CANCELLATION PENDING'], required: false },
+      { name: 'branchStatus', label: 'Branch Status', type: 'select', options: ['LIVE', 'NOT LIVE', 'CANCELLATION', 'MODEL CHANGE', 'NAME CHANGE', 'DROP DOWN FROM CREATED BRANCHES'], required: false },
+      { name: 'branchRemark', label: 'Branch Remark', type: 'text', required: false }
     ]
   },
   offer: {

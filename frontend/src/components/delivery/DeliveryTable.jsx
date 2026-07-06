@@ -4,7 +4,15 @@ import DeliveryGridItem from './DeliveryGridItem.jsx';
 import DeliveryTableRow from './DeliveryTableRow.jsx';
 import { DEPARTMENT_KEYS, SECTIONS, STATUS_VALUES } from '../../models/apiModel.js';
 
-export default function DeliveryTable({ vehicles, branches, openDrawer, totalVehicles = 0, currentPage = 1, fetchVehicles }) {
+export default function DeliveryTable({ 
+  vehicles, 
+  branches, 
+  openDrawer,
+  openNewBooking,
+  totalVehicles = 0, 
+  currentPage = 1, 
+  fetchVehicles 
+}) {
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [filters, setFilters] = useState({
     global: '', branch: '', status: '', pending: '',
@@ -65,7 +73,7 @@ export default function DeliveryTable({ vehicles, branches, openDrawer, totalVeh
           Showing <span id="lbl-result-count">{filteredVehicles.length}</span> of <span id="lbl-total-count">{totalVehicles || vehicles.length}</span> Vehicles
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <button className="btn-primary" onClick={() => openDrawer(null)}>
+          <button className="btn-primary" onClick={openNewBooking || (() => openDrawer(null))}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             New Booking
           </button>
