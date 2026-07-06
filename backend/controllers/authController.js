@@ -45,7 +45,10 @@ export const login = async (req, res) => {
 
     // Regenerate session ID on privilege change to prevent session fixation
     req.session.regenerate((err) => {
-      if (err) return res.status(500).json({ error: 'Session error' });
+      if (err) {
+        console.error('[Session Error] Failed to regenerate session:', err);
+        return res.status(500).json({ error: 'Session error' });
+      }
       req.session.user = sessionUser;
       res.json(sessionUser);
     });
