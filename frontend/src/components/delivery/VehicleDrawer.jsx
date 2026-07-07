@@ -58,7 +58,7 @@ export default function VehicleDrawer({ vehicle, branches, onClose }) {
     }
   };
 
-  const isViewOnly = user.role === 'MANAGEMENT' || user.role === 'BOOKING IN-CHARGE';
+  const isViewOnly = user.role === 'MANAGEMENT';
 
   // For new bookings: show all details sections
   const newBookingSections = Object.keys(SECTIONS);

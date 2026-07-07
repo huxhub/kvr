@@ -12,6 +12,7 @@ export default function SectionBlock({ sectionKey, section, formData, handleChan
     user.role === 'CRM' ||
     user.role === normalizedTitle ||
     (normalizedTitle === 'TALLY FILE' && user.role === 'ACCOUNTS') ||
+    ((normalizedTitle === 'CUSTOMER' || normalizedTitle === 'VEHICLE' || normalizedTitle === 'SALES' || normalizedTitle === 'OFFER') && user.role === 'BOOKING IN-CHARGE') ||
     user.role === 'MANAGEMENT'; // MANAGEMENT is handled specifically later for view-only
 
   const statusField = section.statusField;
@@ -20,7 +21,7 @@ export default function SectionBlock({ sectionKey, section, formData, handleChan
   // Is this section locked entirely? (forceEditable bypasses all lock logic for new bookings; ADMIN/CRM bypasses all lock logic)
   const isLocked = forceEditable ? false : (
     (user.role === 'ADMIN' || user.role === 'CRM') ? false : (
-      !isEditable || user.role === 'MANAGEMENT' || user.role === 'BOOKING IN-CHARGE'
+      !isEditable || user.role === 'MANAGEMENT'
     )
   );
   
