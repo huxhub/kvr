@@ -56,7 +56,7 @@ export default function Sidebar({ activeTab, setActiveTab, isSidebarOpen, setIsS
         </button>
 
         {/* New Booking quick-action button */}
-        {user.role !== 'FINANCE' && (
+        {(user.role === 'ADMIN' || user.role === 'CRM' || user.role === 'BOOKING IN-CHARGE') && (
           <button
             className="sidebar-new-booking-btn"
             onClick={() => { if (onNewBooking) { onNewBooking(); } if (setIsSidebarOpen) setIsSidebarOpen(false); }}
