@@ -8,12 +8,15 @@ INSERT INTO users (username, password, role, name, branch, email) VALUES
   ('crm',      'crm123',      'CRM',        'CRM Advisor',          'Perinthalmanna', 'crm@kvrgroup.com'),
   ('finance',  'finance123',  'FINANCE',    'Finance Manager',      'Perinthalmanna', 'finance@kvrgroup.com'),
   ('accounts', 'accounts123', 'ACCOUNTS',   'Accounts Auditor',     'Perinthalmanna', 'accounts@kvrgroup.com'),
+  ('tma',      'tma123',      'TMA',        'TMA Coordinator',      'Perinthalmanna', 'tma@kvrgroup.com'),
+  ('insurance', 'insurance123', 'INSURANCE', 'Insurance Officer',   'Perinthalmanna', 'insurance@kvrgroup.com'),
+  ('registration', 'registration123', 'REGISTRATION', 'Registration Officer', 'Perinthalmanna', 'registration@kvrgroup.com'),
   ('mgmt',     'mgmt123',     'MANAGEMENT', 'KVR General Manager',  'Perinthalmanna', 'mgmt@kvrgroup.com')
 ON DUPLICATE KEY UPDATE username = username;
 
 -- Default global settings
 INSERT INTO settings (setting_key, companyName, companyPhone, companyEmail, companyAddress, branches, theme, enableAlerts) VALUES
-  ('global', 'KVR TATA', '+91 98470 12345', 'support@kvrgroup.com', 'KVR Group, NH 66, Perinthalmanna, Kerala', '["Perinthalmanna"]', 'light', 1)
+  ('global', 'KVR TATA', '+91 98470 12345', 'support@kvrgroup.com', 'KVR Group, NH 66, Perinthalmanna, Kerala', '["Perinthalmanna", "Ottapalam"]', 'light', 1)
 ON DUPLICATE KEY UPDATE setting_key = setting_key;
 
 -- Seeding Vehicles Table

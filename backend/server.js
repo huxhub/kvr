@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 import connectDB, { pool } from './config/db.js';
 import { requireSession } from './middleware/requireSession.js';
 
-dotenv.config();
+dotenv.config({ override: true });
 
 
 connectDB();
