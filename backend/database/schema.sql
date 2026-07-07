@@ -45,18 +45,18 @@ CREATE TABLE IF NOT EXISTS vehicles (
   pl                  VARCHAR(50)  DEFAULT '',
   variant             VARCHAR(80)  DEFAULT '',
   colour              VARCHAR(50)  DEFAULT '',
-  bdStatus            VARCHAR(50)  DEFAULT '',
-  bdDate              VARCHAR(30)  DEFAULT '',
+  bdStatus            TEXT,
+  bdDate              TEXT,
   vc                  VARCHAR(50)  DEFAULT '',
 
   -- Sales Details
   ca                  VARCHAR(80)  DEFAULT '',
   tl                  VARCHAR(80)  DEFAULT '',
   branch              VARCHAR(80)  NOT NULL DEFAULT 'Perinthalmanna',
-  region              VARCHAR(50)  DEFAULT '',
-  crmBookingStatus    VARCHAR(100) DEFAULT '',
-  branchStatus        VARCHAR(50)  DEFAULT '',
-  branchRemark        VARCHAR(255) DEFAULT '',
+  region              TEXT,
+  crmBookingStatus    TEXT,
+  branchStatus        TEXT,
+  branchRemark        TEXT,
 
   -- Offer Details
   hypothecation       VARCHAR(80)  DEFAULT '',
