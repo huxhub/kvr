@@ -1458,7 +1458,9 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-muted);
 }
 
-.form-field input, .form-field select {
+.form-field input, .form-field select, .form-field textarea {
+  width: 100%;
+  box-sizing: border-box;
   padding: 8px 12px;
   border: 1px solid var(--border-light);
   border-radius: var(--radius-sm);

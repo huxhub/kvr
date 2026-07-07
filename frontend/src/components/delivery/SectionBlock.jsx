@@ -42,7 +42,7 @@ export default function SectionBlock({ sectionKey, section, formData, handleChan
       <div className="section-grid">
         {section.fields.map(field => {
           const isFieldDisabled = 
-            (isLocked || (field.name === 'chassisNumber' && !forceEditable)) && 
+            (isLocked || (field.name === 'chassisNumber' && !forceEditable && !(user.role === 'ADMIN' || user.role === 'CRM' || user.role === 'BOOKING IN-CHARGE'))) && 
             !(isBranchManager && field.name.toLowerCase().includes('remark'));
           
           if (field.type === 'status' || field.type === 'select') {
