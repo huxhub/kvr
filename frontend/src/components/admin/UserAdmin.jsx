@@ -209,7 +209,7 @@ export default function UserAdmin({ branches }) {
                     <option value="TMGA">TMGA (Genuine Accessories)</option>
                     <option value="PDI">PDI (Pre-Delivery Inspection)</option>
                     <option value="DELIVERY">DELIVERY (Delivery Dept)</option>
-                    <option value="BILLING">BILLING (Billing In-Charge)</option>
+                    <option value="BOOKING">BOOKING (Booking In-Charge)</option>
                     <option value="BRANCH_MANAGER">BRANCH_MANAGER (Branch Level)</option>
                     <option value="MANAGEMENT">MANAGEMENT (View-Only)</option>
                   </select>
