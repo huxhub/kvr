@@ -30,10 +30,10 @@ export function AuthProvider({ children }) {
       setError(null);
       const userData = await apiLogin(email, password);
       setUser(userData);
-      return true;
+      return { success: true };
     } catch (err) {
       setError(err.message);
-      return false;
+      return { success: false, error: err.message };
     }
   };
 

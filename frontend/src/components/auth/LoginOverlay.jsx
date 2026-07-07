@@ -16,11 +16,13 @@ export default function LoginOverlay({ companyName = 'KVR TATA' }) {
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const success = await login(email, password);
+    const result = await login(email, password);
     setLoading(false);
     
-    if (success) {
+    if (result.success) {
       showToast('Login Successful', `Welcome back to ${companyName}`);
+    } else {
+      showToast('Login Failed', result.error || 'Invalid credentials', 'error');
     }
   };
 
