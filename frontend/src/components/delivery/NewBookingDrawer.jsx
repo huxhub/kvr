@@ -47,7 +47,7 @@ export default function NewBookingDrawer({ branches, onClose }) {
     }
   };
 
-  const isViewOnly = user.role === 'MANAGEMENT'; // BOOKING can create new bookings
+  const isViewOnly = user.role === 'MANAGEMENT'; // BOOKING IN-CHARGE can create new bookings
 
   // Only render Customer, Vehicle, and Sales details for New Booking form
   const newBookingSections = ['customer', 'vehicle', 'sales'];

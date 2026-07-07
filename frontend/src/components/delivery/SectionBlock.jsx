@@ -17,7 +17,7 @@ export default function SectionBlock({ sectionKey, section, formData, handleChan
   
   // Is this section locked entirely? (forceEditable bypasses all lock logic for new bookings; ADMIN/CRM bypasses all lock logic)
   const isLocked = forceEditable ? false : (
-    (user.role === 'ADMIN' || user.role === 'CRM') ? false : (!isEditable || currentStatus === STATUS_VALUES.APPROVED || user.role === 'MANAGEMENT' || user.role === 'BOOKING')
+    (user.role === 'ADMIN' || user.role === 'CRM') ? false : (!isEditable || currentStatus === STATUS_VALUES.APPROVED || user.role === 'MANAGEMENT' || user.role === 'BOOKING IN-CHARGE')
   );
   
   // For branch manager, only remarks are editable
