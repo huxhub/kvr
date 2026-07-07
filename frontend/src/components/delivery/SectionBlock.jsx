@@ -18,19 +18,17 @@ export default function SectionBlock({ sectionKey, section, formData, handleChan
   const currentStatus = formData[statusField] || STATUS_VALUES.NOT_ATTENDED;
   
   // Is this section locked entirely? (forceEditable bypasses all lock logic for new bookings; ADMIN/CRM bypasses all lock logic)
-  const isLocked = forceEditable ? false : (
-    (user.role === 'ADMIN' || user.role === 'CRM') ? false : (!isEditable || currentStatus === STATUS_VALUES.APPROVED || user.role === 'MANAGEMENT' || user.role === 'BOOKING IN-CHARGE')
+  const isLocked = (user.role === 'ADMIN' || user.role === 'CRM') ? false : (
+    !isEditable || (!forceEditable && (currentStatus === STATUS_VALUES.APPROVED || user.role === 'MANAGEMENT' || user.role === 'BOOKING IN-CHARGE'))
   );
   
   // For branch manager, only remarks are editable
   const isBranchManager = !forceEditable && user.role === 'BRANCH_MANAGER';
-  const lockBadge = forceEditable
-    ? <span className="status-badge" style={{ backgroundColor: 'var(--success-green)', color: 'white' }}>Editable</span>
+  const lockBadge = isLocked
+    ? <span className="status-badge" style={{ backgroundColor: 'var(--border-light)', color: 'var(--text-dark)' }}>🔒 Locked</span>
     : isBranchManager && section.fields.some(f => f.name.toLowerCase().includes('remark'))
       ? <span className="status-badge" style={{ backgroundColor: 'var(--accent-blue)', color: 'white' }}>📝 Remarks Editable</span>
-      : isLocked
-        ? <span className="status-badge" style={{ backgroundColor: 'var(--border-light)', color: 'var(--text-dark)' }}>🔒 Locked</span>
-        : <span className="status-badge" style={{ backgroundColor: 'var(--success-green)', color: 'white' }}>Editable</span>;
+      : <span className="status-badge" style={{ backgroundColor: 'var(--success-green)', color: 'white' }}>Editable</span>;
 
   return (
     <div className={`form-section ${isLocked && !isBranchManager ? 'locked-section' : ''}`}>
