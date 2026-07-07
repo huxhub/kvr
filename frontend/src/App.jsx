@@ -72,14 +72,14 @@ function AppContent() {
     }
 
     loadInitialData();
-    // BRANCH_MANAGER or FINANCE: lock to their own branch; others default to 'All Branches'
-    const isBranchRestricted = (user?.role === 'BRANCH_MANAGER' || user?.role === 'FINANCE') && user?.branch;
+    // BRANCH_MANAGER, FINANCE, TMA, ACCOUNTS, INSURANCE, or REGISTRATION: lock to their own branch; others default to 'All Branches'
+    const isBranchRestricted = (user?.role === 'BRANCH_MANAGER' || user?.role === 'FINANCE' || user?.role === 'TMA' || user?.role === 'ACCOUNTS' || user?.role === 'INSURANCE' || user?.role === 'REGISTRATION') && user?.branch;
     setSelectedBranch(isBranchRestricted ? user.branch : '');
   }, [user, fetchVehicles]);
 
   const branches = useMemo(() => {
-    // BRANCH_MANAGER or FINANCE: only show their own branch in the dropdown
-    const isBranchRestricted = (user?.role === 'BRANCH_MANAGER' || user?.role === 'FINANCE') && user?.branch;
+    // BRANCH_MANAGER, FINANCE, TMA, ACCOUNTS, INSURANCE, or REGISTRATION: only show their own branch in the dropdown
+    const isBranchRestricted = (user?.role === 'BRANCH_MANAGER' || user?.role === 'FINANCE' || user?.role === 'TMA' || user?.role === 'ACCOUNTS' || user?.role === 'INSURANCE' || user?.role === 'REGISTRATION') && user?.branch;
     if (isBranchRestricted) {
       return [user.branch];
     }

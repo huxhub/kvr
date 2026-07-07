@@ -12,6 +12,7 @@ export default function SectionBlock({ sectionKey, section, formData, handleChan
     user.role === 'CRM' ||
     user.role === normalizedTitle ||
     (normalizedTitle === 'TALLY FILE' && user.role === 'ACCOUNTS') ||
+    (forceEditable && user.role === 'BOOKING IN-CHARGE' && ['CUSTOMER', 'VEHICLE', 'SALES'].includes(normalizedTitle)) ||
     user.role === 'MANAGEMENT'; // MANAGEMENT is handled specifically later for view-only
 
   const statusField = section.statusField;
