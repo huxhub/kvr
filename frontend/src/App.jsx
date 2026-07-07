@@ -72,14 +72,14 @@ function AppContent() {
     }
 
     loadInitialData();
-    // BRANCH_MANAGER or FINANCE: lock to their own branch; others default to 'All Branches'
-    const isBranchRestricted = (user?.role === 'BRANCH_MANAGER' || user?.role === 'FINANCE') && user?.branch;
+    // Non-Admin: lock to their own branch; ADMIN defaults to 'All Branches'
+    const isBranchRestricted = user?.role !== 'ADMIN' && user?.branch;
     setSelectedBranch(isBranchRestricted ? user.branch : '');
   }, [user, fetchVehicles]);
 
   const branches = useMemo(() => {
-    // BRANCH_MANAGER or FINANCE: only show their own branch in the dropdown
-    const isBranchRestricted = (user?.role === 'BRANCH_MANAGER' || user?.role === 'FINANCE') && user?.branch;
+    // Non-Admin: only show their own branch in the dropdown
+    const isBranchRestricted = user?.role !== 'ADMIN' && user?.branch;
     if (isBranchRestricted) {
       return [user.branch];
     }
