@@ -9,13 +9,15 @@ export const getVehicles = async (req, res) => {
     const activeLimit = Math.min(25, Math.max(1, limit));
 
     const sessionUser = req.session.user;
-    const isBranchRestricted = sessionUser?.role !== 'ADMIN';
+    const isBranchRestricted = 
+      (sessionUser?.role === 'BRANCH_MANAGER' || sessionUser?.role === 'FINANCE') && 
+      sessionUser?.branch;
     const userBranch = sessionUser?.branch;
 
     let vehicles, totalCount;
 
-    if (isBranchRestricted && userBranch) {
-      // Non-Admin: only see their own branch's vehicles
+    if (isBranchRestricted) {
+      // BRANCH_MANAGER or FINANCE: only see their own branch's vehicles
       [vehicles, totalCount] = await Promise.all([
         Vehicle.findByBranch(userBranch, page, activeLimit),
         Vehicle.countByBranch(userBranch)

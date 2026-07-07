@@ -34,9 +34,9 @@ export default function Header({
   const displayTitle = tabTitles[activeTab] || 'Dashboard';
   const displaySubtitle = tabSubtitles[activeTab] || 'System Overview & Department Bottlenecks';
 
-  const isBranchRestricted = user?.role !== 'ADMIN';
+  const isBranchRestricted = (user?.role === 'BRANCH_MANAGER' || user?.role === 'FINANCE') && user?.branch;
 
-  // Non-Admin sees only their branch; ADMIN sees 'All Branches' + full list
+  // Restricted roles see only their branch; other roles see 'All Branches' + full list
   const dropdownOptions = isBranchRestricted
     ? branches.map(branch => ({ value: branch, label: branch }))
     : [

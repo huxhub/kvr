@@ -6,10 +6,12 @@ export default function SectionBlock({ sectionKey, section, formData, handleChan
   const { user } = useAuth();
   
   // Logic to determine if section is editable based on user role
+  const normalizedTitle = section.title.replace(' Details', '').toUpperCase();
   const isEditable = 
     user.role === 'ADMIN' || 
     user.role === 'CRM' ||
-    user.role === section.title.replace(' Details', '') ||
+    user.role === normalizedTitle ||
+    (normalizedTitle === 'TALLY FILE' && user.role === 'ACCOUNTS') ||
     user.role === 'MANAGEMENT'; // MANAGEMENT is handled specifically later for view-only
 
   const statusField = section.statusField;
