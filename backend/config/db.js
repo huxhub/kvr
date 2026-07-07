@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 
 // Ensure env vars are loaded before pool creation
 // (ES module imports run before dotenv.config() in server.js)
-dotenv.config();
+dotenv.config({ override: true });
 
 // MySQL connection pool — shared across the entire application
 const pool = mysql.createPool({

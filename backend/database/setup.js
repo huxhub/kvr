@@ -8,7 +8,7 @@ import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
-dotenv.config();
+dotenv.config({ override: true });
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 

@@ -62,7 +62,24 @@ export default function Header({
         </div>
       </div>
       
-      {!isBranchRestricted && (
+      {isBranchRestricted ? (
+        <div className="header-branch-select-wrapper">
+          <span className="header-branch-label">Branch:</span>
+          <span className="static-branch-badge" style={{ 
+            fontWeight: 600, 
+            color: 'var(--primary-blue)', 
+            fontSize: '0.75rem', 
+            background: 'rgba(37, 99, 235, 0.08)', 
+            padding: '6px 12px', 
+            borderRadius: '6px', 
+            border: '1px solid rgba(37, 99, 235, 0.15)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px'
+          }}>
+            {user.branch}
+          </span>
+        </div>
+      ) : (
         <div className="header-branch-select-wrapper">
           <span className="header-branch-label">Branch:</span>
           <CustomDropdown 
