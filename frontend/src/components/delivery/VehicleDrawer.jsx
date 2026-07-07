@@ -101,27 +101,6 @@ export default function VehicleDrawer({ vehicle, branches, onClose }) {
             ))
           )}
 
-          {/* Change Verification Remark section inside body */}
-          {!isViewOnly && (
-            <div className="form-section editable" style={{ marginTop: '20px' }}>
-              <div className="section-header">
-                <h4 className="section-title">Change Verification Remark</h4>
-                <span className="status-badge" style={{ backgroundColor: 'var(--status-approved-border)', color: 'white' }}>Required</span>
-              </div>
-              <div className="form-grid" style={{ gridTemplateColumns: '1fr' }}>
-                <div className="form-field">
-                  <label>Operation Reason / Audit Remark *</label>
-                  <input 
-                    type="text" 
-                    value={auditRemark} 
-                    onChange={(e) => setAuditRemark(e.target.value)} 
-                    required 
-                    placeholder="Describe the status updates made (e.g. Loan approved, tax paid)..." 
-                  />
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="modal-footer" style={{ borderTop: '1px solid var(--border-light)', padding: '16px 24px' }}>
