@@ -62,15 +62,16 @@ export default function Header({
         </div>
       </div>
       
-      <div className="header-branch-select-wrapper">
-        <span className="header-branch-label">Branch:</span>
-        <CustomDropdown 
-          value={selectedBranch || ''} 
-          onChange={(e) => !isBranchRestricted && setSelectedBranch(e.target.value)} 
-          options={dropdownOptions}
-          disabled={isBranchRestricted}
-        />
-      </div>
+      {!isBranchRestricted && (
+        <div className="header-branch-select-wrapper">
+          <span className="header-branch-label">Branch:</span>
+          <CustomDropdown 
+            value={selectedBranch || ''} 
+            onChange={(e) => setSelectedBranch(e.target.value)} 
+            options={dropdownOptions}
+          />
+        </div>
+      )}
     </header>
   );
 }

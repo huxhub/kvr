@@ -80,15 +80,16 @@ export default function DashboardKPIs({ vehicles, activeBranch, setSelectedBranc
 
   return (
     <div id="dashboard-view" className="tab-content active">
-      <div className="mobile-branch-selector-container">
-        <span className="mobile-branch-label">Branch:</span>
-        <CustomDropdown 
-          value={activeBranch || ''}
-          onChange={(e) => !isBranchRestricted && setSelectedBranch(e.target.value)}
-          options={dropdownOptions}
-          disabled={isBranchRestricted}
-        />
-      </div>
+      {!isBranchRestricted && (
+        <div className="mobile-branch-selector-container">
+          <span className="mobile-branch-label">Branch:</span>
+          <CustomDropdown 
+            value={activeBranch || ''}
+            onChange={(e) => setSelectedBranch(e.target.value)}
+            options={dropdownOptions}
+          />
+        </div>
+      )}
 
       <div className="kpi-container">
         <div className="kpi-card">

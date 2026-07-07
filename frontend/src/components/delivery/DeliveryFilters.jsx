@@ -74,16 +74,17 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
           <input type="text" id="filter-global" className="global-search-input" placeholder="Search by customer name, mobile, order number, or chassis number..." value={filters.global} onChange={handleChange} />
         </div>
 
-        <div className="filter-group">
-          <label htmlFor="filter-branch">BRANCH</label>
-          <CustomDropdown 
-            id="filter-branch" 
-            value={filters.branch} 
-            onChange={handleChange} 
-            options={branchOptions} 
-            disabled={isBranchRestricted}
-          />
-        </div>
+        {!isBranchRestricted && (
+          <div className="filter-group">
+            <label htmlFor="filter-branch">BRANCH</label>
+            <CustomDropdown 
+              id="filter-branch" 
+              value={filters.branch} 
+              onChange={handleChange} 
+              options={branchOptions} 
+            />
+          </div>
+        )}
 
         <div className="filter-group">
           <label htmlFor="filter-status">VEHICLE STATUS</label>
