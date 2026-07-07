@@ -55,7 +55,8 @@ export default function Sidebar({ activeTab, setActiveTab, isSidebarOpen, setIsS
           Delivery Master List
         </button>
 
-        {user.role !== 'TMGA' && (
+        {/* New Booking quick-action button */}
+        {user.role !== 'FINANCE' && (
           <button
             className="sidebar-new-booking-btn"
             onClick={() => { if (onNewBooking) { onNewBooking(); } if (setIsSidebarOpen) setIsSidebarOpen(false); }}
