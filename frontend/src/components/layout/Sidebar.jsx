@@ -55,15 +55,16 @@ export default function Sidebar({ activeTab, setActiveTab, isSidebarOpen, setIsS
           Delivery Master List
         </button>
 
-        {/* New Booking quick-action button */}
-        <button
-          className="sidebar-new-booking-btn"
-          onClick={() => { if (onNewBooking) { onNewBooking(); } if (setIsSidebarOpen) setIsSidebarOpen(false); }}
-          title="Register a new vehicle booking"
-        >
-          <Plus size={15} strokeWidth={2.5} />
-          New Booking
-        </button>
+        {user.role !== 'TMGA' && (
+          <button
+            className="sidebar-new-booking-btn"
+            onClick={() => { if (onNewBooking) { onNewBooking(); } if (setIsSidebarOpen) setIsSidebarOpen(false); }}
+            title="Register a new vehicle booking"
+          >
+            <Plus size={15} strokeWidth={2.5} />
+            New Booking
+          </button>
+        )}
         <button 
           className={`sidebar-btn ${activeTab === 'audit' ? 'active' : ''}`} 
           onClick={() => handleNavClick('audit')}
