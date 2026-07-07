@@ -87,8 +87,8 @@ export default function Header({
             onChange={(e) => setSelectedBranch(e.target.value)} 
             options={dropdownOptions}
           />
-        )}
-      </div>
+        </div>
+      )}
     </header>
   );
 }
