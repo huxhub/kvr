@@ -62,16 +62,20 @@ export default function Header({
         </div>
       </div>
       
-      {!isBranchRestricted && (
-        <div className="header-branch-select-wrapper">
-          <span className="header-branch-label">Branch:</span>
+      <div className="header-branch-select-wrapper">
+        <span className="header-branch-label">Branch:</span>
+        {isBranchRestricted ? (
+          <span className="header-branch-value" style={{ fontWeight: 600, color: 'var(--text-dark)', fontSize: '0.88rem' }}>
+            {user?.branch || 'Perinthalmanna'}
+          </span>
+        ) : (
           <CustomDropdown 
             value={selectedBranch || ''} 
             onChange={(e) => setSelectedBranch(e.target.value)} 
             options={dropdownOptions}
           />
-        </div>
-      )}
+        )}
+      </div>
     </header>
   );
 }
