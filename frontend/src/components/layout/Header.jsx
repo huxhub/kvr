@@ -34,10 +34,10 @@ export default function Header({
   const displayTitle = tabTitles[activeTab] || 'Dashboard';
   const displaySubtitle = tabSubtitles[activeTab] || 'System Overview & Department Bottlenecks';
 
-  const isBranchManager = user?.role === 'BRANCH_MANAGER';
+  const isBranchRestricted = user?.role !== 'ADMIN';
 
-  // BRANCH_MANAGER sees only their branch; other roles see 'All Branches' + full list
-  const dropdownOptions = isBranchManager
+  // Non-Admin sees only their branch; ADMIN sees 'All Branches' + full list
+  const dropdownOptions = isBranchRestricted
     ? branches.map(branch => ({ value: branch, label: branch }))
     : [
         { value: '', label: 'All Branches' },
@@ -66,9 +66,9 @@ export default function Header({
         <span className="header-branch-label">Branch:</span>
         <CustomDropdown 
           value={selectedBranch || ''} 
-          onChange={(e) => !isBranchManager && setSelectedBranch(e.target.value)} 
+          onChange={(e) => !isBranchRestricted && setSelectedBranch(e.target.value)} 
           options={dropdownOptions}
-          disabled={isBranchManager}
+          disabled={isBranchRestricted}
         />
       </div>
     </header>

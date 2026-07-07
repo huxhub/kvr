@@ -72,13 +72,13 @@ function AppContent() {
     }
 
     loadInitialData();
-    // BRANCH_MANAGER: lock to their own branch; others default to 'All Branches'
-    setSelectedBranch(user?.role === 'BRANCH_MANAGER' && user?.branch ? user.branch : '');
+    // Non-Admin: lock to their own branch; ADMIN defaults to 'All Branches'
+    setSelectedBranch(user?.role !== 'ADMIN' && user?.branch ? user.branch : '');
   }, [user, fetchVehicles]);
 
   const branches = useMemo(() => {
-    // BRANCH_MANAGER: only show their own branch in the dropdown
-    if (user?.role === 'BRANCH_MANAGER' && user?.branch) {
+    // Non-Admin: only show their own branch in the dropdown
+    if (user?.role !== 'ADMIN' && user?.branch) {
       return [user.branch];
     }
     const branchesSet = new Set(['Perinthalmanna', ...(settings.branches || [])]);

@@ -9,9 +9,15 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
     setFilters(prev => ({ ...prev, [id.replace('filter-', '')]: value }));
   };
 
+  const { user } = useAuth();
+  const isBranchRestricted = user?.role !== 'ADMIN';
+
   const handleClear = () => {
     setFilters({ 
-      global: '', branch: '', status: '', pending: '',
+      global: '', 
+      branch: isBranchRestricted && user?.branch ? user.branch : '', 
+      status: '', 
+      pending: '',
       ca: '', tl: '', expDate: '', actDate: '',
       finStatus: '', tmaStatus: '', accStatus: '', regStatus: '', pdiStatus: ''
     });
@@ -20,11 +26,8 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
   const cas = useMemo(() => Array.from(new Set(vehicles.map(v => v.ca).filter(Boolean))).sort(), [vehicles]);
   const tls = useMemo(() => Array.from(new Set(vehicles.map(v => v.tl).filter(Boolean))).sort(), [vehicles]);
 
-  const { user } = useAuth();
-  const isBranchManager = user?.role === 'BRANCH_MANAGER';
-
-  // BRANCH_MANAGER: only show their own branch
-  const branchOptions = isBranchManager
+  // Non-Admin: only show their own branch
+  const branchOptions = isBranchRestricted
     ? branches.map(b => ({ value: b, label: b }))
     : [
         { value: '', label: 'All Branches' },
@@ -78,6 +81,7 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
             value={filters.branch} 
             onChange={handleChange} 
             options={branchOptions} 
+            disabled={isBranchRestricted}
           />
         </div>
 

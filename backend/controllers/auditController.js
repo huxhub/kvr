@@ -9,13 +9,13 @@ export const getAuditLogs = async (req, res) => {
     const activeLimit = Math.min(25, Math.max(1, limit));
 
     const sessionUser = req.session.user;
-    const isBranchManager = sessionUser?.role === 'BRANCH_MANAGER';
+    const isBranchRestricted = sessionUser?.role !== 'ADMIN';
     const userBranch = sessionUser?.branch;
 
     let logs, totalCount;
 
-    if (isBranchManager && userBranch) {
-      // BRANCH_MANAGER: only see audit logs for their branch's vehicles
+    if (isBranchRestricted && userBranch) {
+      // Non-Admin: only see audit logs for their branch's vehicles
       [logs, totalCount] = await Promise.all([
         Audit.findByBranch(userBranch, page, activeLimit),
         Audit.countByBranch(userBranch)

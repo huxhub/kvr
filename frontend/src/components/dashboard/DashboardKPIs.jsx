@@ -65,13 +65,13 @@ export default function DashboardKPIs({ vehicles, activeBranch, setSelectedBranc
   }, [filteredVehicles]);
 
   const { user } = useAuth();
-  const isBranchManager = user?.role === 'BRANCH_MANAGER';
+  const isBranchRestricted = user?.role !== 'ADMIN';
 
   // Colors for the bar chart
   const COLORS = ['#1e293b', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b'];
 
-  // BRANCH_MANAGER: dropdown locked to their branch only
-  const dropdownOptions = isBranchManager
+  // Non-Admin: dropdown locked to their branch only
+  const dropdownOptions = isBranchRestricted
     ? branches.map(branch => ({ value: branch, label: branch }))
     : [
         { value: '', label: 'All Branches' },
@@ -84,9 +84,9 @@ export default function DashboardKPIs({ vehicles, activeBranch, setSelectedBranc
         <span className="mobile-branch-label">Branch:</span>
         <CustomDropdown 
           value={activeBranch || ''}
-          onChange={(e) => !isBranchManager && setSelectedBranch(e.target.value)}
+          onChange={(e) => !isBranchRestricted && setSelectedBranch(e.target.value)}
           options={dropdownOptions}
-          disabled={isBranchManager}
+          disabled={isBranchRestricted}
         />
       </div>
 

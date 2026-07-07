@@ -4,6 +4,8 @@ import DeliveryGridItem from './DeliveryGridItem.jsx';
 import DeliveryTableRow from './DeliveryTableRow.jsx';
 import { DEPARTMENT_KEYS, SECTIONS, STATUS_VALUES } from '../../models/apiModel.js';
 
+import { useAuth } from '../../context/AuthContext.jsx';
+
 export default function DeliveryTable({ 
   vehicles, 
   branches, 
@@ -13,9 +15,15 @@ export default function DeliveryTable({
   currentPage = 1, 
   fetchVehicles 
 }) {
+  const { user } = useAuth();
+  const isBranchRestricted = user?.role !== 'ADMIN';
+
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [filters, setFilters] = useState({
-    global: '', branch: '', status: '', pending: '',
+    global: '', 
+    branch: isBranchRestricted && user?.branch ? user.branch : '', 
+    status: '', 
+    pending: '',
     ca: '', tl: '', expDate: '', actDate: '',
     finStatus: '', tmaStatus: '', accStatus: '', regStatus: '', pdiStatus: ''
   });
