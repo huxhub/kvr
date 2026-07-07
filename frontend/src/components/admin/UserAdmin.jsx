@@ -87,7 +87,7 @@ export default function UserAdmin({ branches }) {
                   <td>{u.name}</td>
                   <td>{u.username}</td>
                   <td>{u.email || '-'}</td>
-                  <td>{u.role}</td>
+                  <td>{u.role?.replace('_', ' ')}</td>
                   <td>{u.branch}</td>
                   <td>{u.password ? '******' : ''}</td>
                   {!isReadOnly && (
@@ -120,7 +120,7 @@ export default function UserAdmin({ branches }) {
                     <span className="user-card-number">#{(currentPage - 1) * 15 + index + 1}</span>
                   </div>
                   <div className="user-card-badges">
-                    <span className="user-badge role">{u.role}</span>
+                    <span className="user-badge role">{u.role?.replace('_', ' ')}</span>
                     <span className="user-badge branch">{u.branch}</span>
                   </div>
                   {!isReadOnly && (

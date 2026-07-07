@@ -98,7 +98,7 @@ export default function Sidebar({ activeTab, setActiveTab, isSidebarOpen, setIsS
         </div>
         <div className="sidebar-profile-info">
           <span className="sidebar-profile-name" title={user.name}>{user.name}</span>
-          <span className="sidebar-profile-role">{user.role}</span>
+          <span className="sidebar-profile-role">{user.role?.replace('_', ' ')}</span>
         </div>
         <button 
           className="sidebar-logout-btn" 
