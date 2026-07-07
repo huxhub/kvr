@@ -18,7 +18,7 @@ export default function DeliveryTable({
   const { user } = useAuth();
   const isBranchRestricted = user?.role !== 'ADMIN';
 
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [viewMode, setViewMode] = useState('list'); // 'grid' or 'list'
   const [filters, setFilters] = useState({
     global: '', 
     branch: isBranchRestricted && user?.branch ? user.branch : '', 
