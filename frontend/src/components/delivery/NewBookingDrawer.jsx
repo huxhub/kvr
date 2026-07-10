@@ -58,8 +58,7 @@ export default function NewBookingDrawer({ branches, onClose, onSaved }) {
 
   const isViewOnly = user.role === 'MANAGEMENT'; // BOOKING IN-CHARGE can create new bookings
 
-  // Only render Customer, Vehicle, and Sales details for New Booking form
-  const newBookingSections = Object.keys(SECTIONS);
+
 
   return (
     <div className="modal-overlay open" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
