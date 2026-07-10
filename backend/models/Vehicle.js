@@ -35,7 +35,7 @@ export async function findAll(page = 1, limit = 25) {
 
   // Parameterized limit & offset need to be passed as strings in execute
   const [rows] = await pool.execute(
-    'SELECT * FROM vehicles LIMIT ? OFFSET ?',
+    'SELECT * FROM vehicles ORDER BY created_at DESC LIMIT ? OFFSET ?',
     [activeLimit.toString(), offset.toString()]
   );
   return rows;
@@ -53,7 +53,7 @@ export async function findByBranch(branch, page = 1, limit = 25) {
   const offset = (activePage - 1) * activeLimit;
 
   const [rows] = await pool.execute(
-    'SELECT * FROM vehicles WHERE branch = ? LIMIT ? OFFSET ?',
+    'SELECT * FROM vehicles WHERE branch = ? ORDER BY created_at DESC LIMIT ? OFFSET ?',
     [branch, activeLimit.toString(), offset.toString()]
   );
   return rows;

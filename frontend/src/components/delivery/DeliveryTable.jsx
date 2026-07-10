@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import DeliveryFilters from './DeliveryFilters.jsx';
 import DeliveryGridItem from './DeliveryGridItem.jsx';
 import DeliveryTableRow from './DeliveryTableRow.jsx';
+import BookingTableRow from './BookingTableRow.jsx';
 import { DEPARTMENT_KEYS, SECTIONS, STATUS_VALUES } from '../../models/apiModel.js';
 
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -11,12 +12,14 @@ export default function DeliveryTable({
   branches, 
   openDrawer,
   openNewBooking,
+  openCrm,
   totalVehicles = 0, 
   currentPage = 1, 
-  fetchVehicles 
+  fetchVehicles,
+  isBookingPage = false
 }) {
   const { user } = useAuth();
-  const isBranchRestricted = user?.role !== 'ADMIN';
+  const isBranchRestricted = user?.role !== 'ADMIN' && user?.branch !== 'All Branches';
 
   const [viewMode, setViewMode] = useState('list'); // 'grid' or 'list'
   const [filters, setFilters] = useState({
@@ -30,6 +33,10 @@ export default function DeliveryTable({
 
   const filteredVehicles = useMemo(() => {
     return vehicles.filter(v => {
+      // Split bookings vs deliveries
+      if (isBookingPage && v.vehicleStatus !== 'Booked') return false;
+      if (!isBookingPage && v.vehicleStatus === 'Booked') return false;
+
       if (filters.global) {
         const term = filters.global.toLowerCase();
         const matchText = `${v.customerName} ${v.mobileNumber} ${v.orderNumber} ${v.chassisNumber} ${v.variant} ${v.ca} ${v.tl}`.toLowerCase();
@@ -70,21 +77,26 @@ export default function DeliveryTable({
 
       return true;
     });
-  }, [vehicles, filters]);
+  }, [vehicles, filters, isBookingPage]);
 
   return (
     <div id="vehicles-view" className="tab-content active">
-      <DeliveryFilters filters={filters} setFilters={setFilters} branches={branches} vehicles={vehicles} />
+      <DeliveryFilters filters={filters} setFilters={setFilters} branches={branches} vehicles={vehicles} isBookingPage={isBookingPage} />
       
       <div className="list-header-controls">
         <div className="list-info-text">
           Showing <span id="lbl-result-count">{filteredVehicles.length}</span> of <span id="lbl-total-count">{totalVehicles || vehicles.length}</span> Vehicles
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <button className="btn-primary" onClick={() => openDrawer(null)}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            CRM
-          </button>
+          {(isBookingPage 
+            ? (user?.role === 'ADMIN' || user?.role === 'BRANCH_MANAGER' || user?.role === 'BRANCH' || user?.role === 'BOOKING IN-CHARGE')
+            : (user?.role === 'ADMIN' || user?.role === 'BOOKING IN-CHARGE' || user?.role === 'CRM')
+          ) && (
+            <button className="btn-primary" onClick={() => isBookingPage ? openNewBooking() : openCrm()}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              {isBookingPage ? 'New Booking' : 'CRM'}
+            </button>
+          )}
           <div className="view-toggles">
             <button className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`} onClick={() => setViewMode('grid')} title="Grid View">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
@@ -107,32 +119,64 @@ export default function DeliveryTable({
           )}
         </div>
       ) : (
-        <div className="list-view-container">
+        <div className="list-view-container" style={{ overflowX: 'auto' }}>
           <table className="table-master">
             <thead>
-              <tr>
-                <th style={{ width: '40px', paddingLeft: '16px' }}>#</th>
-                <th>PL / Variant</th>
-                <th>Branch</th>
-                <th>Expected Delivery</th>
-                <th>Fin Status</th>
-                <th>TMA Status</th>
-                <th>Acc Status</th>
-                <th>Reg Status</th>
-                <th>PDI Status</th>
-                <th>Deliv Status</th>
-                <th>Progress</th>
-              </tr>
+              {isBookingPage ? (
+                <tr>
+                  <th style={{ width: '40px', paddingLeft: '16px' }}>SL NO</th>
+                  <th>Booking Date</th>
+                  <th>Full Name</th>
+                  <th>Mobile No</th>
+                  <th>OPTY ID</th>
+                  <th>PPL</th>
+                  <th>PL</th>
+                  <th>Color</th>
+                  <th>BD STATUS</th>
+                  <th>BD DATE</th>
+                  <th>BKB ORDER NO</th>
+                  <th>SAP ORDER NO</th>
+                  <th>CRM - booking status</th>
+                  <th>CA</th>
+                  <th>TL</th>
+                  <th>BRANCH</th>
+                  <th>REGION</th>
+                  <th>BRANCH STATUS</th>
+                  <th>BRANCH REMARK</th>
+                  <th>FINANCE STATUS</th>
+                  <th>FINANCE REMARK</th>
+                </tr>
+              ) : (
+                <tr>
+                  <th style={{ width: '40px', paddingLeft: '16px' }}>#</th>
+                  <th>PL / Variant</th>
+                  <th>Branch</th>
+                  <th>Expected Delivery</th>
+                  <th>Fin Status</th>
+                  <th>TMA Status</th>
+                  <th>Acc Status</th>
+                  <th>Reg Status</th>
+                  <th>PDI Status</th>
+                  <th>Deliv Status</th>
+                  <th>Progress</th>
+                </tr>
+              )}
             </thead>
             <tbody>
               {filteredVehicles.length === 0 ? (
                 <tr>
-                  <td colSpan="12" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '30px' }}>
+                  <td colSpan={isBookingPage ? 21 : 12} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '30px' }}>
                     No matching vehicle records found.
                   </td>
                 </tr>
               ) : (
-                filteredVehicles.map((v, i) => <DeliveryTableRow key={v.chassisNumber} vehicle={v} openDrawer={openDrawer} index={(currentPage - 1) * 25 + i + 1} />)
+                filteredVehicles.map((v, i) => (
+                  isBookingPage ? (
+                    <BookingTableRow key={v.chassisNumber} vehicle={v} openDrawer={openDrawer} index={(currentPage - 1) * 25 + i + 1} />
+                  ) : (
+                    <DeliveryTableRow key={v.chassisNumber} vehicle={v} openDrawer={openDrawer} index={(currentPage - 1) * 25 + i + 1} />
+                  )
+                ))
               )}
             </tbody>
           </table>

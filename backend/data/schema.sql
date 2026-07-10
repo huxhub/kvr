@@ -1,115 +1,208 @@
 -- KVR Tata Tracker - Seeded MySQL Database Schema (schema.sql)
 -- Import this file into your Hostinger MySQL database using phpMyAdmin.
 
+-- KVR Tata Tracker - MySQL Database Schema
+-- Run this file on a fresh MySQL database to create all required tables.
+-- Usage: mysql -u root -p kvr < database/schema.sql
+
+-- Drop tables in reverse dependency order
 DROP TABLE IF EXISTS audit_logs;
 DROP TABLE IF EXISTS vehicles;
+DROP TABLE IF EXISTS settings;
 DROP TABLE IF EXISTS users;
 
-CREATE TABLE users (
-  username VARCHAR(50) PRIMARY KEY,
-  password VARCHAR(255) NOT NULL,
-  role VARCHAR(50) NOT NULL,
-  name VARCHAR(100) NOT NULL,
-  branch VARCHAR(100) NOT NULL
-);
+-- ============================================================
+-- USERS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS users (
+  username    VARCHAR(50)  NOT NULL PRIMARY KEY,
+  password    VARCHAR(255) NOT NULL,
+  role        VARCHAR(50)  NOT NULL,
+  name        VARCHAR(100) NOT NULL,
+  branch      VARCHAR(100) NOT NULL DEFAULT 'Perinthalmanna',
+  email       VARCHAR(100) DEFAULT '',
+  created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE vehicles (
-  chassisNumber VARCHAR(100) PRIMARY KEY,
-  date VARCHAR(50) NOT NULL,
-  customerName VARCHAR(255) NOT NULL,
-  mobileNumber VARCHAR(20) NOT NULL,
-  orderNumber VARCHAR(100) NOT NULL,
-  invoiceNumber VARCHAR(100) DEFAULT '',
-  source VARCHAR(100) DEFAULT '',
-  year INT NOT NULL,
-  vehicleStatus VARCHAR(100) NOT NULL,
-  fuel VARCHAR(20) NOT NULL,
-  pl VARCHAR(50) NOT NULL,
-  variant VARCHAR(100) NOT NULL,
-  colour VARCHAR(50) NOT NULL,
-  vc VARCHAR(50) DEFAULT '',
-  ca VARCHAR(100) NOT NULL,
-  tl VARCHAR(100) NOT NULL,
-  branch VARCHAR(100) NOT NULL,
-  hypothecation VARCHAR(100) DEFAULT '',
-  cashDiscount INT DEFAULT 0,
-  exchangeLoyalty INT DEFAULT 0,
-  corporate INT DEFAULT 0,
-  sss INT DEFAULT 0,
-  kpkb INT DEFAULT 0,
-  solarOffer INT DEFAULT 0,
-  priceDifference INT DEFAULT 0,
-  offerRemark TEXT,
-  financeType VARCHAR(50) NOT NULL,
-  onRoadPrice INT DEFAULT 0,
-  ip INT DEFAULT 0,
-  loanAmount INT DEFAULT 0,
-  balanceAmount INT DEFAULT 0,
-  fundPercentage DECIMAL(5,2) DEFAULT 0,
-  loanAmountStatus VARCHAR(50) DEFAULT '',
-  financeRemark TEXT,
-  financeStatus VARCHAR(50) DEFAULT 'Not Attended',
-  financeTimestamp VARCHAR(50) DEFAULT '',
-  exchangeYesNo VARCHAR(10) NOT NULL,
-  tmaType VARCHAR(50) DEFAULT '',
-  makeAndModel VARCHAR(100) DEFAULT '',
-  regNumber VARCHAR(50) DEFAULT '',
-  tmaRemark TEXT,
-  tmaStatus VARCHAR(50) DEFAULT 'Not Attended',
-  tmaTimestamp VARCHAR(50) DEFAULT '',
-  fileStatus VARCHAR(50) DEFAULT 'Not Attended',
-  fileTimestamp VARCHAR(50) DEFAULT '',
-  accountsRemark TEXT,
-  tallyDate VARCHAR(50) DEFAULT '',
-  accountsStatus VARCHAR(50) DEFAULT 'Not Attended',
-  accountsTimestamp VARCHAR(50) DEFAULT '',
-  insuranceType VARCHAR(50) NOT NULL,
-  insuranceRemark TEXT,
-  insuranceStatus VARCHAR(50) DEFAULT 'Not Attended',
-  insuranceTimestamp VARCHAR(50) DEFAULT '',
-  registrationType VARCHAR(50) NOT NULL,
-  applicationNumber VARCHAR(100) DEFAULT '',
-  taxPaidDate VARCHAR(50) DEFAULT '',
-  registerNumber VARCHAR(50) DEFAULT '',
-  hsrpStatus VARCHAR(50) DEFAULT '',
-  registrationRemark TEXT,
-  registrationStatus VARCHAR(50) DEFAULT 'Not Attended',
-  registrationTimestamp VARCHAR(50) DEFAULT '',
-  tmgaValue INT DEFAULT 0,
-  vasValue INT DEFAULT 0,
-  tmgaRemark TEXT,
-  tmgaStatus VARCHAR(50) DEFAULT 'Not Attended',
-  tmgaTimestamp VARCHAR(50) DEFAULT '',
-  pdiRemark TEXT,
-  pdiStatus VARCHAR(50) DEFAULT 'Not Attended',
-  pdiTimestamp VARCHAR(50) DEFAULT '',
-  cxoRemark TEXT,
-  expectedDeliveryDate VARCHAR(50) DEFAULT '',
-  actualDeliveryDate VARCHAR(50) DEFAULT '',
-  homeVisit14DayStatus VARCHAR(50) DEFAULT '',
-  deliveryStatus VARCHAR(50) DEFAULT 'Not Attended',
-  deliveryTimestamp VARCHAR(50) DEFAULT ''
-);
+-- ============================================================
+-- VEHICLES
+-- ============================================================
+CREATE TABLE IF NOT EXISTS vehicles (
+  chassisNumber       VARCHAR(50) NOT NULL PRIMARY KEY,
 
-CREATE TABLE audit_logs (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  timestamp VARCHAR(50) NOT NULL,
-  chassisNumber VARCHAR(100) NOT NULL,
-  customerName VARCHAR(255) NOT NULL,
-  updatedBy VARCHAR(100) NOT NULL,
-  department VARCHAR(100) NOT NULL,
-  previousStatus VARCHAR(50) NOT NULL,
-  newStatus VARCHAR(50) NOT NULL,
-  remarks TEXT
-);
+  -- Customer Details
+  date                VARCHAR(30)  DEFAULT '',
+  customerName        VARCHAR(100) NOT NULL,
+  mobileNumber        VARCHAR(20)  DEFAULT '',
+  optyId              VARCHAR(30)  DEFAULT '',
+  orderNumber         VARCHAR(30)  DEFAULT '',
+  sapOrderNo          VARCHAR(30)  DEFAULT '',
+  invoiceNumber       VARCHAR(30)  DEFAULT '',
+  source              VARCHAR(30)  DEFAULT '',
+  year                INT          DEFAULT NULL,
+
+  -- Vehicle Details
+  vehicleStatus       VARCHAR(30)  DEFAULT '',
+  fuel                VARCHAR(20)  DEFAULT '',
+  pl                  VARCHAR(30)  DEFAULT '',
+  variant             VARCHAR(50)  DEFAULT '',
+  colour              VARCHAR(30)  DEFAULT '',
+  bdStatus            VARCHAR(30)  DEFAULT '',
+  bdDate              VARCHAR(30)  DEFAULT '',
+  vc                  VARCHAR(30)  DEFAULT '',
+
+  -- Sales Details
+  ca                  VARCHAR(50)  DEFAULT '',
+  tl                  VARCHAR(50)  DEFAULT '',
+  branch              VARCHAR(50)  NOT NULL DEFAULT 'Perinthalmanna',
+  region              VARCHAR(30)  DEFAULT '',
+  crmBookingStatus    VARCHAR(50)  DEFAULT '',
+  branchStatus        VARCHAR(30)  DEFAULT '',
+  branchRemark        TEXT,
+
+  -- Offer Details
+  hypothecation       VARCHAR(50)  DEFAULT '',
+  cashDiscount        INT          DEFAULT 0,
+  exchangeLoyalty     INT          DEFAULT 0,
+  corporate           INT          DEFAULT 0,
+  sss                 INT          DEFAULT 0,
+  kpkb                INT          DEFAULT 0,
+  solarOffer          INT          DEFAULT 0,
+  priceDifference     INT          DEFAULT 0,
+  offerRemark         TEXT,
+
+  -- Finance Details
+  financeType         VARCHAR(30)  DEFAULT '',
+  onRoadPrice         INT          DEFAULT 0,
+  ip                  INT          DEFAULT 0,
+  loanAmount          INT          DEFAULT 0,
+  balanceAmount       INT          DEFAULT 0,
+  fundPercentage      DECIMAL(5,2) DEFAULT 0,
+  loanAmountStatus    VARCHAR(25)  DEFAULT '',
+  financeRemark       TEXT,
+  financeStatus       VARCHAR(25)  DEFAULT 'Not Attended',
+  financeTimestamp     VARCHAR(25)  DEFAULT '',
+
+  -- TMA Details
+  exchangeYesNo       VARCHAR(10)  DEFAULT '',
+  tmaType             VARCHAR(30)  DEFAULT '',
+  makeAndModel        VARCHAR(50)  DEFAULT '',
+  regNumber           VARCHAR(25)  DEFAULT '',
+  tmaRemark           TEXT,
+  tmaStatus           VARCHAR(25)  DEFAULT 'Not Attended',
+  tmaTimestamp        VARCHAR(25)  DEFAULT '',
+
+  -- File Details
+  fileStatus          VARCHAR(25)  DEFAULT 'Not Attended',
+  fileTimestamp       VARCHAR(25)  DEFAULT '',
+
+  -- Accounts Details
+  tallyDate           VARCHAR(25)  DEFAULT '',
+  accountsRemark      TEXT,
+  accountsStatus      VARCHAR(25)  DEFAULT 'Not Attended',
+  accountsTimestamp   VARCHAR(25)  DEFAULT '',
+
+  -- Insurance Details
+  insuranceName       VARCHAR(50)  DEFAULT '',
+  insuranceType       VARCHAR(30)  DEFAULT '',
+  insurancePremium    INT          DEFAULT 0,
+  insuranceRemark     TEXT,
+  insuranceStatus     VARCHAR(25)  DEFAULT 'Not Attended',
+  insuranceTimestamp  VARCHAR(25)  DEFAULT '',
+
+  -- Registration Details
+  registrationType    VARCHAR(25)  DEFAULT '',
+  applicationNumber   VARCHAR(35)  DEFAULT '',
+  taxPaidDate         VARCHAR(25)  DEFAULT '',
+  registerNumber      VARCHAR(25)  DEFAULT '',
+  hsrpStatus          VARCHAR(25)  DEFAULT '',
+  registrationRemark  TEXT,
+  registrationStatus  VARCHAR(25)  DEFAULT 'Not Attended',
+  registrationTimestamp VARCHAR(25) DEFAULT '',
+
+  -- TMGA Details
+  tmgaValue           INT          DEFAULT 0,
+  vasValue            INT          DEFAULT 0,
+  tmgaRemark          TEXT,
+  tmgaStatus          VARCHAR(25)  DEFAULT 'Not Attended',
+  tmgaTimestamp       VARCHAR(25)  DEFAULT '',
+
+  -- PDI Details
+  pdiRemark           TEXT,
+  pdiStatus           VARCHAR(25)  DEFAULT 'Not Attended',
+  pdiTimestamp        VARCHAR(25)  DEFAULT '',
+
+  -- Delivery Details
+  cxoRemark           TEXT,
+  expectedDeliveryDate VARCHAR(25) DEFAULT '',
+  actualDeliveryDate  VARCHAR(25)  DEFAULT '',
+  homeVisit14DayStatus VARCHAR(25) DEFAULT '',
+  deliveryStatus      VARCHAR(25)  DEFAULT 'Not Attended',
+  deliveryTimestamp   VARCHAR(25)  DEFAULT '',
+
+  -- Timestamps
+  created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- AUDIT LOGS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id              INT          AUTO_INCREMENT PRIMARY KEY,
+  chassisNumber   VARCHAR(100) NOT NULL,
+  customerName    VARCHAR(255) DEFAULT '',
+  updatedBy       VARCHAR(100) DEFAULT '',
+  department      VARCHAR(100) DEFAULT '',
+  previousStatus  VARCHAR(50)  DEFAULT '',
+  newStatus       VARCHAR(50)  DEFAULT '',
+  remarks         TEXT,
+  timestamp       DATETIME     DEFAULT CURRENT_TIMESTAMP,
+  created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  INDEX idx_audit_chassis (chassisNumber),
+  INDEX idx_audit_timestamp (timestamp)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- SETTINGS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS settings (
+  setting_key     VARCHAR(50)  NOT NULL PRIMARY KEY,
+  companyName     VARCHAR(255) NOT NULL DEFAULT 'KVR TATA',
+  companyPhone    VARCHAR(50)  DEFAULT '+91 98470 12345',
+  companyEmail    VARCHAR(100) DEFAULT 'support@kvrgroup.com',
+  companyAddress  VARCHAR(500) DEFAULT 'KVR Group, NH 66, Perinthalmanna, Kerala',
+  branches        JSON         DEFAULT NULL,
+  theme           VARCHAR(20)  DEFAULT 'light',
+  enableAlerts    TINYINT(1)   DEFAULT 1,
+  created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
--- Seeding Users Table
-INSERT INTO users (`username`, `password`, `role`, `name`, `branch`) VALUES ('admin', 'admin123', 'ADMIN', 'System Administrator', 'Perinthalmanna');
-INSERT INTO users (`username`, `password`, `role`, `name`, `branch`) VALUES ('crm', 'crm123', 'CRM', 'CRM Advisor', 'Perinthalmanna');
-INSERT INTO users (`username`, `password`, `role`, `name`, `branch`) VALUES ('finance', 'finance123', 'FINANCE', 'Finance Manager', 'Perinthalmanna');
-INSERT INTO users (`username`, `password`, `role`, `name`, `branch`) VALUES ('accounts', 'accounts123', 'ACCOUNTS', 'Accounts Auditor', 'Perinthalmanna');
-INSERT INTO users (`username`, `password`, `role`, `name`, `branch`) VALUES ('mgmt', 'mgmt123', 'MANAGEMENT', 'KVR General Manager', 'Perinthalmanna');
+-- KVR Tata Tracker - Seed Data
+-- Run after schema.sql to populate initial data.
+-- Usage: mysql -u root -p kvr < database/seed.sql
+
+-- Default admin users (passwords are plain-text; they auto-upgrade to bcrypt on first login)
+INSERT INTO users (username, password, role, name, branch, email) VALUES
+  ('admin',    'admin123',    'ADMIN',      'System Administrator', 'Perinthalmanna', 'admin@kvrgroup.com'),
+  ('crm',      'crm123',      'CRM',        'CRM Advisor',          'Perinthalmanna', 'crm@kvrgroup.com'),
+  ('finance',  'finance123',  'FINANCE',    'Finance Manager',      'Perinthalmanna', 'finance@kvrgroup.com'),
+  ('accounts', 'accounts123', 'ACCOUNTS',   'Accounts Auditor',     'Perinthalmanna', 'accounts@kvrgroup.com'),
+  ('tma',      'tma123',      'TMA',        'TMA Coordinator',      'Perinthalmanna', 'tma@kvrgroup.com'),
+  ('insurance', 'insurance123', 'INSURANCE', 'Insurance Officer',   'Perinthalmanna', 'insurance@kvrgroup.com'),
+  ('registration', 'registration123', 'REGISTRATION', 'Registration Officer', 'Perinthalmanna', 'registration@kvrgroup.com'),
+  ('mgmt',     'mgmt123',     'MANAGEMENT', 'KVR General Manager',  'Perinthalmanna', 'mgmt@kvrgroup.com')
+ON DUPLICATE KEY UPDATE username = username;
+
+-- Default global settings
+INSERT INTO settings (setting_key, companyName, companyPhone, companyEmail, companyAddress, branches, theme, enableAlerts) VALUES
+  ('global', 'KVR TATA', '+91 98470 12345', 'support@kvrgroup.com', 'KVR Group, NH 66, Perinthalmanna, Kerala', '["Perinthalmanna", "Ottapalam"]', 'light', 1)
+ON DUPLICATE KEY UPDATE setting_key = setting_key;
 
 -- Seeding Vehicles Table
 INSERT INTO vehicles (`date`, `customerName`, `mobileNumber`, `orderNumber`, `invoiceNumber`, `source`, `year`, `vehicleStatus`, `chassisNumber`, `fuel`, `pl`, `variant`, `colour`, `vc`, `ca`, `tl`, `branch`, `hypothecation`, `cashDiscount`, `exchangeLoyalty`, `corporate`, `sss`, `kpkb`, `solarOffer`, `priceDifference`, `offerRemark`, `financeType`, `onRoadPrice`, `ip`, `loanAmount`, `balanceAmount`, `fundPercentage`, `loanAmountStatus`, `financeRemark`, `financeStatus`, `financeTimestamp`, `exchangeYesNo`, `tmaType`, `makeAndModel`, `regNumber`, `tmaRemark`, `tmaStatus`, `tmaTimestamp`, `fileStatus`, `fileTimestamp`, `accountsRemark`, `tallyDate`, `accountsStatus`, `accountsTimestamp`, `insuranceType`, `insuranceRemark`, `insuranceStatus`, `insuranceTimestamp`, `registrationType`, `applicationNumber`, `taxPaidDate`, `registerNumber`, `hsrpStatus`, `registrationRemark`, `registrationStatus`, `registrationTimestamp`, `tmgaValue`, `vasValue`, `tmgaRemark`, `tmgaStatus`, `tmgaTimestamp`, `pdiRemark`, `pdiStatus`, `pdiTimestamp`, `cxoRemark`, `expectedDeliveryDate`, `actualDeliveryDate`, `homeVisit14DayStatus`, `deliveryStatus`, `deliveryTimestamp`) VALUES ('2026-05-10', 'Rajesh Nair', '9847012345', 'KVR-ORD-4001', 'INV-40102', 'Walk-in', 2026, 'Delivered', 'MAT625123GD82301A', 'Petrol', 'Nexon', 'Creative+ S DCT', 'Flame Red', 'NXN-PET-CPSD', 'Sreejith K', 'Manoj Kumar', 'Perinthalmanna', 'SBI Car Loan', 15000, 10000, 5000, 2000, 0, 0, 0, 'Fully Cleared Offer', 'In-House', 1450000, 250000, 1200000, 0, 82.7, 'Disbursed', 'Loan disbursed via SBI', 'Approved', '2026-05-12 11:22:10', 'Yes', 'Tata Assured Trade-in', 'Maruti Swift LDi 2018', 'KL-11-CC-4321', 'Exchanged with Swift, valuated at 3,50,000', 'Approved', '2026-05-12 14:15:30', 'Approved', '2026-05-13 10:00:22', 'Full payment received, tally entry done', '2026-05-13', 'Approved', '2026-05-13 16:45:00', 'In-House (Tata Motors)', 'ICICI Lombard zero dep insurance policy generated', 'Approved', '2026-05-14 09:30:15', 'Permanent', 'KL260515000213', '2026-05-15', 'KL-53-CU-7890', 'Fitted', 'Permanent reg complete. Plates fitted.', 'Approved', '2026-05-18 17:10:00', 12500, 6500, 'Underbody coating + Scuff plates fitted', 'Approved', '2026-05-16 11:00:00', 'PDI clearance given, clean report', 'Approved', '2026-05-15 15:40:00', 'Delivered in premium ceremony with family', '2026-05-20', '2026-05-20', 'Completed', 'Approved', '2026-05-20 18:30:00');

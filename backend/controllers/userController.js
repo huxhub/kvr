@@ -14,7 +14,7 @@ export const getUsers = async (req, res) => {
     const activeLimit = Math.min(15, Math.max(1, limit));
 
     const isBranchManager = req.session.user.role === 'BRANCH_MANAGER';
-    const branchFilter = isBranchManager ? req.session.user.branch : null;
+    const branchFilter = (isBranchManager && req.session.user.branch !== 'All Branches') ? req.session.user.branch : null;
 
     const [users, totalCount] = await Promise.all([
       User.findAll(page, activeLimit, branchFilter),

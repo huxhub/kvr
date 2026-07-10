@@ -23,7 +23,7 @@ export const SECTIONS = {
       { name: 'pl', label: 'PPL', type: 'select', options: ['Tiago', 'Tigor', 'Altroz', 'Punch', 'Nexon', 'Harrier', 'Safari'], required: true },
       { name: 'variant', label: 'PL (Variant)', type: 'text', required: true },
       { name: 'colour', label: 'Color', type: 'text', required: true },
-      { name: 'bdStatus', label: 'BD STATUS', type: 'select', options: ['BD DONE', 'BD PENDING', 'IN STOCK', 'DROP DOWN LIST'], required: false },
+      { name: 'bdStatus', label: 'BD STATUS', type: 'select', options: ['BD DONE', 'BD PENDING', 'IN STOCK', 'No Stock'], required: false },
       { name: 'bdDate', label: 'BD DATE', type: 'date', required: false },
       { name: 'vc', label: 'Vehicle Code (VC)', type: 'text', required: false }
     ]
@@ -33,10 +33,10 @@ export const SECTIONS = {
     fields: [
       { name: 'ca', label: 'Customer Advisor (CA)', type: 'text', required: true },
       { name: 'tl', label: 'Team Leader (TL)', type: 'text', required: true },
-      { name: 'branch', label: 'Branch', type: 'text', required: true },
+      { name: 'branch', label: 'Branch', type: 'select', options: [], required: true },
       { name: 'region', label: 'Region', type: 'select', options: ['R1', 'R2', 'TD'], required: false },
       { name: 'crmBookingStatus', label: 'CRM - Booking Status', type: 'select', options: ['CRM /RETAIL DONE', 'CRM REQUESTED/CHASSIS BLOCKED', 'CANCELLED WITHOUT DOCUMENT/REFUND', 'REFUND OK-CRM CANCELLATION PENDING'], required: false },
-      { name: 'branchStatus', label: 'Branch Status', type: 'select', options: ['LIVE', 'NOT LIVE', 'CANCELLATION', 'MODEL CHANGE', 'NAME CHANGE', 'DROP DOWN FROM CREATED BRANCHES'], required: false },
+      { name: 'branchStatus', label: 'Branch Status', type: 'select', options: ['LIVE', 'NOT LIVE', 'CANCELLATION', 'MODEL CHANGE', 'NAME CHANGE'], required: false },
       { name: 'branchRemark', label: 'Branch Remark', type: 'text', required: false }
     ]
   },
@@ -68,7 +68,7 @@ export const SECTIONS = {
       { name: 'fundPercentage', label: 'Fund Percentage (%)', type: 'number', required: false },
       { name: 'loanAmountStatus', label: 'Loan Amount Status', type: 'select', options: ['Logged In', 'Sanctioned', 'Disbursed', 'Not Applicable'], required: false },
       { name: 'financeRemark', label: 'Finance Remark', type: 'text', required: false },
-      { name: 'financeStatus', label: 'Finance Status', type: 'status', required: true },
+      { name: 'financeStatus', label: 'Finance Status', type: 'select', options: ['DOCUMENTS PENDING', 'LOAN APPROVED', 'CASH PURCHASE', 'CIBIL ISSUE'], required: true },
       { name: 'financeTimestamp', label: 'Finance Timestamp', type: 'timestamp', required: false }
     ]
   },

@@ -219,6 +219,7 @@ export default function UserAdmin({ branches }) {
                   <label>Branch *</label>
                   <select name="branch" required value={formData.branch} onChange={handleChange}>
                     <option value="">Select Branch...</option>
+                    <option value="All Branches">All Branches</option>
                     {branches.map(b => <option key={b} value={b}>{b}</option>)}
                   </select>
                 </div>

@@ -65,7 +65,7 @@ export default function DashboardKPIs({ vehicles, activeBranch, setSelectedBranc
   }, [filteredVehicles]);
 
   const { user } = useAuth();
-  const isBranchRestricted = user?.role !== 'ADMIN' && user?.branch;
+  const isBranchRestricted = user?.role !== 'ADMIN' && user?.branch && user?.branch !== 'All Branches';
 
   // Colors for the bar chart
   const COLORS = ['#1e293b', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b'];

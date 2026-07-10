@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import BookingSectionBlock from './BookingSectionBlock.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { createVehicle as apiCreateVehicle } from '../../models/apiModel.js';
 import { addAuditLog } from '../../models/auditModel.js';
 import { useToast } from '../../context/ToastContext.jsx';
+import CrmSectionBlock from './CrmSectionBlock.jsx';
 
-export default function NewBookingDrawer({ branches, onClose, onSaved }) {
+export default function CrmDrawer({ branches, onClose, onSaved }) {
   const [formData, setFormData] = useState({});
   const [auditRemark, setAuditRemark] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -16,10 +16,11 @@ export default function NewBookingDrawer({ branches, onClose, onSaved }) {
     setFormData({
       branch: user.branch || (branches && branches[0]) || '',
       ca: user.name,
-      vehicleStatus: 'Booked',
+      vehicleStatus: 'Allotted',
       year: new Date().getFullYear(),
+      fuel: 'Petrol'
     });
-    setAuditRemark('New booking registered');
+    setAuditRemark('New CRM vehicle registered');
   }, [user, branches]);
 
   const handleChange = (e) => {
@@ -39,14 +40,14 @@ export default function NewBookingDrawer({ branches, onClose, onSaved }) {
         ...formData,
         chassisNumber: formData.chassisNumber || `TEMP-${formData.orderNumber || Math.random().toString(36).substring(2, 10).toUpperCase()}`,
         fuel: formData.fuel || 'Petrol',
-        vehicleStatus: formData.vehicleStatus || 'Booked',
+        vehicleStatus: formData.vehicleStatus || 'Allotted',
         year: formData.year || new Date().getFullYear(),
       };
       await apiCreateVehicle(submissionData, user.role);
       try {
-        await addAuditLog({ chassisNumber: submissionData.chassisNumber, customerName: submissionData.customerName, updatedBy: user.role, department: 'Customer Booking', previousStatus: 'None', newStatus: 'Booked', remarks: auditRemark || 'New booking registered' });
+        await addAuditLog({ chassisNumber: submissionData.chassisNumber, customerName: submissionData.customerName, updatedBy: user.role, department: 'Customer Booking', previousStatus: 'None', newStatus: 'Allotted', remarks: auditRemark || 'New CRM vehicle registered' });
       } catch (_) {}
-      showToast('Success', 'Booking Created');
+      showToast('Success', 'Vehicle Registered');
       if (onSaved) onSaved();   // ← refresh shared table state immediately
       onClose();
     } catch (err) {
@@ -56,27 +57,23 @@ export default function NewBookingDrawer({ branches, onClose, onSaved }) {
     }
   };
 
-  const isViewOnly = user.role === 'MANAGEMENT'; // BOOKING IN-CHARGE can create new bookings
-
-  // Only render Customer, Vehicle, and Sales details for New Booking form
-  const newBookingSections = Object.keys(SECTIONS);
+  const isViewOnly = user.role === 'MANAGEMENT';
 
   return (
     <div className="modal-overlay open" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <form className="modal-drawer" onSubmit={handleSubmit}>
         <div className="modal-header">
           <div>
-            <h3>Register New Booking</h3>
-            <p style={{ margin: 0, marginTop: '4px', fontSize: '0.85rem', color: '#64748b' }}>Enter initial booking details</p>
+            <h3>CRM Form</h3>
+            <p style={{ margin: 0, marginTop: '4px', fontSize: '0.85rem', color: '#64748b' }}>Register new vehicle / CRM entry</p>
           </div>
           <button type="button" className="close-btn" onClick={onClose}>×</button>
         </div>
         
         <div className="modal-body">
-          <BookingSectionBlock 
+          <CrmSectionBlock 
             formData={formData} 
             handleChange={handleChange}
-            forceEditable={true}
             branches={branches}
           />
         </div>
@@ -85,7 +82,7 @@ export default function NewBookingDrawer({ branches, onClose, onSaved }) {
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginLeft: 'auto' }}>
             <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
             <button type="submit" className="btn-primary" disabled={isViewOnly || submitting}>
-              {submitting ? 'Creating Booking...' : 'Create Booking'}
+              {submitting ? 'Registering Vehicle...' : 'Register Vehicle'}
             </button>
           </div>
         </div>

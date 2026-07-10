@@ -55,17 +55,13 @@ export default function Sidebar({ activeTab, setActiveTab, isSidebarOpen, setIsS
           Delivery Master List
         </button>
 
-        {/* New Booking quick-action button */}
-        {user.role !== 'TMGA' && user.role !== 'PDI' && user.role !== 'DELIVERY' && user.role !== 'FINANCE' && (
-          <button
-            className="sidebar-new-booking-btn"
-            onClick={() => { if (onNewBooking) { onNewBooking(); } if (setIsSidebarOpen) setIsSidebarOpen(false); }}
-            title="Register a new vehicle booking"
-          >
-            <Plus size={15} strokeWidth={2.5} />
-            New Booking
-          </button>
-        )}
+        <button 
+          className={`sidebar-btn ${activeTab === 'bookings' ? 'active' : ''}`} 
+          onClick={() => handleNavClick('bookings')}
+        >
+          <svg className="tab-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          Booking
+        </button>
         <button 
           className={`sidebar-btn ${activeTab === 'audit' ? 'active' : ''}`} 
           onClick={() => handleNavClick('audit')}

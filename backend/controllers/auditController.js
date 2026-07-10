@@ -11,7 +11,8 @@ export const getAuditLogs = async (req, res) => {
     const sessionUser = req.session.user;
     const isBranchRestricted = 
       (sessionUser?.role === 'BRANCH_MANAGER' || sessionUser?.role === 'FINANCE' || sessionUser?.role === 'TMA' || sessionUser?.role === 'ACCOUNTS' || sessionUser?.role === 'INSURANCE' || sessionUser?.role === 'REGISTRATION') && 
-      sessionUser?.branch;
+      sessionUser?.branch && 
+      sessionUser?.branch !== 'All Branches';
     const userBranch = sessionUser?.branch;
 
     let logs, totalCount;

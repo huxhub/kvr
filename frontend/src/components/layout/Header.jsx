@@ -17,6 +17,7 @@ export default function Header({
 
   const tabTitles = {
     dashboard: 'Dashboard',
+    bookings: 'Booking Master List',
     delivery: 'Delivery Master List',
     audit: 'Audit History Logs',
     users: 'Users List',
@@ -25,6 +26,7 @@ export default function Header({
 
   const tabSubtitles = {
     dashboard: 'System Overview & Department Bottlenecks',
+    bookings: 'Track vehicle bookings, sales, and allocations',
     delivery: 'Complete vehicle records and delivery tracking',
     audit: 'Review and track system changes',
     users: 'Registered employees and permissions',
@@ -34,7 +36,7 @@ export default function Header({
   const displayTitle = tabTitles[activeTab] || 'Dashboard';
   const displaySubtitle = tabSubtitles[activeTab] || 'System Overview & Department Bottlenecks';
 
-  const isBranchRestricted = user?.role !== 'ADMIN' && user?.branch;
+  const isBranchRestricted = user?.role !== 'ADMIN' && user?.branch && user?.branch !== 'All Branches';
 
   // Restricted roles see only their branch; other roles see 'All Branches' + full list
   const dropdownOptions = isBranchRestricted

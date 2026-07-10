@@ -18,6 +18,7 @@ const AuditHistory    = lazy(() => import('./components/audit/AuditHistory.jsx')
 const UserAdmin       = lazy(() => import('./components/admin/UserAdmin.jsx'));
 const VehicleDrawer   = lazy(() => import('./components/delivery/VehicleDrawer.jsx'));
 const NewBookingDrawer = lazy(() => import('./components/delivery/NewBookingDrawer.jsx'));
+const CrmDrawer       = lazy(() => import('./components/delivery/CrmDrawer.jsx'));
 const Settings        = lazy(() => import('./components/settings/Settings.jsx'));
 
 // Minimal inline fallback — a spinner that uses only inline styles (zero extra CSS needed)
@@ -37,6 +38,7 @@ function AppContent() {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isNewBookingOpen, setIsNewBookingOpen] = useState(false);
+  const [isCrmOpen, setIsCrmOpen] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [companyName, setCompanyName] = useState('KVR TATA');
@@ -73,19 +75,19 @@ function AppContent() {
 
     loadInitialData();
     // Non-Admin: lock to their own branch; ADMIN defaults to 'All Branches'
-    const isBranchRestricted = user?.role !== 'ADMIN' && user?.branch;
+    const isBranchRestricted = user?.role !== 'ADMIN' && user?.branch && user?.branch !== 'All Branches';
     setSelectedBranch(isBranchRestricted ? user.branch : '');
   }, [user, fetchVehicles]);
 
   const branches = useMemo(() => {
     // Non-Admin: only show their own branch in the dropdown
-    const isBranchRestricted = user?.role !== 'ADMIN' && user?.branch;
+    const isBranchRestricted = user?.role !== 'ADMIN' && user?.branch && user?.branch !== 'All Branches';
     if (isBranchRestricted) {
       return [user.branch];
     }
     const branchesSet = new Set(['Perinthalmanna', ...(settings.branches || [])]);
-    if (user && user.branch) branchesSet.add(user.branch);
-    vehicles.forEach(v => { if (v.branch) branchesSet.add(v.branch); });
+    if (user && user.branch && user.branch !== 'All Branches') branchesSet.add(user.branch);
+    vehicles.forEach(v => { if (v.branch && v.branch !== 'All Branches') branchesSet.add(v.branch); });
     return Array.from(branchesSet).sort();
   }, [vehicles, user, settings.branches]);
 
@@ -121,6 +123,14 @@ function AppContent() {
     setIsNewBookingOpen(false);
   };
 
+  const handleOpenCrm = () => {
+    setIsCrmOpen(true);
+  };
+
+  const handleCloseCrm = () => {
+    setIsCrmOpen(false);
+  };
+
   return (
     <div className="app-container" style={{ flexDirection: 'row' }}>
       {isSidebarOpen && <div className="sidebar-backdrop" onClick={() => setIsSidebarOpen(false)} />}
@@ -131,7 +141,7 @@ function AppContent() {
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
         companyName={companyName}
-        onNewBooking={() => { setActiveTab('delivery'); handleOpenNewBooking(); }}
+        onNewBooking={() => { setActiveTab('bookings'); handleOpenNewBooking(); }}
       />
       
       <div className="main-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflowY: 'auto' }}>
@@ -154,15 +164,30 @@ function AppContent() {
                 branches={branches}
               />
             )}
+            {activeTab === 'bookings' && (
+              <DeliveryTable 
+                vehicles={vehicles} 
+                branches={branches} 
+                openDrawer={handleOpenDrawer}
+                openNewBooking={handleOpenNewBooking}
+                openCrm={handleOpenCrm}
+                totalVehicles={totalVehicles}
+                currentPage={currentPage}
+                fetchVehicles={fetchVehicles}
+                isBookingPage={true}
+              />
+            )}
             {activeTab === 'delivery' && (
               <DeliveryTable 
                 vehicles={vehicles} 
                 branches={branches} 
                 openDrawer={handleOpenDrawer}
                 openNewBooking={handleOpenNewBooking}
+                openCrm={handleOpenCrm}
                 totalVehicles={totalVehicles}
                 currentPage={currentPage}
                 fetchVehicles={fetchVehicles}
+                isBookingPage={false}
               />
             )}
             {activeTab === 'audit' && <AuditHistory />}
@@ -174,13 +199,19 @@ function AppContent() {
 
       {isDrawerOpen && (
         <Suspense fallback={null}>
-          <VehicleDrawer vehicle={selectedVehicle} branches={branches} onClose={handleCloseDrawer} />
+          <VehicleDrawer vehicle={selectedVehicle} branches={branches} onClose={handleCloseDrawer} onSaved={() => fetchVehicles(currentPage)} isBookingPage={activeTab === 'bookings'} />
         </Suspense>
       )}
 
       {isNewBookingOpen && (
         <Suspense fallback={null}>
-          <NewBookingDrawer branches={branches} onClose={handleCloseNewBooking} />
+          <NewBookingDrawer branches={branches} onClose={handleCloseNewBooking} onSaved={() => fetchVehicles(1)} />
+        </Suspense>
+      )}
+
+      {isCrmOpen && (
+        <Suspense fallback={null}>
+          <CrmDrawer branches={branches} onClose={handleCloseCrm} onSaved={() => fetchVehicles(currentPage)} />
         </Suspense>
       )}
     </div>

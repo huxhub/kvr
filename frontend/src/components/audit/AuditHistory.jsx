@@ -9,6 +9,7 @@ export default function AuditHistory() {
   const { showToast } = useToast();
   const [keyword, setKeyword] = useState('');
 
+  // Load on mount and whenever keyword changes
   useEffect(() => {
     fetchAuditLogs(1, 25, keyword);
   }, [fetchAuditLogs, keyword]);
@@ -67,6 +68,15 @@ export default function AuditHistory() {
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
             />
+            <button
+              className="btn-secondary"
+              onClick={() => fetchAuditLogs(currentPage, 25, keyword)}
+              disabled={loading}
+              title="Refresh audit logs"
+              style={{ padding: '8px 14px', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              {loading ? '⏳' : '🔄'} Refresh
+            </button>
             {user.role === 'ADMIN' && (
               <button className="btn-secondary audit-clear-btn" onClick={handleClear}>
                 Clear Audit Files

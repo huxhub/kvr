@@ -3,14 +3,14 @@ import { DEPARTMENT_KEYS, SECTIONS } from '../../models/constants.js';
 import CustomDropdown from '../ui/DropdownMenu.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 
-export default function DeliveryFilters({ filters, setFilters, branches, vehicles }) {
+export default function DeliveryFilters({ filters, setFilters, branches, vehicles, isBookingPage = false }) {
   const handleChange = (e) => {
     const { id, value } = e.target;
     setFilters(prev => ({ ...prev, [id.replace('filter-', '')]: value }));
   };
 
   const { user } = useAuth();
-  const isBranchRestricted = user?.role !== 'ADMIN';
+  const isBranchRestricted = user?.role !== 'ADMIN' && user?.branch !== 'All Branches';
 
   const handleClear = () => {
     setFilters({ 
@@ -36,13 +36,14 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
 
   const statusOptions = [
     { value: '', label: 'All Statuses' },
-    { value: 'Booked', label: 'Booked' },
-    { value: 'Allotted', label: 'Allotted' },
-    { value: 'In-Transit', label: 'In-Transit' },
-    { value: 'PDI Hold', label: 'PDI Hold' },
-    { value: 'Ready for Delivery', label: 'Ready for Delivery' },
-    { value: 'Delivered', label: 'Delivered' },
-    { value: 'Cancelled', label: 'Cancelled' }
+    ...(isBookingPage ? [{ value: 'Booked', label: 'Booked' }] : [
+      { value: 'Allotted', label: 'Allotted' },
+      { value: 'In-Transit', label: 'In-Transit' },
+      { value: 'PDI Hold', label: 'PDI Hold' },
+      { value: 'Ready for Delivery', label: 'Ready for Delivery' },
+      { value: 'Delivered', label: 'Delivered' },
+      { value: 'Cancelled', label: 'Cancelled' }
+    ])
   ];
 
   const caOptions = [
@@ -86,15 +87,17 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
           </div>
         )}
 
-        <div className="filter-group">
-          <label htmlFor="filter-status">VEHICLE STATUS</label>
-          <CustomDropdown 
-            id="filter-status" 
-            value={filters.status} 
-            onChange={handleChange} 
-            options={statusOptions} 
-          />
-        </div>
+        {!isBookingPage && (
+          <div className="filter-group">
+            <label htmlFor="filter-status">VEHICLE STATUS</label>
+            <CustomDropdown 
+              id="filter-status" 
+              value={filters.status} 
+              onChange={handleChange} 
+              options={statusOptions} 
+            />
+          </div>
+        )}
 
         <div className="filter-group">
           <label htmlFor="filter-ca">CUSTOMER ADVISOR (CA)</label>
