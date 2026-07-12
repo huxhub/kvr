@@ -41,10 +41,10 @@ const BOOKING_FIELD_ACCESS = {
   'variant':  ['BOOKING IN-CHARGE',  'BRANCH'],
   // Booking Color
   'colour':   ['BOOKING IN-CHARGE', 'BRANCH'],
-  // Booking BD Status
-  'bdstatus': ['CRM'],
-  // Booking BD Date
-  'bddate':   ['CRM'],
+  // Booking BO Status
+  'bostatus': ['CRM'],
+  // Booking BO Date
+  'bodate':   ['CRM'],
 
   // ── Booking Sales Details ──
   // Booking CA (Customer Advisor)
@@ -74,7 +74,7 @@ const BOOKING_FIELD_ACCESS = {
 const BOOKING_FIELD_WHITELIST = [
   'date', 'customername', 'mobilenumber', 'optyid',
   'ordernumber', 'saporderno',
-  'pl', 'variant', 'colour', 'bdstatus', 'bddate',
+  'pl', 'variant', 'colour', 'bostatus', 'bodate',
   'crmbookingstatus', 'ca', 'tl', 'branch', 'region',
   'branchstatus', 'branchremark',
   'financestatus', 'financeremark'
@@ -84,7 +84,7 @@ const BOOKING_FIELD_WHITELIST = [
 const BOOKING_FIELD_ORDER = [
   'date', 'customername', 'mobilenumber', 'optyid',
   'pl', 'variant', 'colour',
-  'bdstatus', 'bddate', 'ordernumber', 'saporderno',
+  'bostatus', 'bodate', 'ordernumber', 'saporderno',
   'crmbookingstatus', 'ca', 'tl',
   'branch', 'region', 'branchstatus', 'branchremark',
   'financestatus', 'financeremark'
@@ -98,6 +98,33 @@ const BOOKING_SECTION_TITLE_MAP = {
   'Offer Details':    'BOOKING OFFER',
   'Finance Details':  'BOOKING FINANCE',
 };
+
+const BOOKING_GROUPS = [
+  {
+    title: 'Customer & Booking Details',
+    fields: ['date', 'customername', 'mobilenumber', 'optyid']
+  },
+  {
+    title: 'Vehicle Details',
+    fields: ['pl', 'variant', 'colour']
+  },
+  {
+    title: 'Sales & Branch Routing',
+    fields: ['ca', 'tl', 'branch', 'region', 'crmbookingstatus']
+  },
+  {
+    title: 'CRM Verification Details',
+    fields: ['bostatus', 'bodate', 'ordernumber', 'saporderno']
+  },
+  {
+    title: 'Branch Approval Remarks',
+    fields: ['branchstatus', 'branchremark']
+  },
+  {
+    title: 'Finance Status Details',
+    fields: ['financestatus', 'financeremark']
+  }
+];
 
 export default function BookingSectionBlock({ formData, handleChange, forceEditable = true, branches = [] }) {
   const { user } = useAuth();
@@ -127,7 +154,7 @@ export default function BookingSectionBlock({ formData, handleChange, forceEdita
     }
   }, [user?.role]);
 
-  // Collect all fields from SECTIONS, filter to whitelist, then sort
+  // Collect all fields from SECTIONS and filter to whitelist
   const allBookingFields = Object.keys(SECTIONS).flatMap(sectionKey => {
     const section = SECTIONS[sectionKey];
     return section.fields.map(field => ({
@@ -136,14 +163,9 @@ export default function BookingSectionBlock({ formData, handleChange, forceEdita
       sectionTitle: section.title
     }));
   })
-    .filter(field => BOOKING_FIELD_WHITELIST.includes(field.name.toLowerCase()))
-    .sort((a, b) => {
-      const idxA = BOOKING_FIELD_ORDER.indexOf(a.name.toLowerCase());
-      const idxB = BOOKING_FIELD_ORDER.indexOf(b.name.toLowerCase());
-      return idxA - idxB;
-    });
+    .filter(field => BOOKING_FIELD_WHITELIST.includes(field.name.toLowerCase()));
 
-  const renderBookingField = (field) => {
+  const isFieldDisabled = (field) => {
     const fieldNameLower = field.name.toLowerCase();
     const bookingSectionKey = BOOKING_SECTION_TITLE_MAP[field.sectionTitle];
 
@@ -153,22 +175,23 @@ export default function BookingSectionBlock({ formData, handleChange, forceEdita
       user?.role !== 'ADMIN' &&
       user?.role !== 'BOOKING IN-CHARGE';
 
-    const isFieldDisabled = isNewBookingFieldLocked || (() => {
-      if (user?.role === 'ADMIN') return false;
+    if (user?.role === 'ADMIN') return false;
 
-      // Check field-level override first
-      if (BOOKING_FIELD_ACCESS[fieldNameLower]) {
-        return !BOOKING_FIELD_ACCESS[fieldNameLower].includes(user?.role);
-      }
+    // Check field-level override first
+    if (BOOKING_FIELD_ACCESS[fieldNameLower]) {
+      return !BOOKING_FIELD_ACCESS[fieldNameLower].includes(user?.role) || isNewBookingFieldLocked;
+    }
 
-      // Fall back to section-level access
-      if (!bookingSectionKey) return true;
-      const allowedRoles = BOOKING_SECTION_ACCESS[bookingSectionKey];
-      if (!allowedRoles) return true;
-      return !allowedRoles.includes(user?.role);
-    })();
+    // Fall back to section-level access
+    if (!bookingSectionKey) return true;
+    const allowedRoles = BOOKING_SECTION_ACCESS[bookingSectionKey];
+    if (!allowedRoles) return true;
+    return !allowedRoles.includes(user?.role) || isNewBookingFieldLocked;
+  };
 
-    const highlightStyle = getHighlightStyle(isFieldDisabled);
+  const renderBookingField = (field) => {
+    const disabledState = isFieldDisabled(field);
+    const highlightStyle = getHighlightStyle(disabledState);
 
     if (field.type === 'status' || field.type === 'select' || field.name === 'branch') {
       let options = field.options || Object.values(STATUS_VALUES);
@@ -180,8 +203,8 @@ export default function BookingSectionBlock({ formData, handleChange, forceEdita
             name={field.name}
             value={formData[field.name] || ''}
             onChange={handleChange}
-            required={field.required && !isFieldDisabled}
-            disabled={isFieldDisabled}
+            required={field.required && !disabledState}
+            disabled={disabledState}
             style={highlightStyle}
           >
             <option value="" disabled>Select...</option>
@@ -199,8 +222,8 @@ export default function BookingSectionBlock({ formData, handleChange, forceEdita
           name={field.name}
           value={formData[field.name] || ''}
           onChange={handleChange}
-          required={field.required && !isFieldDisabled}
-          disabled={isFieldDisabled}
+          required={field.required && !disabledState}
+          disabled={disabledState}
           placeholder={field.type === 'text' ? 'Enter details...' : ''}
           style={highlightStyle}
         />
@@ -209,8 +232,54 @@ export default function BookingSectionBlock({ formData, handleChange, forceEdita
   };
 
   return (
-    <div ref={containerRef} className="section-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px 24px', padding: '10px 0' }}>
-      {allBookingFields.map(field => renderBookingField(field))}
+    <div ref={containerRef} className="sections-container" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {BOOKING_GROUPS.map(group => {
+        const groupFields = group.fields.map(fieldName => {
+          return allBookingFields.find(f => f.name.toLowerCase() === fieldName.toLowerCase());
+        }).filter(Boolean);
+
+        if (groupFields.length === 0) return null;
+
+        const isGroupLocked = groupFields.every(field => isFieldDisabled(field));
+
+        return (
+          <div 
+            key={group.title} 
+            className="section-card" 
+            style={{ 
+              background: isGroupLocked ? '#f8fafc' : '#ffffff', 
+              border: isGroupLocked ? '1px solid #cbd5e1' : '1px solid #e2e8f0', 
+              borderRadius: '8px', 
+              padding: '20px', 
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+              opacity: isGroupLocked ? 0.85 : 1,
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 0 16px 0', paddingBottom: '10px', borderBottom: '1px solid #f1f5f9' }}>
+              <h4 style={{ margin: 0, color: isGroupLocked ? '#64748b' : '#1e293b', fontWeight: '600', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {group.title}
+              </h4>
+              <span 
+                style={{ 
+                  fontSize: '0.75rem', 
+                  padding: '3px 8px', 
+                  borderRadius: '12px', 
+                  fontWeight: '500',
+                  background: isGroupLocked ? '#e2e8f0' : '#e0f2fe',
+                  color: isGroupLocked ? '#475569' : '#0369a1',
+                  border: isGroupLocked ? '1px solid #cbd5e1' : '1px solid #bae6fd'
+                }}
+              >
+                {isGroupLocked ? '🔒 Locked' : '✏️ Editable'}
+              </span>
+            </div>
+            <div className="section-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px 24px' }}>
+              {groupFields.map(field => renderBookingField(field))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

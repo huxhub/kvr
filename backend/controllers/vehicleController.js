@@ -9,7 +9,7 @@ const FIELD_DEPARTMENT_MAP = {
   invoiceNumber: 'Customer Booking', source: 'Customer Booking', year: 'Customer Booking',
   // Vehicle
   vehicleStatus: 'Vehicle', chassisNumber: 'Vehicle', fuel: 'Vehicle',
-  pl: 'Vehicle', variant: 'Vehicle', colour: 'Vehicle', bdStatus: 'Vehicle', bdDate: 'Vehicle', vc: 'Vehicle',
+  pl: 'Vehicle', variant: 'Vehicle', colour: 'Vehicle', boStatus: 'Vehicle', boDate: 'Vehicle', vc: 'Vehicle',
   // Sales
   ca: 'Sales', tl: 'Sales', branch: 'Sales', region: 'Sales',
   crmBookingStatus: 'Sales', branchStatus: 'Sales', branchRemark: 'Sales',

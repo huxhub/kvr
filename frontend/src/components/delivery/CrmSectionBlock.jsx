@@ -49,8 +49,8 @@ const CRM_FIELD_ACCESS = {
   'pl':       ['BOOKING IN-CHARGE'],
   'variant':  ['BOOKING IN-CHARGE'],
   'colour':   ['BOOKING IN-CHARGE'],
-  'bdstatus': ['CRM'],
-  'bddate':   ['CRM'],
+  'bostatus': ['CRM'],
+  'bodate':   ['CRM'],
   // vehiclestatus, fuel, vc → use section default
   // chassisnumber → handled separately by isChassisLocked
 

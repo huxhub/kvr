@@ -132,8 +132,8 @@ export default function DeliveryTable({
                   <th>PPL</th>
                   <th>PL</th>
                   <th>Color</th>
-                  <th>BD STATUS</th>
-                  <th>BD DATE</th>
+                  <th>BO STATUS</th>
+                  <th>BO DATE</th>
                   <th>BKB ORDER NO</th>
                   <th>SAP ORDER NO</th>
                   <th>CRM - booking status</th>

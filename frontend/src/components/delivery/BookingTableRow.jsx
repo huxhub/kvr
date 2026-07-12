@@ -44,8 +44,8 @@ export default function BookingTableRow({ vehicle, openDrawer, index }) {
       <td style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{vehicle.pl || '-'}</td>
       <td style={{ whiteSpace: 'nowrap' }}>{vehicle.variant || '-'}</td>
       <td style={{ whiteSpace: 'nowrap' }}>{vehicle.colour || '-'}</td>
-      <td>{renderBadge(vehicle.bdStatus)}</td>
-      <td style={{ whiteSpace: 'nowrap' }}>{vehicle.bdDate || '-'}</td>
+      <td>{renderBadge(vehicle.boStatus)}</td>
+      <td style={{ whiteSpace: 'nowrap' }}>{vehicle.boDate || '-'}</td>
       <td style={{ whiteSpace: 'nowrap' }}>{vehicle.orderNumber || '-'}</td>
       <td style={{ whiteSpace: 'nowrap' }}>{vehicle.sapOrderNo || '-'}</td>
       <td>{renderBadge(vehicle.crmBookingStatus)}</td>

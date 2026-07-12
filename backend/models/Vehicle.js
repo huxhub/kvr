@@ -9,7 +9,7 @@ import { pool } from '../config/db.js';
 const VEHICLE_COLUMNS = [
   'chassisNumber', 'date', 'customerName', 'mobileNumber', 'optyId', 'orderNumber', 'sapOrderNo',
   'invoiceNumber', 'source', 'year', 'vehicleStatus', 'fuel', 'pl',
-  'variant', 'colour', 'bdStatus', 'bdDate', 'vc', 'ca', 'tl', 'branch', 'region', 
+  'variant', 'colour', 'boStatus', 'boDate', 'vc', 'ca', 'tl', 'branch', 'region', 
   'crmBookingStatus', 'branchStatus', 'branchRemark', 'hypothecation',
   'cashDiscount', 'exchangeLoyalty', 'corporate', 'sss', 'kpkb',
   'solarOffer', 'priceDifference', 'offerRemark', 'financeType',

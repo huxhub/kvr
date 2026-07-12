@@ -48,8 +48,8 @@ CREATE TABLE IF NOT EXISTS vehicles (
   pl                  VARCHAR(30)  DEFAULT '',
   variant             VARCHAR(50)  DEFAULT '',
   colour              VARCHAR(30)  DEFAULT '',
-  bdStatus            VARCHAR(30)  DEFAULT '',
-  bdDate              VARCHAR(30)  DEFAULT '',
+  boStatus            VARCHAR(30)  DEFAULT '',
+  boDate              VARCHAR(30)  DEFAULT '',
   vc                  VARCHAR(30)  DEFAULT '',
 
   -- Sales Details
