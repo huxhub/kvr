@@ -3,7 +3,6 @@ import { saveBackendSettings } from '../../models/apiModel.js';
 
 // ─── All known roles (same list as UserAdmin role options) ───────────────────
 const ALL_ROLES = [
-  'ADMIN',
   'BOOKING IN-CHARGE',
   'CRM',
   'BRANCH',
