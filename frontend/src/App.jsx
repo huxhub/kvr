@@ -31,15 +31,132 @@ function TabLoader() {
   );
 }
 
+// Error boundary to catch dynamic import (chunk load) errors and auto-reload the page
+class ChunkErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error) {
+    const isChunkError = 
+      error.message && 
+      (error.message.includes('Failed to fetch dynamically imported module') ||
+       error.message.includes('Loading chunk') ||
+       error.message.includes('dynamically imported') ||
+       error.message.includes('Failed to fetch'));
+       
+    if (isChunkError) {
+      // Reload the page once to retrieve the new build files
+      window.location.reload();
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px', gap: '10px', color: '#64748b', fontSize: '0.9rem' }}>
+          Loading updates...
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function AppContent() {
   const { user, loading: authLoading } = useAuth();
   const { vehicles, totalVehicles, currentPage, fetchVehicles } = useVehicles();
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [activeSubTab, setActiveSubTab] = useState('profile');
-  const [selectedVehicle, setSelectedVehicle] = useState(null);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isNewBookingOpen, setIsNewBookingOpen] = useState(false);
-  const [isCrmOpen, setIsCrmOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('activeTab') || 'dashboard');
+  const [activeSubTab, setActiveSubTab] = useState(() => localStorage.getItem('activeSubTab') || 'profile');
+
+  // Synchronize tab state with localStorage
+  useEffect(() => {
+    if (activeTab) {
+      localStorage.setItem('activeTab', activeTab);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeSubTab) {
+      localStorage.setItem('activeSubTab', activeSubTab);
+    }
+  }, [activeSubTab]);
+
+  // Enforce access control permissions on activeTab
+  useEffect(() => {
+    if (authLoading) return; // Wait until authentication load is complete
+
+    if (!user) {
+      // Clear tabs state and drawer state on logout
+      localStorage.removeItem('activeTab');
+      localStorage.removeItem('activeSubTab');
+      localStorage.removeItem('selectedVehicle');
+      localStorage.removeItem('isDrawerOpen');
+      localStorage.removeItem('isNewBookingOpen');
+      localStorage.removeItem('isCrmOpen');
+
+      setActiveTab('dashboard');
+      setActiveSubTab('profile');
+      setSelectedVehicle(null);
+      setIsDrawerOpen(false);
+      setIsNewBookingOpen(false);
+      setIsCrmOpen(false);
+      return;
+    }
+
+    if (activeTab === 'settings' && user.role !== 'ADMIN') {
+      setActiveTab('dashboard');
+    } else if (activeTab === 'users' && user.role !== 'ADMIN' && user.role !== 'BRANCH_MANAGER') {
+      setActiveTab('dashboard');
+    }
+  }, [user, authLoading, activeTab]);
+
+  const [selectedVehicle, setSelectedVehicle] = useState(() => {
+    const saved = localStorage.getItem('selectedVehicle');
+    try {
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [isDrawerOpen, setIsDrawerOpen] = useState(() => {
+    return localStorage.getItem('isDrawerOpen') === 'true';
+  });
+
+  const [isNewBookingOpen, setIsNewBookingOpen] = useState(() => {
+    return localStorage.getItem('isNewBookingOpen') === 'true';
+  });
+
+  const [isCrmOpen, setIsCrmOpen] = useState(() => {
+    return localStorage.getItem('isCrmOpen') === 'true';
+  });
+
+  useEffect(() => {
+    if (selectedVehicle) {
+      localStorage.setItem('selectedVehicle', JSON.stringify(selectedVehicle));
+    } else {
+      localStorage.removeItem('selectedVehicle');
+    }
+  }, [selectedVehicle]);
+
+  useEffect(() => {
+    localStorage.setItem('isDrawerOpen', isDrawerOpen);
+  }, [isDrawerOpen]);
+
+  useEffect(() => {
+    localStorage.setItem('isNewBookingOpen', isNewBookingOpen);
+  }, [isNewBookingOpen]);
+
+  useEffect(() => {
+    localStorage.setItem('isCrmOpen', isCrmOpen);
+  }, [isCrmOpen]);
+
   const [selectedBranch, setSelectedBranch] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [companyName, setCompanyName] = useState('KVR TATA');
@@ -161,76 +278,80 @@ function AppContent() {
         />
         
         <main className="content-wrapper" id="app-main">
-          <Suspense fallback={<TabLoader />}>
-            {activeTab === 'dashboard' && (
-              <DashboardKPIs 
-                vehicles={vehicles} 
-                activeBranch={selectedBranch} 
-                setSelectedBranch={setSelectedBranch}
-                branches={branches}
-              />
-            )}
-            {activeTab === 'bookings' && (
-              <DeliveryTable 
-                vehicles={vehicles} 
-                branches={branches} 
-                openDrawer={handleOpenDrawer}
-                openNewBooking={handleOpenNewBooking}
-                openCrm={handleOpenCrm}
-                totalVehicles={totalVehicles}
-                currentPage={currentPage}
-                fetchVehicles={fetchVehicles}
-                isBookingPage={true}
-              />
-            )}
-            {activeTab === 'delivery' && (
-              <DeliveryTable 
-                vehicles={vehicles} 
-                branches={branches} 
-                openDrawer={handleOpenDrawer}
-                openNewBooking={handleOpenNewBooking}
-                openCrm={handleOpenCrm}
-                totalVehicles={totalVehicles}
-                currentPage={currentPage}
-                fetchVehicles={fetchVehicles}
-                isBookingPage={false}
-              />
-            )}
-            {activeTab === 'audit' && <AuditHistory />}
-            {activeTab === 'users' && (user.role === 'ADMIN' || user.role === 'BRANCH_MANAGER') && <UserAdmin branches={branches} />}
-            {activeTab === 'settings' && user.role === 'ADMIN' && (
-              <Settings 
-                branches={branches} 
-                settings={settings} 
-                setSettings={setSettings} 
-                companyName={companyName} 
-                setCompanyName={setCompanyName} 
-                vehicles={vehicles} 
-                activeSubTab={activeSubTab}
-                setActiveSubTab={setActiveSubTab}
-              />
-            )}
-          </Suspense>
+          <ChunkErrorBoundary>
+            <Suspense fallback={<TabLoader />}>
+              {activeTab === 'dashboard' && (
+                <DashboardKPIs 
+                  vehicles={vehicles} 
+                  activeBranch={selectedBranch} 
+                  setSelectedBranch={setSelectedBranch}
+                  branches={branches}
+                />
+              )}
+              {activeTab === 'bookings' && (
+                <DeliveryTable 
+                  vehicles={vehicles} 
+                  branches={branches} 
+                  openDrawer={handleOpenDrawer}
+                  openNewBooking={handleOpenNewBooking}
+                  openCrm={handleOpenCrm}
+                  totalVehicles={totalVehicles}
+                  currentPage={currentPage}
+                  fetchVehicles={fetchVehicles}
+                  isBookingPage={true}
+                />
+              )}
+              {activeTab === 'delivery' && (
+                <DeliveryTable 
+                  vehicles={vehicles} 
+                  branches={branches} 
+                  openDrawer={handleOpenDrawer}
+                  openNewBooking={handleOpenNewBooking}
+                  openCrm={handleOpenCrm}
+                  totalVehicles={totalVehicles}
+                  currentPage={currentPage}
+                  fetchVehicles={fetchVehicles}
+                  isBookingPage={false}
+                />
+              )}
+              {activeTab === 'audit' && <AuditHistory />}
+              {activeTab === 'users' && (user.role === 'ADMIN' || user.role === 'BRANCH_MANAGER') && <UserAdmin branches={branches} />}
+              {activeTab === 'settings' && user.role === 'ADMIN' && (
+                <Settings 
+                  branches={branches} 
+                  settings={settings} 
+                  setSettings={setSettings} 
+                  companyName={companyName} 
+                  setCompanyName={setCompanyName} 
+                  vehicles={vehicles} 
+                  activeSubTab={activeSubTab}
+                  setActiveSubTab={setActiveSubTab}
+                />
+              )}
+            </Suspense>
+          </ChunkErrorBoundary>
         </main>
       </div>
 
-      {isDrawerOpen && (
-        <Suspense fallback={null}>
-          <VehicleDrawer vehicle={selectedVehicle} branches={allBranches} onClose={handleCloseDrawer} onSaved={() => fetchVehicles(currentPage)} isBookingPage={activeTab === 'bookings'} />
-        </Suspense>
-      )}
+      <ChunkErrorBoundary>
+        {isDrawerOpen && (
+          <Suspense fallback={null}>
+            <VehicleDrawer vehicle={selectedVehicle} branches={allBranches} onClose={handleCloseDrawer} onSaved={() => fetchVehicles(currentPage)} isBookingPage={activeTab === 'bookings'} />
+          </Suspense>
+        )}
 
-      {isNewBookingOpen && (
-        <Suspense fallback={null}>
-          <NewBookingDrawer branches={allBranches} onClose={handleCloseNewBooking} onSaved={() => fetchVehicles(1)} />
-        </Suspense>
-      )}
+        {isNewBookingOpen && (
+          <Suspense fallback={null}>
+            <NewBookingDrawer branches={allBranches} onClose={handleCloseNewBooking} onSaved={() => fetchVehicles(1)} />
+          </Suspense>
+        )}
 
-      {isCrmOpen && (
-        <Suspense fallback={null}>
-          <CrmDrawer branches={allBranches} onClose={handleCloseCrm} onSaved={() => fetchVehicles(currentPage)} />
-        </Suspense>
-      )}
+        {isCrmOpen && (
+          <Suspense fallback={null}>
+            <CrmDrawer branches={allBranches} onClose={handleCloseCrm} onSaved={() => fetchVehicles(currentPage)} />
+          </Suspense>
+        )}
+      </ChunkErrorBoundary>
     </div>
 
   );
