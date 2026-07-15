@@ -56,6 +56,11 @@ const connectDB = async () => {
         await pool.execute("ALTER TABLE vehicles ADD COLUMN realChassisNumber VARCHAR(50) DEFAULT NULL");
         console.log("Added column 'realChassisNumber' to 'vehicles' table.");
       }
+
+      // Ensure audit_logs columns previousStatus and newStatus can hold long text
+      await pool.execute("ALTER TABLE audit_logs MODIFY COLUMN previousStatus TEXT DEFAULT NULL");
+      await pool.execute("ALTER TABLE audit_logs MODIFY COLUMN newStatus TEXT DEFAULT NULL");
+      console.log("Altered audit_logs columns (previousStatus, newStatus) to TEXT.");
     } catch (error) {
       console.error(`❌ MySQL Connection Failed (attempt ${attempt}/${MAX_RETRIES}): ${error.message}`);
       if (attempt < MAX_RETRIES) {
