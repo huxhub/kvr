@@ -57,6 +57,26 @@ const connectDB = async () => {
         console.log("Added column 'realChassisNumber' to 'vehicles' table.");
       }
 
+      // Ensure boStatus column exists
+      const [boStatusCols] = await pool.execute(
+        "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'vehicles' AND COLUMN_NAME = 'boStatus'",
+        [dbName]
+      );
+      if (boStatusCols.length === 0) {
+        await pool.execute("ALTER TABLE vehicles ADD COLUMN boStatus TEXT DEFAULT NULL");
+        console.log("Added column 'boStatus' to 'vehicles' table.");
+      }
+
+      // Ensure boDate column exists
+      const [boDateCols] = await pool.execute(
+        "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'vehicles' AND COLUMN_NAME = 'boDate'",
+        [dbName]
+      );
+      if (boDateCols.length === 0) {
+        await pool.execute("ALTER TABLE vehicles ADD COLUMN boDate TEXT DEFAULT NULL");
+        console.log("Added column 'boDate' to 'vehicles' table.");
+      }
+
       // Ensure audit_logs columns previousStatus and newStatus can hold long text
       await pool.execute("ALTER TABLE audit_logs MODIFY COLUMN previousStatus TEXT DEFAULT NULL");
       await pool.execute("ALTER TABLE audit_logs MODIFY COLUMN newStatus TEXT DEFAULT NULL");
