@@ -78,6 +78,7 @@ export default function Sidebar({ activeTab, setActiveTab, activeSubTab, setActi
             Users List
           </button>
         )}
+        {user.role === 'ADMIN' && (
         <button 
           className={`sidebar-btn ${activeTab === 'settings' ? 'active' : ''}`} 
           onClick={() => handleNavClick('settings')}
@@ -85,7 +86,8 @@ export default function Sidebar({ activeTab, setActiveTab, activeSubTab, setActi
           <Settings className="tab-icon" size={18} />
           Settings
         </button>
-        {activeTab === 'settings' && (
+        )}
+        {user.role === 'ADMIN' && activeTab === 'settings' && (
           <div className="sidebar-submenu" style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingLeft: '28px', marginTop: '4px' }}>
             <button 
               type="button"

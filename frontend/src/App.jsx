@@ -198,7 +198,7 @@ function AppContent() {
             )}
             {activeTab === 'audit' && <AuditHistory />}
             {activeTab === 'users' && (user.role === 'ADMIN' || user.role === 'BRANCH_MANAGER') && <UserAdmin branches={branches} />}
-            {activeTab === 'settings' && (
+            {activeTab === 'settings' && user.role === 'ADMIN' && (
               <Settings 
                 branches={branches} 
                 settings={settings} 
