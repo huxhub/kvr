@@ -27,8 +27,9 @@ export default function DeliveryTable({
     branch: isBranchRestricted && user?.branch ? user.branch : '', 
     status: '', 
     pending: '',
-    ca: '', tl: '', expDate: '', actDate: '',
-    finStatus: '', tmaStatus: '', accStatus: '', regStatus: '', pdiStatus: ''
+    ca: '', tl: '',
+    finStatus: '', tmaStatus: '', accStatus: '', regStatus: '', pdiStatus: '',
+    crmGenerated: ''
   });
 
   const filteredVehicles = useMemo(() => {
@@ -60,8 +61,6 @@ export default function DeliveryTable({
       }
       if (filters.ca && v.ca !== filters.ca) return false;
       if (filters.tl && v.tl !== filters.tl) return false;
-      if (filters.expDate && v.expectedDeliveryDate !== filters.expDate) return false;
-      if (filters.actDate && v.actualDeliveryDate !== filters.actDate) return false;
       
       const checkDept = (filterVal, field) => {
         if (!filterVal) return true;
@@ -74,6 +73,11 @@ export default function DeliveryTable({
       if (!checkDept(filters.accStatus, SECTIONS.accounts.statusField)) return false;
       if (!checkDept(filters.regStatus, SECTIONS.registration.statusField)) return false;
       if (!checkDept(filters.pdiStatus, SECTIONS.pdi.statusField)) return false;
+
+      if (isBookingPage && filters.crmGenerated) {
+        if (filters.crmGenerated === 'generated' && !v.crmGenerated) return false;
+        if (filters.crmGenerated === 'pending' && v.crmGenerated) return false;
+      }
 
       return true;
     });
@@ -149,9 +153,9 @@ export default function DeliveryTable({
               ) : (
                 <tr>
                   <th style={{ width: '40px', paddingLeft: '16px' }}>#</th>
+                  <th>Customer Name</th>
                   <th>PL / Variant</th>
                   <th>Branch</th>
-                  <th>Expected Delivery</th>
                   <th>Fin Status</th>
                   <th>TMA Status</th>
                   <th>Acc Status</th>

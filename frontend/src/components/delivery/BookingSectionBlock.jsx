@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { STATUS_VALUES, SECTIONS } from '../../models/apiModel.js';
 
@@ -129,6 +129,44 @@ const BOOKING_GROUPS = [
 export default function BookingSectionBlock({ formData, handleChange, forceEditable = true, branches = [] }) {
   const { user } = useAuth();
   const containerRef = useRef(null);
+  const [pplOptions, setPplOptions] = useState(['Tiago', 'Tigor', 'Altroz', 'Punch', 'Nexon', 'Harrier', 'Safari']);
+  const [isOpen, setIsOpen] = useState(false);
+  const [dbSettings, setDbSettings] = useState(null);
+
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
+        const res = await fetch(`${apiBaseUrl}/api/settings`, { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          setDbSettings(data);
+        }
+      } catch (err) {
+        console.error('Failed to load settings in BookingSectionBlock:', err);
+      }
+    }
+    loadSettings();
+  }, []);
+
+  useEffect(() => {
+    async function fetchPpls() {
+      try {
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
+        const res = await fetch(`${apiBaseUrl}/api/vehicles/ppls`, { credentials: 'include' });
+        if (res.ok) {
+          const dbPpls = await res.json();
+          setPplOptions(prev => {
+            const merged = [...new Set([...prev, ...dbPpls])];
+            return merged.filter(Boolean);
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch PPLs:', err);
+      }
+    }
+    fetchPpls();
+  }, []);
 
   const getHighlightStyle = (isDisabled) => {
     if (isDisabled) return {};
@@ -166,6 +204,7 @@ export default function BookingSectionBlock({ formData, handleChange, forceEdita
     .filter(field => BOOKING_FIELD_WHITELIST.includes(field.name.toLowerCase()));
 
   const isFieldDisabled = (field) => {
+    if (formData.crmGenerated) return true;
     const fieldNameLower = field.name.toLowerCase();
     const bookingSectionKey = BOOKING_SECTION_TITLE_MAP[field.sectionTitle];
 
@@ -176,6 +215,18 @@ export default function BookingSectionBlock({ formData, handleChange, forceEdita
       user?.role !== 'BOOKING IN-CHARGE';
 
     if (user?.role === 'ADMIN') return false;
+
+    // Check dynamic settings field rule first
+    if (dbSettings?.role_permissions?.booking?.[fieldNameLower]?.[user?.role] !== undefined) {
+      const perm = dbSettings.role_permissions.booking[fieldNameLower][user?.role];
+      return !perm.edit || isNewBookingFieldLocked;
+    }
+
+    // Check dynamic settings section default rule next
+    if (bookingSectionKey && dbSettings?.role_permissions?.booking?.[`section:${bookingSectionKey}`]?.[user?.role] !== undefined) {
+      const perm = dbSettings.role_permissions.booking[`section:${bookingSectionKey}`][user?.role];
+      return !perm.edit || isNewBookingFieldLocked;
+    }
 
     // Check field-level override first
     if (BOOKING_FIELD_ACCESS[fieldNameLower]) {
@@ -189,9 +240,119 @@ export default function BookingSectionBlock({ formData, handleChange, forceEdita
     return !allowedRoles.includes(user?.role) || isNewBookingFieldLocked;
   };
 
+  const isFieldHidden = (field) => {
+    if (user?.role === 'ADMIN') return false;
+    const fieldNameLower = field.name.toLowerCase();
+    const bookingSectionKey = BOOKING_SECTION_TITLE_MAP[field.sectionTitle];
+
+    // Check dynamic settings field rule first
+    if (dbSettings?.role_permissions?.booking?.[fieldNameLower]?.[user?.role] !== undefined) {
+      const perm = dbSettings.role_permissions.booking[fieldNameLower][user?.role];
+      return !perm.view;
+    }
+
+    // Check dynamic settings section default rule next
+    if (bookingSectionKey && dbSettings?.role_permissions?.booking?.[`section:${bookingSectionKey}`]?.[user?.role] !== undefined) {
+      const perm = dbSettings.role_permissions.booking[`section:${bookingSectionKey}`][user?.role];
+      return !perm.view;
+    }
+
+    return false; // Default visible
+  };
+
   const renderBookingField = (field) => {
     const disabledState = isFieldDisabled(field);
     const highlightStyle = getHighlightStyle(disabledState);
+
+    if (field.name === 'pl') {
+      return (
+        <div key={field.name} className="form-field" style={{ position: 'relative' }}>
+          <label>Booking {field.label} {field.required ? '*' : ''}</label>
+          <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+            <input
+              type="text"
+              name={field.name}
+              value={formData[field.name] || ''}
+              onChange={handleChange}
+              required={field.required && !disabledState}
+              disabled={disabledState}
+              style={{ ...highlightStyle, paddingRight: '36px', width: '100%' }}
+              placeholder="Select or type PPL..."
+            />
+            {!disabledState && (
+              <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                style={{
+                  position: 'absolute',
+                  right: '4px',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#64748b',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '8px',
+                  height: '32px',
+                  width: '32px'
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }}>
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </button>
+            )}
+          </div>
+          {isOpen && !disabledState && (
+            <>
+              <div 
+                onClick={() => setIsOpen(false)} 
+                style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000 }} 
+              />
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  backgroundColor: '#ffffff',
+                  border: '1.5px solid #003b71',
+                  borderRadius: '6px',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                  zIndex: 1001,
+                  maxHeight: '180px',
+                  overflowY: 'auto',
+                  marginTop: '4px',
+                  padding: '4px 0'
+                }}
+              >
+                {pplOptions.map(opt => (
+                  <div
+                    key={opt}
+                    onClick={() => {
+                      handleChange({ target: { name: field.name, value: opt } });
+                      setIsOpen(false);
+                    }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#f1f5f9'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                    style={{
+                      padding: '8px 12px',
+                      cursor: 'pointer',
+                      fontSize: '0.9rem',
+                      color: '#1e293b',
+                      transition: 'background-color 0.1s ease'
+                    }}
+                  >
+                    {opt}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      );
+    }
 
     if (field.type === 'status' || field.type === 'select' || field.name === 'branch') {
       let options = field.options || Object.values(STATUS_VALUES);
@@ -236,7 +397,7 @@ export default function BookingSectionBlock({ formData, handleChange, forceEdita
       {BOOKING_GROUPS.map(group => {
         const groupFields = group.fields.map(fieldName => {
           return allBookingFields.find(f => f.name.toLowerCase() === fieldName.toLowerCase());
-        }).filter(Boolean);
+        }).filter(Boolean).filter(field => !isFieldHidden(field));
 
         if (groupFields.length === 0) return null;
 

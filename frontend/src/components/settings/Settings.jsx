@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
-import { Settings as SettingsIcon, User, Layers, Shield, Plus, Trash2, Download, Building } from 'lucide-react';
+import { Plus, Trash2, Download } from 'lucide-react';
 import { saveBackendSettings, updateUser } from '../../models/apiModel.js';
+import AccessMatrix from '../admin/AccessMatrix.jsx';
 
-export default function Settings({ branches, settings, setSettings, companyName, setCompanyName, vehicles }) {
+export default function Settings({ branches, settings, setSettings, companyName, setCompanyName, vehicles, activeSubTab }) {
   const { user, updateUserProfile } = useAuth();
   const { showToast } = useToast();
-  const [activeSubTab, setActiveSubTab] = useState('profile');
 
   // Profile Settings States
   const [profileUsername, setProfileUsername] = useState(user?.username || '');
@@ -241,60 +241,78 @@ export default function Settings({ branches, settings, setSettings, companyName,
     showToast('Export Started', 'Vehicles backup saved as Excel CSV.', 'info');
   };
 
+  const handleExportBookings = () => {
+    const bookings = (vehicles || []).filter(v => v.vehicleStatus === 'Booked');
+    if (bookings.length === 0) {
+      showToast('No Data', 'There are no booking records to export.', 'warning');
+      return;
+    }
+
+    const columns = [
+      { key: 'chassisNumber', label: 'Chassis Number' },
+      { key: 'date', label: 'Booking Date' },
+      { key: 'customerName', label: 'Customer Name' },
+      { key: 'mobileNumber', label: 'Mobile Number' },
+      { key: 'orderNumber', label: 'Order Number' },
+      { key: 'invoiceNumber', label: 'Invoice Number' },
+      { key: 'source', label: 'Booking Source' },
+      { key: 'year', label: 'Manufacturing Year' },
+      { key: 'vehicleStatus', label: 'Vehicle Status' },
+      { key: 'fuel', label: 'Fuel Type' },
+      { key: 'pl', label: 'Product Line (PL)' },
+      { key: 'variant', label: 'Variant' },
+      { key: 'colour', label: 'Colour' },
+      { key: 'vc', label: 'Vehicle Code (VC)' },
+      { key: 'ca', label: 'Customer Advisor (CA)' },
+      { key: 'tl', label: 'Team Leader (TL)' },
+      { key: 'branch', label: 'Branch' },
+      { key: 'hypothecation', label: 'Hypothecation' },
+      { key: 'cashDiscount', label: 'Cash Discount / Green Bonus' },
+      { key: 'exchangeLoyalty', label: 'Exchange / Loyalty' },
+      { key: 'corporate', label: 'Corporate Discount' },
+      { key: 'sss', label: 'SSS Discount' },
+      { key: 'kpkb', label: 'KPKB / Special Scheme' },
+      { key: 'solarOffer', label: 'Solar Offer' },
+      { key: 'priceDifference', label: 'Price Difference' },
+      { key: 'offerRemark', label: 'Offer Remark' },
+      { key: 'financeType', label: 'Finance Type' },
+      { key: 'onRoadPrice', label: 'On Road Price' },
+      { key: 'ip', label: 'Initial Payment (IP)' },
+      { key: 'loanAmount', label: 'Loan Amount' },
+      { key: 'balanceAmount', label: 'Balance Amount' },
+      { key: 'fundPercentage', label: 'Fund Percentage' },
+      { key: 'loanAmountStatus', label: 'Loan Amount Status' },
+      { key: 'financeStatus', label: 'Finance Status' }
+    ];
+
+    const headerRow = columns.map(col => `"${col.label.replace(/"/g, '""')}"`).join(',');
+    const dataRows = bookings.map(v => {
+      return columns.map(col => {
+        const val = v[col.key] !== undefined && v[col.key] !== null ? String(v[col.key]) : '';
+        return `"${val.replace(/"/g, '""')}"`;
+      }).join(',');
+    });
+
+    const csvContent = '\uFEFF' + [headerRow, ...dataRows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", url);
+    downloadAnchor.setAttribute("download", `${companyName.toLowerCase().replace(/\s+/g, '_')}_bookings_backup_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+    URL.revokeObjectURL(url);
+    
+    showToast('Export Started', 'Bookings backup saved as Excel CSV.', 'info');
+  };
+
   return (
     <div id="settings-view" className="tab-content active" style={{ animation: 'fadeIn 0.25s ease' }}>
-      <div className="settings-container">
+      <div className="settings-container" style={{ display: 'block' }}>
         
-        {/* Settings Navigation Menu */}
-        <div className="settings-sidebar">
-          <button 
-            type="button"
-            className={`settings-tab-btn ${activeSubTab === 'profile' ? 'active' : ''}`}
-            onClick={() => setActiveSubTab('profile')}
-          >
-            <User size={16} />
-            My Profile
-          </button>
-          {user.role === 'ADMIN' && (
-            <button 
-              type="button"
-              className={`settings-tab-btn ${activeSubTab === 'company' ? 'active' : ''}`}
-              onClick={() => setActiveSubTab('company')}
-            >
-              <Building size={16} />
-              Company Settings
-            </button>
-          )}
-          {user.role !== 'CRM' && (
-            <button 
-              type="button"
-              className={`settings-tab-btn ${activeSubTab === 'branches' ? 'active' : ''}`}
-              onClick={() => setActiveSubTab('branches')}
-            >
-              <Layers size={16} />
-              Manage Branches
-            </button>
-          )}
-          <button 
-            type="button"
-            className={`settings-tab-btn ${activeSubTab === 'preferences' ? 'active' : ''}`}
-            onClick={() => setActiveSubTab('preferences')}
-          >
-            <SettingsIcon size={16} />
-            System Preferences
-          </button>
-          <button 
-            type="button"
-            className={`settings-tab-btn ${activeSubTab === 'backup' ? 'active' : ''}`}
-            onClick={() => setActiveSubTab('backup')}
-          >
-            <Shield size={16} />
-            Data Backup & Export
-          </button>
-        </div>
-
         {/* Settings Panel Content Area */}
-        <div className="settings-content">
+        <div className="settings-content" style={{ paddingLeft: 0 }}>
           
           {/* Subtab: Profile */}
           {activeSubTab === 'profile' && (
@@ -508,6 +526,15 @@ export default function Settings({ branches, settings, setSettings, companyName,
                   <button 
                     type="button" 
                     className="btn-primary" 
+                    onClick={handleExportBookings}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#10b981', borderColor: '#10b981' }}
+                  >
+                    <Download size={16} />
+                    Download Bookings Excel Backup
+                  </button>
+                  <button 
+                    type="button" 
+                    className="btn-primary" 
                     onClick={handleExportExcel}
                     style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                   >
@@ -524,6 +551,17 @@ export default function Settings({ branches, settings, setSettings, companyName,
                     Download JSON Backup
                   </button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Subtab: Roles & Access */}
+          {activeSubTab === 'access' && (
+            <div style={{ animation: 'fadeIn 0.2s ease' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--primary-navy)', marginBottom: '4px', marginTop: 0 }}>Roles & Access Permissions</h3>
+              <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '20px', marginTop: 0 }}>Manage edit and view access roles for each form field. Changes apply instantly.</p>
+              <div style={{ borderRadius: '12px', border: '1px solid var(--border-light)', overflow: 'hidden' }}>
+                <AccessMatrix settings={settings} setSettings={setSettings} isReadOnly={user.role !== 'ADMIN'} />
               </div>
             </div>
           )}

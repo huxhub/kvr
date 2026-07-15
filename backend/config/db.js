@@ -35,6 +35,27 @@ const connectDB = async () => {
       const connection = await pool.getConnection();
       console.log(`✅ MySQL Connected: ${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || 3306}/${process.env.DB_NAME || 'kvr'}`);
       connection.release();
+
+      // Ensure crmGenerated column exists
+      const dbName = process.env.DB_NAME || 'kvr';
+      const [columns] = await pool.execute(
+        "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'vehicles' AND COLUMN_NAME = 'crmGenerated'",
+        [dbName]
+      );
+      if (columns.length === 0) {
+        await pool.execute("ALTER TABLE vehicles ADD COLUMN crmGenerated TINYINT DEFAULT 0");
+        console.log("Added column 'crmGenerated' to 'vehicles' table.");
+      }
+
+      // Ensure realChassisNumber column exists
+      const [realChassisCols] = await pool.execute(
+        "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'vehicles' AND COLUMN_NAME = 'realChassisNumber'",
+        [dbName]
+      );
+      if (realChassisCols.length === 0) {
+        await pool.execute("ALTER TABLE vehicles ADD COLUMN realChassisNumber VARCHAR(50) DEFAULT NULL");
+        console.log("Added column 'realChassisNumber' to 'vehicles' table.");
+      }
     } catch (error) {
       console.error(`❌ MySQL Connection Failed (attempt ${attempt}/${MAX_RETRIES}): ${error.message}`);
       if (attempt < MAX_RETRIES) {

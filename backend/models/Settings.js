@@ -10,11 +10,23 @@ import { pool } from '../config/db.js';
 
 const SETTING_FIELDS = [
   'companyName', 'companyPhone', 'companyEmail', 'companyAddress',
-  'branches', 'theme', 'enableAlerts'
+  'branches', 'theme', 'enableAlerts', 'role_permissions'
 ];
 
 /** Find settings by key (usually 'global') */
 export async function findByKey(key = 'global') {
+  // Ensure role_permissions column exists
+  try {
+    await pool.execute('SELECT role_permissions FROM settings LIMIT 1');
+  } catch (err) {
+    try {
+      await pool.execute('ALTER TABLE settings ADD COLUMN role_permissions JSON DEFAULT NULL');
+      console.log('✅ Successfully added role_permissions JSON column to settings table.');
+    } catch (e) {
+      console.error('Failed to add role_permissions column:', e.message);
+    }
+  }
+
   const [rows] = await pool.execute(
     'SELECT * FROM settings WHERE setting_key = ? LIMIT 1',
     [key]
@@ -31,6 +43,12 @@ export async function findByKey(key = 'global') {
     try { row.branches = JSON.parse(row.branches); } catch { row.branches = ['Perinthalmanna']; }
   }
   if (!Array.isArray(row.branches)) row.branches = ['Perinthalmanna'];
+
+  // Parse role_permissions safely
+  if (typeof row.role_permissions === 'string') {
+    try { row.role_permissions = JSON.parse(row.role_permissions); } catch { row.role_permissions = null; }
+  }
+
   // Map setting_key to key for API compatibility
   row.key = row.setting_key;
   return row;
@@ -60,8 +78,8 @@ export async function upsert(key, data) {
   for (const field of SETTING_FIELDS) {
     if (data[field] !== undefined) {
       fields.push(`${field} = ?`);
-      if (field === 'branches') {
-        // Serialize array to JSON string for storage
+      if (field === 'branches' || field === 'role_permissions') {
+        // Serialize array/object to JSON string for storage
         values.push(JSON.stringify(data[field]));
       } else if (field === 'enableAlerts') {
         // Convert boolean to TINYINT

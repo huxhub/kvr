@@ -27,6 +27,7 @@ export default function DeliveryTableRow({ vehicle, openDrawer, index }) {
   return (
     <tr onClick={() => openDrawer(vehicle)} style={{ cursor: 'pointer' }}>
       <td style={{ color: '#64748b', fontWeight: 600, fontSize: '0.8rem', paddingLeft: '16px' }}>{index}</td>
+      <td style={{ fontWeight: 600, color: 'var(--text-main)' }}>{vehicle.customerName || '-'}</td>
       <td>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <span style={{ fontWeight: 600, color: 'var(--primary-navy)' }}>{vehicle.pl}</span>
@@ -34,7 +35,6 @@ export default function DeliveryTableRow({ vehicle, openDrawer, index }) {
         </div>
       </td>
       <td>{vehicle.branch || 'Perinthalmanna'}</td>
-      <td>{vehicle.expectedDeliveryDate || '-'}</td>
       <td>{renderStatusPill(vehicle.financeStatus, vehicle.financeRemark)}</td>
       <td>{renderStatusPill(vehicle.tmaStatus, vehicle.tmaRemark)}</td>
       <td>{renderStatusPill(vehicle.accountsStatus, vehicle.accountsRemark)}</td>

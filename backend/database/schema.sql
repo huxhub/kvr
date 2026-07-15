@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- ============================================================
 CREATE TABLE IF NOT EXISTS vehicles (
   chassisNumber       VARCHAR(50) NOT NULL PRIMARY KEY,
+  crmGenerated        TINYINT      NOT NULL DEFAULT 0,
 
   -- Customer Details
   date                VARCHAR(30)  DEFAULT '',

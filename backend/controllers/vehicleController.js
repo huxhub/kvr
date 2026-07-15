@@ -120,6 +120,12 @@ export const updateVehicle = async (req, res) => {
       return res.status(404).json({ error: 'Vehicle not found or no changes' });
     }
 
+    const hasChassisChanged = req.body.chassisNumber && req.body.chassisNumber !== id;
+    if (hasChassisChanged) {
+      // Update all past audit logs for this chassis number to the new chassis number
+      await Audit.updateChassisNumber(id, req.body.chassisNumber);
+    }
+
     // Diff: find every field that actually changed value
     const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
     const auditEntries = [];
@@ -130,12 +136,12 @@ export const updateVehicle = async (req, res) => {
 
       // Skip unchanged fields and internal keys
       if (String(oldVal ?? '') === String(newVal ?? '')) continue;
-      if (field === 'chassisNumber') continue;
+      if (field === 'created_at' || field === 'updated_at') continue;
 
       const dept = FIELD_DEPARTMENT_MAP[field] || 'General';
 
       auditEntries.push({
-        chassisNumber: id,
+        chassisNumber: hasChassisChanged ? req.body.chassisNumber : id,
         customerName: oldVehicle.customerName || updated.customerName || '',
         updatedBy: changedByRole,
         department: `${dept} — ${field}`,
@@ -167,6 +173,87 @@ export const deleteVehicle = async (req, res) => {
     }
 
     res.json({ message: 'Vehicle deleted' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const getDistinctPpls = async (req, res) => {
+  try {
+    const ppls = await Vehicle.getDistinctPpls();
+    res.json(ppls);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const generateCrm = async (req, res) => {
+  try {
+    const { originalChassisNumber, newChassisNumber } = req.body;
+    
+    if (!originalChassisNumber || !newChassisNumber) {
+      return res.status(400).json({ error: 'Original and new chassis numbers are required' });
+    }
+
+    // 1. Fetch original booking
+    const original = await Vehicle.findByChassis(originalChassisNumber);
+    if (!original) {
+      return res.status(404).json({ error: 'Original booking not found' });
+    }
+
+    if (original.crmGenerated) {
+      return res.status(400).json({ error: 'This booking has already been processed' });
+    }
+
+    // 2. Check if new chassis number already exists
+    const existing = await Vehicle.findByChassis(newChassisNumber);
+    if (existing) {
+      return res.status(400).json({ error: 'New Chassis Number already exists in the system' });
+    }
+
+    // 3. Duplicate and update original
+    const duplicatedData = { ...original };
+    
+    // Remove database internal metadata fields that should be auto-managed or reset
+    delete duplicatedData.created_at;
+    delete duplicatedData.updated_at;
+
+    duplicatedData.chassisNumber = newChassisNumber;
+    duplicatedData.vehicleStatus = 'Pending'; // Delivery Master List status
+    duplicatedData.crmGenerated = 0;
+
+    // Save duplicate
+    await Vehicle.create(duplicatedData);
+
+    // Lock the original booking and link the real chassis number
+    await Vehicle.updateByChassis(originalChassisNumber, { crmGenerated: 1, realChassisNumber: newChassisNumber });
+
+    // 4. Create Audit Logs
+    const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    await Audit.insertMany([
+      {
+        chassisNumber: originalChassisNumber,
+        customerName: original.customerName || '',
+        updatedBy: req.headers['x-role'] || 'CRM',
+        department: 'Customer Booking',
+        previousStatus: 'Booked',
+        newStatus: 'Booked (Locked)',
+        remarks: `CRM Generated. Sent to delivery with Chassis: ${newChassisNumber}`,
+        timestamp: now
+      },
+      {
+        chassisNumber: newChassisNumber,
+        customerName: original.customerName || '',
+        updatedBy: req.headers['x-role'] || 'CRM',
+        department: 'Vehicle',
+        previousStatus: 'None',
+        newStatus: 'Pending',
+        remarks: `Vehicle entry generated from booking ${originalChassisNumber}`,
+        timestamp: now
+      }
+    ]);
+
+    res.status(201).json({ message: 'CRM Delivery Record Generated successfully', newChassisNumber });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

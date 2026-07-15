@@ -23,7 +23,7 @@ export const SECTIONS = {
       { name: 'pl', label: 'PPL', type: 'select', options: ['Tiago', 'Tigor', 'Altroz', 'Punch', 'Nexon', 'Harrier', 'Safari'], required: true },
       { name: 'variant', label: 'PL (Variant)', type: 'text', required: true },
       { name: 'colour', label: 'Color', type: 'text', required: true },
-      { name: 'boStatus', label: 'BO STATUS', type: 'select', options: ['BD DONE', 'BD PENDING', 'IN STOCK', 'No Stock'], required: false },
+      { name: 'boStatus', label: 'BO STATUS', type: 'select', options: ['BO DONE', 'BO PENDING', 'IN STOCK', 'No Stock'], required: false },
       { name: 'boDate', label: 'BO DATE', type: 'date', required: false },
       { name: 'vc', label: 'Vehicle Code (VC)', type: 'text', required: false }
     ]

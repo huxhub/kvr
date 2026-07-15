@@ -36,10 +36,6 @@ export default function DeliveryGridItem({ vehicle, openDrawer, index }) {
           <span className="card-detail-label">Team Leader (TL)</span>
           <span className="card-detail-value">{vehicle.tl}</span>
         </div>
-        <div className="card-detail-item" style={{ gridColumn: '1/-1' }}>
-          <span className="card-detail-label">Expected Delivery</span>
-          <span className="card-detail-value">{vehicle.expectedDeliveryDate || 'Not Scheduled'}</span>
-        </div>
       </div>
       
       <div className="card-progress-section">

@@ -10,8 +10,9 @@ export async function getVehicles(page = 1, limit = 25) {
   return { vehicles, totalCount };
 }
 
-export async function saveVehicle(updatedVehicle, changedByRole, remarks) {
-  const res = await fetch(`${API_BASE_URL}/api/vehicles/${updatedVehicle.chassisNumber}`, {
+export async function saveVehicle(updatedVehicle, changedByRole, remarks, originalChassisNumber) {
+  const targetChassis = originalChassisNumber || updatedVehicle.chassisNumber;
+  const res = await fetch(`${API_BASE_URL}/api/vehicles/${targetChassis}`, {
     method: 'PUT',
     credentials: 'include',
     headers: {

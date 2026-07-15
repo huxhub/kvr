@@ -35,6 +35,7 @@ function AppContent() {
   const { user, loading: authLoading } = useAuth();
   const { vehicles, totalVehicles, currentPage, fetchVehicles } = useVehicles();
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeSubTab, setActiveSubTab] = useState('profile');
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isNewBookingOpen, setIsNewBookingOpen] = useState(false);
@@ -79,17 +80,20 @@ function AppContent() {
     setSelectedBranch(isBranchRestricted ? user.branch : '');
   }, [user, fetchVehicles]);
 
-  const branches = useMemo(() => {
-    // Non-Admin: only show their own branch in the dropdown
-    const isBranchRestricted = user?.role !== 'ADMIN' && user?.branch && user?.branch !== 'All Branches';
-    if (isBranchRestricted) {
-      return [user.branch];
-    }
+  const allBranches = useMemo(() => {
     const branchesSet = new Set(['Perinthalmanna', ...(settings.branches || [])]);
     if (user && user.branch && user.branch !== 'All Branches') branchesSet.add(user.branch);
     vehicles.forEach(v => { if (v.branch && v.branch !== 'All Branches') branchesSet.add(v.branch); });
     return Array.from(branchesSet).sort();
   }, [vehicles, user, settings.branches]);
+
+  const branches = useMemo(() => {
+    const isBranchRestricted = user?.role !== 'ADMIN' && user?.branch && user?.branch !== 'All Branches';
+    if (isBranchRestricted) {
+      return [user.branch];
+    }
+    return allBranches;
+  }, [user, allBranches]);
 
   // While session restore is in progress, show a minimal spinner
   if (authLoading) {
@@ -138,6 +142,8 @@ function AppContent() {
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
+        activeSubTab={activeSubTab}
+        setActiveSubTab={setActiveSubTab}
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
         companyName={companyName}
@@ -192,26 +198,37 @@ function AppContent() {
             )}
             {activeTab === 'audit' && <AuditHistory />}
             {activeTab === 'users' && (user.role === 'ADMIN' || user.role === 'BRANCH_MANAGER') && <UserAdmin branches={branches} />}
-            {activeTab === 'settings' && <Settings branches={branches} settings={settings} setSettings={setSettings} companyName={companyName} setCompanyName={setCompanyName} vehicles={vehicles} />}
+            {activeTab === 'settings' && (
+              <Settings 
+                branches={branches} 
+                settings={settings} 
+                setSettings={setSettings} 
+                companyName={companyName} 
+                setCompanyName={setCompanyName} 
+                vehicles={vehicles} 
+                activeSubTab={activeSubTab}
+                setActiveSubTab={setActiveSubTab}
+              />
+            )}
           </Suspense>
         </main>
       </div>
 
       {isDrawerOpen && (
         <Suspense fallback={null}>
-          <VehicleDrawer vehicle={selectedVehicle} branches={branches} onClose={handleCloseDrawer} onSaved={() => fetchVehicles(currentPage)} isBookingPage={activeTab === 'bookings'} />
+          <VehicleDrawer vehicle={selectedVehicle} branches={allBranches} onClose={handleCloseDrawer} onSaved={() => fetchVehicles(currentPage)} isBookingPage={activeTab === 'bookings'} />
         </Suspense>
       )}
 
       {isNewBookingOpen && (
         <Suspense fallback={null}>
-          <NewBookingDrawer branches={branches} onClose={handleCloseNewBooking} onSaved={() => fetchVehicles(1)} />
+          <NewBookingDrawer branches={allBranches} onClose={handleCloseNewBooking} onSaved={() => fetchVehicles(1)} />
         </Suspense>
       )}
 
       {isCrmOpen && (
         <Suspense fallback={null}>
-          <CrmDrawer branches={branches} onClose={handleCloseCrm} onSaved={() => fetchVehicles(currentPage)} />
+          <CrmDrawer branches={allBranches} onClose={handleCloseCrm} onSaved={() => fetchVehicles(currentPage)} />
         </Suspense>
       )}
     </div>

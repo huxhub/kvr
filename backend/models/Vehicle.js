@@ -7,7 +7,7 @@ import { pool } from '../config/db.js';
 
 // All vehicle columns (excluding auto-managed created_at/updated_at)
 const VEHICLE_COLUMNS = [
-  'chassisNumber', 'date', 'customerName', 'mobileNumber', 'optyId', 'orderNumber', 'sapOrderNo',
+  'chassisNumber', 'crmGenerated', 'realChassisNumber', 'date', 'customerName', 'mobileNumber', 'optyId', 'orderNumber', 'sapOrderNo',
   'invoiceNumber', 'source', 'year', 'vehicleStatus', 'fuel', 'pl',
   'variant', 'colour', 'boStatus', 'boDate', 'vc', 'ca', 'tl', 'branch', 'region', 
   'crmBookingStatus', 'branchStatus', 'branchRemark', 'hypothecation',
@@ -107,8 +107,13 @@ export async function updateByChassis(chassisNumber, data) {
   const values = [];
 
   for (const col of VEHICLE_COLUMNS) {
-    // Don't allow changing the primary key via update
-    if (col === 'chassisNumber') continue;
+    if (col === 'chassisNumber') {
+      if (data.chassisNumber && data.chassisNumber !== chassisNumber) {
+        fields.push('chassisNumber = ?');
+        values.push(data.chassisNumber);
+      }
+      continue;
+    }
     if (data[col] !== undefined) {
       fields.push(`${col} = ?`);
       values.push(data[col]);
@@ -126,8 +131,8 @@ export async function updateByChassis(chassisNumber, data) {
 
   if (result.affectedRows === 0) return null;
 
-  // Return the updated row
-  return findByChassis(chassisNumber);
+  const finalChassis = (data.chassisNumber && data.chassisNumber !== chassisNumber) ? data.chassisNumber : chassisNumber;
+  return findByChassis(finalChassis);
 }
 
 /** Delete a vehicle by chassisNumber */
@@ -137,4 +142,12 @@ export async function deleteByChassis(chassisNumber) {
     [chassisNumber]
   );
   return result.affectedRows > 0;
+}
+
+/** Get distinct Product Line (PPL) values */
+export async function getDistinctPpls() {
+  const [rows] = await pool.execute(
+    'SELECT DISTINCT pl FROM vehicles WHERE pl IS NOT NULL AND pl != "" ORDER BY pl ASC'
+  );
+  return rows.map(r => r.pl);
 }

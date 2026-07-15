@@ -83,3 +83,11 @@ export async function insertMany(logs) {
 export async function deleteAll() {
   await pool.execute('DELETE FROM audit_logs');
 }
+
+/** Update chassisNumber referenced in audit logs */
+export async function updateChassisNumber(oldChassis, newChassis) {
+  await pool.execute(
+    'UPDATE audit_logs SET chassisNumber = ? WHERE chassisNumber = ?',
+    [newChassis, oldChassis]
+  );
+}

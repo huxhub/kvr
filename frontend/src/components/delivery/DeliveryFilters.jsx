@@ -18,8 +18,9 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
       branch: isBranchRestricted && user?.branch ? user.branch : '', 
       status: '', 
       pending: '',
-      ca: '', tl: '', expDate: '', actDate: '',
-      finStatus: '', tmaStatus: '', accStatus: '', regStatus: '', pdiStatus: ''
+      ca: '', tl: '',
+      finStatus: '', tmaStatus: '', accStatus: '', regStatus: '', pdiStatus: '',
+      crmGenerated: ''
     });
   };
 
@@ -99,6 +100,22 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
           </div>
         )}
 
+        {isBookingPage && (
+          <div className="filter-group">
+            <label htmlFor="filter-crmGenerated">CRM STATUS</label>
+            <CustomDropdown 
+              id="filter-crmGenerated" 
+              value={filters.crmGenerated || ''} 
+              onChange={handleChange} 
+              options={[
+                { value: '', label: 'All' },
+                { value: 'generated', label: 'CRM Generated' },
+                { value: 'pending', label: 'Pending Generation' }
+              ]} 
+            />
+          </div>
+        )}
+
         <div className="filter-group">
           <label htmlFor="filter-ca">CUSTOMER ADVISOR (CA)</label>
           <CustomDropdown 
@@ -118,17 +135,6 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
             options={tlOptions} 
           />
         </div>
-
-        <div className="filter-group">
-          <label htmlFor="filter-expDate">EXPECTED DELIVERY</label>
-          <input type="date" id="filter-expDate" className="filter-date" value={filters.expDate} onChange={handleChange} />
-        </div>
-
-        <div className="filter-group">
-          <label htmlFor="filter-actDate">ACTUAL DELIVERY</label>
-          <input type="date" id="filter-actDate" className="filter-date" value={filters.actDate} onChange={handleChange} />
-        </div>
-
         <div className="filter-group">
           <label htmlFor="filter-finStatus">FINANCE STATUS</label>
           <CustomDropdown 

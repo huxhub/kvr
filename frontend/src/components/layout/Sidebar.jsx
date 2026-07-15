@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { LogOut, X, Settings, Plus } from 'lucide-react';
 
-export default function Sidebar({ activeTab, setActiveTab, isSidebarOpen, setIsSidebarOpen, companyName = 'KVR TATA', onNewBooking }) {
+export default function Sidebar({ activeTab, setActiveTab, activeSubTab, setActiveSubTab, isSidebarOpen, setIsSidebarOpen, companyName = 'KVR TATA', onNewBooking }) {
   const { user, logout } = useAuth();
 
   if (!user) return null;
@@ -85,6 +85,146 @@ export default function Sidebar({ activeTab, setActiveTab, isSidebarOpen, setIsS
           <Settings className="tab-icon" size={18} />
           Settings
         </button>
+        {activeTab === 'settings' && (
+          <div className="sidebar-submenu" style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingLeft: '28px', marginTop: '4px' }}>
+            <button 
+              type="button"
+              className={`sidebar-sub-btn ${activeSubTab === 'profile' ? 'active' : ''}`}
+              onClick={() => setActiveSubTab('profile')}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: '6px 12px',
+                textAlign: 'left',
+                width: '100%',
+                borderRadius: '6px',
+                fontSize: '0.75rem',
+                fontFamily: 'var(--font-body)',
+                fontWeight: activeSubTab === 'profile' ? '600' : '500',
+                color: activeSubTab === 'profile' ? 'var(--sidebar-active-color, #4f46e5)' : '#64748b',
+                backgroundColor: activeSubTab === 'profile' ? 'var(--sidebar-active-bg, #eef2ff)' : 'transparent',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              My Profile
+            </button>
+            {user.role === 'ADMIN' && (
+              <button 
+                type="button"
+                className={`sidebar-sub-btn ${activeSubTab === 'company' ? 'active' : ''}`}
+                onClick={() => setActiveSubTab('company')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: '6px 12px',
+                  textAlign: 'left',
+                  width: '100%',
+                  borderRadius: '6px',
+                  fontSize: '0.75rem',
+                  fontFamily: 'var(--font-body)',
+                  fontWeight: activeSubTab === 'company' ? '600' : '500',
+                  color: activeSubTab === 'company' ? 'var(--sidebar-active-color, #4f46e5)' : '#64748b',
+                  backgroundColor: activeSubTab === 'company' ? 'var(--sidebar-active-bg, #eef2ff)' : 'transparent',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Company Settings
+              </button>
+            )}
+            {user.role !== 'CRM' && (
+              <button 
+                type="button"
+                className={`sidebar-sub-btn ${activeSubTab === 'branches' ? 'active' : ''}`}
+                onClick={() => setActiveSubTab('branches')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: '6px 12px',
+                  textAlign: 'left',
+                  width: '100%',
+                  borderRadius: '6px',
+                  fontSize: '0.75rem',
+                  fontFamily: 'var(--font-body)',
+                  fontWeight: activeSubTab === 'branches' ? '600' : '500',
+                  color: activeSubTab === 'branches' ? 'var(--sidebar-active-color, #4f46e5)' : '#64748b',
+                  backgroundColor: activeSubTab === 'branches' ? 'var(--sidebar-active-bg, #eef2ff)' : 'transparent',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Manage Branches
+              </button>
+            )}
+            <button 
+              type="button"
+              className={`sidebar-sub-btn ${activeSubTab === 'preferences' ? 'active' : ''}`}
+              onClick={() => setActiveSubTab('preferences')}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: '6px 12px',
+                textAlign: 'left',
+                width: '100%',
+                borderRadius: '6px',
+                fontSize: '0.75rem',
+                fontFamily: 'var(--font-body)',
+                fontWeight: activeSubTab === 'preferences' ? '600' : '500',
+                color: activeSubTab === 'preferences' ? 'var(--sidebar-active-color, #4f46e5)' : '#64748b',
+                backgroundColor: activeSubTab === 'preferences' ? 'var(--sidebar-active-bg, #eef2ff)' : 'transparent',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              System Preferences
+            </button>
+            <button 
+              type="button"
+              className={`sidebar-sub-btn ${activeSubTab === 'backup' ? 'active' : ''}`}
+              onClick={() => setActiveSubTab('backup')}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: '6px 12px',
+                textAlign: 'left',
+                width: '100%',
+                borderRadius: '6px',
+                fontSize: '0.75rem',
+                fontFamily: 'var(--font-body)',
+                fontWeight: activeSubTab === 'backup' ? '600' : '500',
+                color: activeSubTab === 'backup' ? 'var(--sidebar-active-color, #4f46e5)' : '#64748b',
+                backgroundColor: activeSubTab === 'backup' ? 'var(--sidebar-active-bg, #eef2ff)' : 'transparent',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              Data Backup & Export
+            </button>
+            <button 
+              type="button"
+              className={`sidebar-sub-btn ${activeSubTab === 'access' ? 'active' : ''}`}
+              onClick={() => setActiveSubTab('access')}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: '6px 12px',
+                textAlign: 'left',
+                width: '100%',
+                borderRadius: '6px',
+                fontSize: '0.75rem',
+                fontFamily: 'var(--font-body)',
+                fontWeight: activeSubTab === 'access' ? '600' : '500',
+                color: activeSubTab === 'access' ? 'var(--sidebar-active-color, #4f46e5)' : '#64748b',
+                backgroundColor: activeSubTab === 'access' ? 'var(--sidebar-active-bg, #eef2ff)' : 'transparent',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              Roles & Access
+            </button>
+          </div>
+        )}
       </nav>
 
       {/* Modern Profile and Logout Section */}
