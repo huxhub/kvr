@@ -3,7 +3,12 @@ import * as User from '../models/User.js';
 
 export const getUsers = async (req, res) => {
   try {
-    if (!req.session.user || (req.session.user.role !== 'ADMIN' && req.session.user.role !== 'BRANCH_MANAGER')) {
+    if (!req.session.user) {
+      return res.status(403).json({ error: 'Forbidden: You do not have permission to view users.' });
+    }
+
+    const userRoles = req.session.user.role ? req.session.user.role.split(',').map(r => r.trim()) : [];
+    if (!userRoles.includes('ADMIN') && !userRoles.includes('BRANCH_MANAGER')) {
       return res.status(403).json({ error: 'Forbidden: You do not have permission to view users.' });
     }
 
@@ -13,7 +18,7 @@ export const getUsers = async (req, res) => {
     // Enforce strict limit <= 15
     const activeLimit = Math.min(15, Math.max(1, limit));
 
-    const isBranchManager = req.session.user.role === 'BRANCH_MANAGER';
+    const isBranchManager = userRoles.includes('BRANCH_MANAGER');
     const branchFilter = (isBranchManager && req.session.user.branch !== 'All Branches') ? req.session.user.branch : null;
 
     const [users, totalCount] = await Promise.all([
@@ -35,7 +40,11 @@ export const getUsers = async (req, res) => {
 
 export const createUser = async (req, res) => {
   try {
-    if (!req.session.user || req.session.user.role !== 'ADMIN') {
+    if (!req.session.user) {
+      return res.status(403).json({ error: 'Forbidden: Only Administrator can manage users' });
+    }
+    const userRoles = req.session.user.role ? req.session.user.role.split(',').map(r => r.trim()) : [];
+    if (!userRoles.includes('ADMIN')) {
       return res.status(403).json({ error: 'Forbidden: Only Administrator can manage users' });
     }
 
@@ -63,7 +72,8 @@ export const updateUser = async (req, res) => {
   try {
     const { username } = req.params;
     const isSelfUpdate = req.session.user && req.session.user.username.toLowerCase() === username.toLowerCase();
-    const isAdmin = req.session.user && req.session.user.role === 'ADMIN';
+    const userRoles = req.session.user?.role ? req.session.user.role.split(',').map(r => r.trim()) : [];
+    const isAdmin = userRoles.includes('ADMIN');
 
     if (!isSelfUpdate && !isAdmin) {
       return res.status(403).json({ error: 'Forbidden: Only Administrator can manage users' });
@@ -101,7 +111,11 @@ export const updateUser = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
   try {
-    if (!req.session.user || req.session.user.role !== 'ADMIN') {
+    if (!req.session.user) {
+      return res.status(403).json({ error: 'Forbidden: Only Administrator can manage users' });
+    }
+    const userRoles = req.session.user.role ? req.session.user.role.split(',').map(r => r.trim()) : [];
+    if (!userRoles.includes('ADMIN')) {
       return res.status(403).json({ error: 'Forbidden: Only Administrator can manage users' });
     }
 

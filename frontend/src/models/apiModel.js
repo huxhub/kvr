@@ -2,9 +2,27 @@ export * from './constants.js';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
+async function handleResponseError(res, defaultMessage) {
+  let errMsg = defaultMessage;
+  try {
+    const errorData = await res.json();
+    errMsg = errorData.error || errorData.message || errMsg;
+  } catch (jsonErr) {
+    try {
+      const textData = await res.text();
+      if (textData) {
+        errMsg = textData.substring(0, 150);
+      }
+    } catch (_) {}
+  }
+  return new Error(errMsg);
+}
+
 export async function getVehicles(page = 1, limit = 25) {
   const res = await fetch(`${API_BASE_URL}/api/vehicles?page=${page}&limit=${limit}`, { credentials: 'include' });
-  if (!res.ok) throw new Error('Failed to fetch vehicle records');
+  if (!res.ok) {
+    throw await handleResponseError(res, 'Failed to fetch vehicle records');
+  }
   const vehicles = await res.json();
   const totalCount = parseInt(res.headers.get('X-Total-Count'), 10) || vehicles.length;
   return { vehicles, totalCount };
@@ -24,8 +42,7 @@ export async function saveVehicle(updatedVehicle, changedByRole, remarks, origin
   });
 
   if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(errorData.error || 'Failed to save vehicle details');
+    throw await handleResponseError(res, 'Failed to save vehicle details');
   }
 
   const { auditEntries } = await res.json();
@@ -44,8 +61,7 @@ export async function createVehicle(newVehicle, changedByRole) {
   });
 
   if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(errorData.error || 'Failed to create new booking');
+    throw await handleResponseError(res, 'Failed to create new booking');
   }
 
   return await res.json();
@@ -59,14 +75,15 @@ export async function deleteVehicle(chassisNumber, changedByRole) {
   });
 
   if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(errorData.error || 'Failed to remove booking record');
+    throw await handleResponseError(res, 'Failed to remove booking record');
   }
 }
 
 export async function resetDatabase() {
   const res = await fetch(`${API_BASE_URL}/api/reset`, { method: 'POST', credentials: 'include' });
-  if (!res.ok) throw new Error('Failed to run backend seed operation');
+  if (!res.ok) {
+    throw await handleResponseError(res, 'Failed to run backend seed operation');
+  }
   return await getVehicles();
 }
 
@@ -79,8 +96,7 @@ export async function loginUser(email, password) {
   });
 
   if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(errorData.error || 'Login verification failed');
+    throw await handleResponseError(res, 'Login verification failed');
   }
   return await res.json();
 }
@@ -96,7 +112,9 @@ export async function logoutUser() {
     method: 'POST',
     credentials: 'include'
   });
-  if (!res.ok) throw new Error('Logout failed');
+  if (!res.ok) {
+    throw await handleResponseError(res, 'Logout failed');
+  }
 }
 
 export async function getUsers(activeRole, page = 1, limit = 15) {
@@ -105,8 +123,7 @@ export async function getUsers(activeRole, page = 1, limit = 15) {
     headers: { 'X-Role': activeRole }
   });
   if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(errorData.error || 'Failed to retrieve users');
+    throw await handleResponseError(res, 'Failed to retrieve users');
   }
   const users = await res.json();
   const totalCount = parseInt(res.headers.get('X-Total-Count'), 10) || users.length;
@@ -121,8 +138,7 @@ export async function createUser(userData, activeRole) {
     body: JSON.stringify(userData)
   });
   if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(errorData.error || 'Failed to create user');
+    throw await handleResponseError(res, 'Failed to create user');
   }
 }
 
@@ -134,8 +150,7 @@ export async function updateUser(username, userData, activeRole) {
     body: JSON.stringify(userData)
   });
   if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(errorData.error || 'Failed to update user');
+    throw await handleResponseError(res, 'Failed to update user');
   }
   return await res.json();
 }
@@ -147,14 +162,15 @@ export async function deleteUser(username, activeRole) {
     headers: { 'X-Role': activeRole }
   });
   if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(errorData.error || 'Failed to remove user');
+    throw await handleResponseError(res, 'Failed to remove user');
   }
 }
 
 export async function getBackendSettings() {
   const res = await fetch(`${API_BASE_URL}/api/settings`, { credentials: 'include' });
-  if (!res.ok) throw new Error('Failed to fetch settings from server');
+  if (!res.ok) {
+    throw await handleResponseError(res, 'Failed to fetch settings from server');
+  }
   return await res.json();
 }
 
@@ -166,8 +182,7 @@ export async function saveBackendSettings(settingsData) {
     body: JSON.stringify(settingsData)
   });
   if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.error || 'Failed to save settings on server');
+    throw await handleResponseError(res, 'Failed to save settings on server');
   }
   return await res.json();
 }

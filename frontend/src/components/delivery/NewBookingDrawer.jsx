@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import BookingSectionBlock from './BookingSectionBlock.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { calculateFinanceFields } from '../../utils/vehicleUtils.js';
 import { createVehicle as apiCreateVehicle } from '../../models/apiModel.js';
 import { addAuditLog } from '../../models/auditModel.js';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -24,10 +25,13 @@ export default function NewBookingDrawer({ branches, onClose, onSaved }) {
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({ 
-      ...prev, 
-      [name]: type === 'number' ? (value ? Number(value) : '') : value 
-    }));
+    setFormData(prev => {
+      const updated = { 
+        ...prev, 
+        [name]: type === 'number' ? (value ? Number(value) : '') : value 
+      };
+      return calculateFinanceFields(updated, name);
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -56,7 +60,8 @@ export default function NewBookingDrawer({ branches, onClose, onSaved }) {
     }
   };
 
-  const isViewOnly = user.role === 'MANAGEMENT'; // BOOKING IN-CHARGE can create new bookings
+  const userRoles = user?.role ? user.role.split(',').map(r => r.trim()) : [];
+  const isViewOnly = userRoles.includes('MANAGEMENT') && !userRoles.includes('ADMIN') && !userRoles.includes('BOOKING IN-CHARGE');
 
 
 

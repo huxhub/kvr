@@ -207,55 +207,87 @@ export default function BookingSectionBlock({ formData, handleChange, forceEdita
     if (formData.crmGenerated) return true;
     const fieldNameLower = field.name.toLowerCase();
     const bookingSectionKey = BOOKING_SECTION_TITLE_MAP[field.sectionTitle];
+    const userRoles = typeof user?.role === 'string' ? user.role.split(',').map(r => r.trim()) : [user?.role];
 
     // Lock Branch and CRM Booking Status on new booking creation for non-admins (except BOOKING IN-CHARGE)
     const isNewBookingFieldLocked = forceEditable &&
       (field.name === 'crmBookingStatus' || field.name === 'branch') &&
-      user?.role !== 'ADMIN' &&
-      user?.role !== 'BOOKING IN-CHARGE';
+      !userRoles.includes('ADMIN') &&
+      !userRoles.includes('BOOKING IN-CHARGE');
 
-    if (user?.role === 'ADMIN') return false;
+    if (userRoles.includes('ADMIN')) return false;
 
     // Check dynamic settings field rule first
-    if (dbSettings?.role_permissions?.booking?.[fieldNameLower]?.[user?.role] !== undefined) {
-      const perm = dbSettings.role_permissions.booking[fieldNameLower][user?.role];
-      return !perm.edit || isNewBookingFieldLocked;
+    let hasFieldRule = false;
+    let fieldEdit = false;
+    for (const r of userRoles) {
+      if (dbSettings?.role_permissions?.booking?.[fieldNameLower]?.[r] !== undefined) {
+        hasFieldRule = true;
+        if (dbSettings.role_permissions.booking[fieldNameLower][r].edit) {
+          fieldEdit = true;
+        }
+      }
     }
+    if (hasFieldRule) return !fieldEdit || isNewBookingFieldLocked;
 
     // Check dynamic settings section default rule next
-    if (bookingSectionKey && dbSettings?.role_permissions?.booking?.[`section:${bookingSectionKey}`]?.[user?.role] !== undefined) {
-      const perm = dbSettings.role_permissions.booking[`section:${bookingSectionKey}`][user?.role];
-      return !perm.edit || isNewBookingFieldLocked;
+    let hasSectionRule = false;
+    let sectionEdit = false;
+    for (const r of userRoles) {
+      if (bookingSectionKey && dbSettings?.role_permissions?.booking?.[`section:${bookingSectionKey}`]?.[r] !== undefined) {
+        hasSectionRule = true;
+        if (dbSettings.role_permissions.booking[`section:${bookingSectionKey}`][r].edit) {
+          sectionEdit = true;
+        }
+      }
     }
+    if (hasSectionRule) return !sectionEdit || isNewBookingFieldLocked;
 
     // Check field-level override first
     if (BOOKING_FIELD_ACCESS[fieldNameLower]) {
-      return !BOOKING_FIELD_ACCESS[fieldNameLower].includes(user?.role) || isNewBookingFieldLocked;
+      const allowed = BOOKING_FIELD_ACCESS[fieldNameLower].some(r => userRoles.includes(r));
+      return !allowed || isNewBookingFieldLocked;
     }
 
     // Fall back to section-level access
     if (!bookingSectionKey) return true;
     const allowedRoles = BOOKING_SECTION_ACCESS[bookingSectionKey];
     if (!allowedRoles) return true;
-    return !allowedRoles.includes(user?.role) || isNewBookingFieldLocked;
+    const allowed = allowedRoles.some(r => userRoles.includes(r));
+    return !allowed || isNewBookingFieldLocked;
   };
 
   const isFieldHidden = (field) => {
-    if (user?.role === 'ADMIN') return false;
+    const userRoles = typeof user?.role === 'string' ? user.role.split(',').map(r => r.trim()) : [user?.role];
+    if (userRoles.includes('ADMIN')) return false;
     const fieldNameLower = field.name.toLowerCase();
     const bookingSectionKey = BOOKING_SECTION_TITLE_MAP[field.sectionTitle];
 
     // Check dynamic settings field rule first
-    if (dbSettings?.role_permissions?.booking?.[fieldNameLower]?.[user?.role] !== undefined) {
-      const perm = dbSettings.role_permissions.booking[fieldNameLower][user?.role];
-      return !perm.view;
+    let hasFieldRule = false;
+    let fieldView = false;
+    for (const r of userRoles) {
+      if (dbSettings?.role_permissions?.booking?.[fieldNameLower]?.[r] !== undefined) {
+        hasFieldRule = true;
+        if (dbSettings.role_permissions.booking[fieldNameLower][r].view) {
+          fieldView = true;
+        }
+      }
     }
+    if (hasFieldRule) return !fieldView;
 
     // Check dynamic settings section default rule next
-    if (bookingSectionKey && dbSettings?.role_permissions?.booking?.[`section:${bookingSectionKey}`]?.[user?.role] !== undefined) {
-      const perm = dbSettings.role_permissions.booking[`section:${bookingSectionKey}`][user?.role];
-      return !perm.view;
+    let hasSectionRule = false;
+    let sectionView = false;
+    for (const r of userRoles) {
+      if (bookingSectionKey && dbSettings?.role_permissions?.booking?.[`section:${bookingSectionKey}`]?.[r] !== undefined) {
+        hasSectionRule = true;
+        if (dbSettings.role_permissions.booking[`section:${bookingSectionKey}`][r].view) {
+          sectionView = true;
+        }
+      }
     }
+    if (hasSectionRule) return !sectionView;
 
     return false; // Default visible
   };

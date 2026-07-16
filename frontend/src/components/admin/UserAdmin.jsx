@@ -25,6 +25,11 @@ export default function UserAdmin({ branches }) {
     e.preventDefault();
     const isEdit = !!originalUsername;
     
+    if (!formData.role) {
+      showToast('Error', 'Please select at least one role', 'error');
+      return;
+    }
+    
     const result = isEdit ? await updateUser(originalUsername, formData) : await createUser(formData);
     
     if (result.success) {
@@ -87,7 +92,11 @@ export default function UserAdmin({ branches }) {
                   <td>{u.name}</td>
                   <td>{u.username}</td>
                   <td>{u.email || '-'}</td>
-                  <td>{u.role?.replace('_', ' ')}</td>
+                  <td>
+                    {u.role?.split(',').map(r => r.trim()).map(r => (
+                      <span key={r} className="user-badge role" style={{ marginRight: '4px', marginBottom: '2px', display: 'inline-block' }}>{r.replace('_', ' ')}</span>
+                    ))}
+                  </td>
                   <td>{u.branch}</td>
                   <td>{u.password ? '******' : ''}</td>
                   {!isReadOnly && (
@@ -119,8 +128,10 @@ export default function UserAdmin({ branches }) {
                     </div>
                     <span className="user-card-number">#{(currentPage - 1) * 15 + index + 1}</span>
                   </div>
-                  <div className="user-card-badges">
-                    <span className="user-badge role">{u.role?.replace('_', ' ')}</span>
+                  <div className="user-card-badges" style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                    {u.role?.split(',').map(r => r.trim()).map(r => (
+                      <span key={r} className="user-badge role">{r.replace('_', ' ')}</span>
+                    ))}
                     <span className="user-badge branch">{u.branch}</span>
                   </div>
                   {!isReadOnly && (
@@ -196,23 +207,80 @@ export default function UserAdmin({ branches }) {
                 </div>
                 
                 <div className="form-field">
-                  <label>Assigned Role *</label>
-                  <select name="role" required value={formData.role} onChange={handleChange}>
-                    <option value="">Select Role...</option>
+                  <label>Assigned Roles *</label>
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (!val) return;
+                      const selected = formData.role ? formData.role.split(',').map(r => r.trim()) : [];
+                      if (!selected.includes(val)) {
+                        const newRoles = [...selected, val];
+                        setFormData(prev => ({ ...prev, role: newRoles.join(',') }));
+                      }
+                    }}
+                  >
+                    <option value="">Select Role to Add...</option>
                     <option value="ADMIN">ADMIN (Full Access)</option>
                     <option value="CRM">CRM (Bookings/Offers)</option>
                     <option value="FINANCE">FINANCE (Finance Dept)</option>
                     <option value="TMA">TMA (Exchange Dept)</option>
-                    <option value="ACCOUNTS">ACCOUNTS (Accounts & Files)</option>
+                    <option value="ACCOUNTS">ACCOUNTS (Accounts/Files)</option>
                     <option value="INSURANCE">INSURANCE (Insurance Dept)</option>
-                    <option value="REGISTRATION">REGISTRATION (Registration Dept)</option>
+                    <option value="REGISTRATION">REGISTRATION (Registration)</option>
                     <option value="TMGA">TMGA (Genuine Accessories)</option>
-                    <option value="PDI">PDI (Pre-Delivery Inspection)</option>
+                    <option value="PDI">PDI (Inspection)</option>
                     <option value="DELIVERY">DELIVERY (Delivery Dept)</option>
                     <option value="BOOKING IN-CHARGE">BOOKING (Booking In-Charge)</option>
-                    <option value="BRANCH_MANAGER">BRANCH_MANAGER (Branch Level)</option>
+                    <option value="BRANCH_MANAGER">BRANCH_MANAGER (Branch)</option>
                     <option value="MANAGEMENT">MANAGEMENT (View-Only)</option>
                   </select>
+
+                  {/* Render selected roles list below */}
+                  {formData.role && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
+                      {formData.role.split(',').map(r => r.trim()).map(r => (
+                        <span key={r} className="user-badge role" style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '6px 12px',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          backgroundColor: '#eff6ff',
+                          color: 'var(--primary-navy)',
+                          border: '1.5px solid var(--primary-navy)',
+                          borderRadius: '20px'
+                        }}>
+                          {r.replace('_', ' ')}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const selected = formData.role.split(',').map(x => x.trim());
+                              const newRoles = selected.filter(x => x !== r);
+                              setFormData(prev => ({ ...prev, role: newRoles.join(',') }));
+                            }}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: 'var(--primary-navy)',
+                              cursor: 'pointer',
+                              fontWeight: 'bold',
+                              fontSize: '0.95rem',
+                              padding: 0,
+                              lineHeight: 1,
+                              marginLeft: '4px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="form-field">

@@ -80,7 +80,8 @@ const connectDB = async () => {
       // Ensure audit_logs columns previousStatus and newStatus can hold long text
       await pool.execute("ALTER TABLE audit_logs MODIFY COLUMN previousStatus TEXT DEFAULT NULL");
       await pool.execute("ALTER TABLE audit_logs MODIFY COLUMN newStatus TEXT DEFAULT NULL");
-      console.log("Altered audit_logs columns (previousStatus, newStatus) to TEXT.");
+      await pool.execute("ALTER TABLE users MODIFY COLUMN role VARCHAR(255) NOT NULL");
+      console.log("Altered audit_logs columns (previousStatus, newStatus) to TEXT and users (role) to VARCHAR(255).");
     } catch (error) {
       console.error(`❌ MySQL Connection Failed (attempt ${attempt}/${MAX_RETRIES}): ${error.message}`);
       if (attempt < MAX_RETRIES) {

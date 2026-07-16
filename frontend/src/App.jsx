@@ -12,14 +12,14 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 // Lazy-load all heavy route-level components — they are not needed until the user
 // is authenticated and actively navigates to that tab. This removes recharts (4.8MB)
 // and other large chunks from the initial JS bundle entirely.
-const DashboardKPIs   = lazy(() => import('./components/dashboard/DashboardKPIs.jsx'));
-const DeliveryTable   = lazy(() => import('./components/delivery/DeliveryTable.jsx'));
-const AuditHistory    = lazy(() => import('./components/audit/AuditHistory.jsx'));
-const UserAdmin       = lazy(() => import('./components/admin/UserAdmin.jsx'));
-const VehicleDrawer   = lazy(() => import('./components/delivery/VehicleDrawer.jsx'));
+const DashboardKPIs = lazy(() => import('./components/dashboard/DashboardKPIs.jsx'));
+const DeliveryTable = lazy(() => import('./components/delivery/DeliveryTable.jsx'));
+const AuditHistory = lazy(() => import('./components/audit/AuditHistory.jsx'));
+const UserAdmin = lazy(() => import('./components/admin/UserAdmin.jsx'));
+const VehicleDrawer = lazy(() => import('./components/delivery/VehicleDrawer.jsx'));
 const NewBookingDrawer = lazy(() => import('./components/delivery/NewBookingDrawer.jsx'));
-const CrmDrawer       = lazy(() => import('./components/delivery/CrmDrawer.jsx'));
-const Settings        = lazy(() => import('./components/settings/Settings.jsx'));
+const CrmDrawer = lazy(() => import('./components/delivery/CrmDrawer.jsx'));
+const Settings = lazy(() => import('./components/settings/Settings.jsx'));
 
 // Minimal inline fallback — a spinner that uses only inline styles (zero extra CSS needed)
 function TabLoader() {
@@ -43,13 +43,13 @@ class ChunkErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error) {
-    const isChunkError = 
-      error.message && 
+    const isChunkError =
+      error.message &&
       (error.message.includes('Failed to fetch dynamically imported module') ||
-       error.message.includes('Loading chunk') ||
-       error.message.includes('dynamically imported') ||
-       error.message.includes('Failed to fetch'));
-       
+        error.message.includes('Loading chunk') ||
+        error.message.includes('dynamically imported') ||
+        error.message.includes('Failed to fetch'));
+
     if (isChunkError) {
       // Reload the page once to retrieve the new build files
       window.location.reload();
@@ -70,6 +70,7 @@ class ChunkErrorBoundary extends React.Component {
 
 function AppContent() {
   const { user, loading: authLoading } = useAuth();
+  const userRoles = useMemo(() => user?.role ? user.role.split(',').map(r => r.trim()) : [], [user?.role]);
   const { vehicles, totalVehicles, currentPage, fetchVehicles } = useVehicles();
   const [activeTab, setActiveTab] = useState(() => localStorage.getItem('activeTab') || 'dashboard');
   const [activeSubTab, setActiveSubTab] = useState(() => localStorage.getItem('activeSubTab') || 'profile');
@@ -109,9 +110,10 @@ function AppContent() {
       return;
     }
 
-    if (activeTab === 'settings' && user.role !== 'ADMIN') {
+    const userRoles = user?.role ? user.role.split(',').map(r => r.trim()) : [];
+    if (activeTab === 'settings' && !userRoles.includes('ADMIN')) {
       setActiveTab('dashboard');
-    } else if (activeTab === 'users' && user.role !== 'ADMIN' && user.role !== 'BRANCH_MANAGER') {
+    } else if (activeTab === 'users' && !userRoles.includes('ADMIN') && !userRoles.includes('BRANCH_MANAGER')) {
       setActiveTab('dashboard');
     }
   }, [user, authLoading, activeTab]);
@@ -193,9 +195,9 @@ function AppContent() {
 
     loadInitialData();
     // Non-Admin: lock to their own branch; ADMIN defaults to 'All Branches'
-    const isBranchRestricted = user?.role !== 'ADMIN' && user?.branch && user?.branch !== 'All Branches';
+    const isBranchRestricted = !userRoles.includes('ADMIN') && user?.branch && user?.branch !== 'All Branches';
     setSelectedBranch(isBranchRestricted ? user.branch : '');
-  }, [user, fetchVehicles]);
+  }, [user, fetchVehicles, userRoles]);
 
   const allBranches = useMemo(() => {
     const branchesSet = new Set(['Perinthalmanna', ...(settings.branches || [])]);
@@ -205,12 +207,12 @@ function AppContent() {
   }, [vehicles, user, settings.branches]);
 
   const branches = useMemo(() => {
-    const isBranchRestricted = user?.role !== 'ADMIN' && user?.branch && user?.branch !== 'All Branches';
+    const isBranchRestricted = !userRoles.includes('ADMIN') && user?.branch && user?.branch !== 'All Branches';
     if (isBranchRestricted) {
       return [user.branch];
     }
     return allBranches;
-  }, [user, allBranches]);
+  }, [user, allBranches, userRoles]);
 
   // While session restore is in progress, show a minimal spinner
   if (authLoading) {
@@ -255,10 +257,10 @@ function AppContent() {
   return (
     <div className="app-container" style={{ flexDirection: 'row' }}>
       {isSidebarOpen && <div className="sidebar-backdrop" onClick={() => setIsSidebarOpen(false)} />}
-      
-      <Sidebar 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
+
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
         activeSubTab={activeSubTab}
         setActiveSubTab={setActiveSubTab}
         isSidebarOpen={isSidebarOpen}
@@ -266,32 +268,32 @@ function AppContent() {
         companyName={companyName}
         onNewBooking={() => { setActiveTab('bookings'); handleOpenNewBooking(); }}
       />
-      
+
       <div className="main-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflowY: 'auto' }}>
-        <Header 
-          activeTab={activeTab} 
-          selectedBranch={selectedBranch} 
-          setSelectedBranch={setSelectedBranch} 
-          branches={branches} 
+        <Header
+          activeTab={activeTab}
+          selectedBranch={selectedBranch}
+          setSelectedBranch={setSelectedBranch}
+          branches={branches}
           isSidebarOpen={isSidebarOpen}
           setIsSidebarOpen={setIsSidebarOpen}
         />
-        
+
         <main className="content-wrapper" id="app-main">
           <ChunkErrorBoundary>
             <Suspense fallback={<TabLoader />}>
               {activeTab === 'dashboard' && (
-                <DashboardKPIs 
-                  vehicles={vehicles} 
-                  activeBranch={selectedBranch} 
+                <DashboardKPIs
+                  vehicles={vehicles}
+                  activeBranch={selectedBranch}
                   setSelectedBranch={setSelectedBranch}
                   branches={branches}
                 />
               )}
               {activeTab === 'bookings' && (
-                <DeliveryTable 
-                  vehicles={vehicles} 
-                  branches={branches} 
+                <DeliveryTable
+                  vehicles={vehicles}
+                  branches={branches}
                   openDrawer={handleOpenDrawer}
                   openNewBooking={handleOpenNewBooking}
                   openCrm={handleOpenCrm}
@@ -299,12 +301,13 @@ function AppContent() {
                   currentPage={currentPage}
                   fetchVehicles={fetchVehicles}
                   isBookingPage={true}
+                  settings={settings}
                 />
               )}
               {activeTab === 'delivery' && (
-                <DeliveryTable 
-                  vehicles={vehicles} 
-                  branches={branches} 
+                <DeliveryTable
+                  vehicles={vehicles}
+                  branches={branches}
                   openDrawer={handleOpenDrawer}
                   openNewBooking={handleOpenNewBooking}
                   openCrm={handleOpenCrm}
@@ -312,18 +315,19 @@ function AppContent() {
                   currentPage={currentPage}
                   fetchVehicles={fetchVehicles}
                   isBookingPage={false}
+                  settings={settings}
                 />
               )}
               {activeTab === 'audit' && <AuditHistory />}
-              {activeTab === 'users' && (user.role === 'ADMIN' || user.role === 'BRANCH_MANAGER') && <UserAdmin branches={branches} />}
-              {activeTab === 'settings' && user.role === 'ADMIN' && (
-                <Settings 
-                  branches={branches} 
-                  settings={settings} 
-                  setSettings={setSettings} 
-                  companyName={companyName} 
-                  setCompanyName={setCompanyName} 
-                  vehicles={vehicles} 
+              {activeTab === 'users' && (userRoles.includes('ADMIN') || userRoles.includes('BRANCH_MANAGER')) && <UserAdmin branches={branches} />}
+              {activeTab === 'settings' && userRoles.includes('ADMIN') && (
+                <Settings
+                  branches={branches}
+                  settings={settings}
+                  setSettings={setSettings}
+                  companyName={companyName}
+                  setCompanyName={setCompanyName}
+                  vehicles={vehicles}
                   activeSubTab={activeSubTab}
                   setActiveSubTab={setActiveSubTab}
                 />

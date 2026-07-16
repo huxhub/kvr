@@ -8,6 +8,7 @@ import AccessMatrix from '../admin/AccessMatrix.jsx';
 export default function Settings({ branches, settings, setSettings, companyName, setCompanyName, vehicles, activeSubTab }) {
   const { user, updateUserProfile } = useAuth();
   const { showToast } = useToast();
+  const userRoles = user?.role ? user.role.split(',').map(r => r.trim()) : [];
 
   // Profile Settings States
   const [profileUsername, setProfileUsername] = useState(user?.username || '');
@@ -331,7 +332,7 @@ export default function Settings({ branches, settings, setSettings, companyName,
                 </div>
                 <div className="form-field">
                   <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', marginBottom: '4px' }}>Role</label>
-                  <input type="text" value={user?.role || ''} disabled style={{ backgroundColor: '#f1f5f9', color: '#64748b', cursor: 'not-allowed', borderRadius: '6px', border: '1px solid #cbd5e1', padding: '10px 12px' }} />
+                  <input type="text" value={user?.role?.split(',').map(r => r.trim().replace('_', ' ')).join(', ') || ''} disabled style={{ backgroundColor: '#f1f5f9', color: '#64748b', cursor: 'not-allowed', borderRadius: '6px', border: '1px solid #cbd5e1', padding: '10px 12px' }} />
                 </div>
                 <div className="form-field">
                   <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', marginBottom: '4px' }}>Display Name</label>
@@ -351,7 +352,7 @@ export default function Settings({ branches, settings, setSettings, companyName,
           )}
 
           {/* Subtab: Company Settings */}
-          {activeSubTab === 'company' && user.role === 'ADMIN' && (
+          {activeSubTab === 'company' && userRoles.includes('ADMIN') && (
             <div style={{ animation: 'fadeIn 0.2s ease' }}>
               <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--primary-navy)', marginBottom: '4px', marginTop: 0 }}>Company details & branding</h3>
               <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '20px', marginTop: 0 }}>Configure support contact details, addresses, and overall platform branding name.</p>
@@ -405,7 +406,7 @@ export default function Settings({ branches, settings, setSettings, companyName,
               <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--primary-navy)', marginBottom: '4px', marginTop: 0 }}>Manage Sales Branches</h3>
               <p style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '20px', marginTop: 0 }}>Create and remove customized sales branches for {companyName}.</p>
               
-              {user.role === 'ADMIN' ? (
+              {userRoles.includes('ADMIN') ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   {/* Add Branch Form */}
                   <form onSubmit={handleAddBranch} style={{ display: 'flex', gap: '10px', maxWidth: '500px', alignItems: 'flex-end' }}>

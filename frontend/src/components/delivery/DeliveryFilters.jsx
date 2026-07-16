@@ -10,7 +10,8 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
   };
 
   const { user } = useAuth();
-  const isBranchRestricted = user?.role !== 'ADMIN' && user?.branch !== 'All Branches';
+  const userRoles = user?.role ? user.role.split(',').map(r => r.trim()) : [];
+  const isBranchRestricted = !userRoles.includes('ADMIN') && user?.branch !== 'All Branches';
 
   const handleClear = () => {
     setFilters({ 

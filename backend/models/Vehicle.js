@@ -29,7 +29,7 @@ const VEHICLE_COLUMNS = [
 
 /** Get all vehicles (paginated) */
 export async function findAll(page = 1, limit = 25) {
-  const activeLimit = Math.min(25, Math.max(1, parseInt(limit, 10) || 25));
+  const activeLimit = Math.min(10000, Math.max(1, parseInt(limit, 10) || 25));
   const activePage = Math.max(1, parseInt(page, 10) || 1);
   const offset = (activePage - 1) * activeLimit;
 
@@ -48,7 +48,7 @@ export async function countAll() {
 }
 
 export async function findByBranch(branch, page = 1, limit = 25) {
-  const activeLimit = Math.min(25, Math.max(1, parseInt(limit, 10) || 25));
+  const activeLimit = Math.min(10000, Math.max(1, parseInt(limit, 10) || 25));
   const activePage = Math.max(1, parseInt(page, 10) || 1);
   const offset = (activePage - 1) * activeLimit;
 

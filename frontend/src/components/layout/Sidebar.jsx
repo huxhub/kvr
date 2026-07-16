@@ -4,6 +4,7 @@ import { LogOut, X, Settings, Plus } from 'lucide-react';
 
 export default function Sidebar({ activeTab, setActiveTab, activeSubTab, setActiveSubTab, isSidebarOpen, setIsSidebarOpen, companyName = 'KVR TATA', onNewBooking }) {
   const { user, logout } = useAuth();
+  const userRoles = user?.role ? user.role.split(',').map(r => r.trim()) : [];
 
   if (!user) return null;
 
@@ -69,7 +70,7 @@ export default function Sidebar({ activeTab, setActiveTab, activeSubTab, setActi
           <svg className="tab-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
           Audit History Logs
         </button>
-        {(user.role === 'ADMIN' || user.role === 'BRANCH_MANAGER') && (
+        {(userRoles.includes('ADMIN') || userRoles.includes('BRANCH_MANAGER')) && (
           <button 
             className={`sidebar-btn ${activeTab === 'users' ? 'active' : ''}`} 
             onClick={() => handleNavClick('users')}
@@ -78,7 +79,7 @@ export default function Sidebar({ activeTab, setActiveTab, activeSubTab, setActi
             Users List
           </button>
         )}
-        {user.role === 'ADMIN' && (
+        {userRoles.includes('ADMIN') && (
         <button 
           className={`sidebar-btn ${activeTab === 'settings' ? 'active' : ''}`} 
           onClick={() => handleNavClick('settings')}
@@ -87,7 +88,7 @@ export default function Sidebar({ activeTab, setActiveTab, activeSubTab, setActi
           Settings
         </button>
         )}
-        {user.role === 'ADMIN' && activeTab === 'settings' && (
+        {userRoles.includes('ADMIN') && activeTab === 'settings' && (
           <div className="sidebar-submenu" style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingLeft: '28px', marginTop: '4px' }}>
             <button 
               type="button"
@@ -111,7 +112,7 @@ export default function Sidebar({ activeTab, setActiveTab, activeSubTab, setActi
             >
               My Profile
             </button>
-            {user.role === 'ADMIN' && (
+            {userRoles.includes('ADMIN') && (
               <button 
                 type="button"
                 className={`sidebar-sub-btn ${activeSubTab === 'company' ? 'active' : ''}`}
@@ -135,7 +136,7 @@ export default function Sidebar({ activeTab, setActiveTab, activeSubTab, setActi
                 Company Settings
               </button>
             )}
-            {user.role !== 'CRM' && (
+            {userRoles.some(r => r !== 'CRM') && (
               <button 
                 type="button"
                 className={`sidebar-sub-btn ${activeSubTab === 'branches' ? 'active' : ''}`}
@@ -236,7 +237,7 @@ export default function Sidebar({ activeTab, setActiveTab, activeSubTab, setActi
         </div>
         <div className="sidebar-profile-info">
           <span className="sidebar-profile-name" title={user.name}>{user.name}</span>
-          <span className="sidebar-profile-role">{user.role?.replace('_', ' ')}</span>
+          <span className="sidebar-profile-role">{user.role?.split(',').map(r => r.trim().replace('_', ' ')).join(', ')}</span>
         </div>
         <button 
           className="sidebar-logout-btn" 

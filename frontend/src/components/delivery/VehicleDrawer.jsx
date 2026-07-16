@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import CrmSectionBlock from './CrmSectionBlock.jsx';
 import BookingSectionBlock from './BookingSectionBlock.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { calculateFinanceFields } from '../../utils/vehicleUtils.js';
 import { saveVehicle as apiSaveVehicle, createVehicle as apiCreateVehicle } from '../../models/apiModel.js';
 import { addAuditLog } from '../../models/auditModel.js';
 import { useToast } from '../../context/ToastContext.jsx';
+import { getPermission } from '../admin/AccessMatrix.jsx';
 
 export default function VehicleDrawer({ vehicle, branches, onClose, onSaved, isBookingPage = false }) {
   const { user } = useAuth();
@@ -12,7 +14,7 @@ export default function VehicleDrawer({ vehicle, branches, onClose, onSaved, isB
   const [formData, setFormData] = useState({});
   const [auditRemark, setAuditRemark] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [crmChassisNumber, setCrmChassisNumber] = useState('');
+  const [dbSettings, setDbSettings] = useState(null);
 
   const isNew = !vehicle || !vehicle.chassisNumber;
 
@@ -26,10 +28,10 @@ export default function VehicleDrawer({ vehicle, branches, onClose, onSaved, isB
   };
 
   const handleGenerateCrm = async () => {
-    if (!crmChassisNumber.trim()) return;
     setSubmitting(true);
     try {
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
+      console.log('Generating CRM for chassis:', vehicle.chassisNumber);
       const res = await fetch(`${apiBaseUrl}/api/vehicles/generate-crm`, {
         method: 'POST',
         credentials: 'include',
@@ -39,24 +41,52 @@ export default function VehicleDrawer({ vehicle, branches, onClose, onSaved, isB
         },
         body: JSON.stringify({
           originalChassisNumber: vehicle.chassisNumber,
-          newChassisNumber: crmChassisNumber.trim()
+          newChassisNumber: vehicle.chassisNumber
         })
       });
 
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || 'Failed to generate CRM entry');
+        let errMsg = 'Failed to generate CRM entry';
+        try {
+          const errorData = await res.json();
+          errMsg = errorData.error || errorData.message || errMsg;
+        } catch (jsonErr) {
+          try {
+            const textData = await res.text();
+            if (textData) {
+              errMsg = textData.substring(0, 150); // limit length in case it's a huge HTML page
+            }
+          } catch (_) {}
+        }
+        throw new Error(errMsg);
       }
 
       showToast('Success', 'CRM Delivery Entry Generated and Booking Locked');
       if (onSaved) onSaved();
       onClose();
     } catch (err) {
-      showToast('Error', err.message, 'error');
+      console.error('Error generating CRM entry:', err);
+      showToast('Error', err.message || 'An unexpected error occurred', 'error');
     } finally {
       setSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
+        const res = await fetch(`${apiBaseUrl}/api/settings`, { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          setDbSettings(data);
+        }
+      } catch (err) {
+        console.error('Failed to load settings in VehicleDrawer:', err);
+      }
+    }
+    loadSettings();
+  }, []);
 
   useEffect(() => {
     if (vehicle) {
@@ -80,22 +110,24 @@ export default function VehicleDrawer({ vehicle, branches, onClose, onSaved, isB
         [name]: type === 'number' ? (value ? Number(value) : '') : value 
       };
 
-      if (name === 'onRoadPrice' || name === 'ip' || name === 'loanAmount') {
-        const onRoad = Number(updated.onRoadPrice) || 0;
-        const ip = Number(updated.ip) || 0;
-        const loan = Number(updated.loanAmount) || 0;
+      const STATUS_TIMESTAMP_MAP = {
+        financeStatus: 'financeTimestamp',
+        tmaStatus: 'tmaTimestamp',
+        fileStatus: 'fileTimestamp',
+        accountsStatus: 'accountsTimestamp',
+        insuranceStatus: 'insuranceTimestamp',
+        registrationStatus: 'registrationTimestamp',
+        tmgaStatus: 'tmgaTimestamp',
+        pdiStatus: 'pdiTimestamp',
+        deliveryStatus: 'deliveryTimestamp'
+      };
 
-        const balance = onRoad - (ip + loan);
-        updated.balanceAmount = balance;
-
-        if (onRoad > 0) {
-          updated.fundPercentage = parseFloat(((loan / onRoad) * 100).toFixed(2));
-        } else {
-          updated.fundPercentage = 0;
-        }
+      if (STATUS_TIMESTAMP_MAP[name] && value === 'Approved') {
+        const nowTimestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        updated[STATUS_TIMESTAMP_MAP[name]] = nowTimestamp;
       }
 
-      return updated;
+      return calculateFinanceFields(updated, name);
     });
   };
 
@@ -130,7 +162,8 @@ export default function VehicleDrawer({ vehicle, branches, onClose, onSaved, isB
     }
   };
 
-  const isViewOnly = user.role === 'MANAGEMENT' || (!isBookingPage && user.role === 'CRM');
+  const userRoles = user?.role ? user.role.split(',').map(r => r.trim()) : [];
+  const isViewOnly = userRoles.includes('MANAGEMENT') || (!isBookingPage && userRoles.includes('CRM') && !userRoles.includes('ADMIN'));
 
 
 
@@ -142,7 +175,7 @@ export default function VehicleDrawer({ vehicle, branches, onClose, onSaved, isB
             <h3>{isNew ? (isBookingPage ? 'Register New Booking' : 'CRM Form') : 'Edit Vehicle Booking'}</h3>
             {!isNew && !isBookingPage && (
               <p style={{ margin: 0, marginTop: '4px', fontSize: '0.85rem', color: '#64748b' }}>
-                Chassis: {crmChassisNumber || formData.realChassisNumber || formData.chassisNumber || vehicle.chassisNumber}
+                Chassis: {formData.realChassisNumber || formData.chassisNumber || vehicle.chassisNumber}
               </p>
             )}
           </div>
@@ -155,7 +188,7 @@ export default function VehicleDrawer({ vehicle, branches, onClose, onSaved, isB
             : <CrmSectionBlock formData={formData} handleChange={handleChange} branches={branches} />
           }
 
-          {isBookingPage && !isNew && user?.role === 'CRM' && (user?.branch === 'All Branches' || user?.branch === vehicle?.branch) && !formData.crmGenerated && (
+          {isBookingPage && !isNew && getPermission(dbSettings, 'crm', 'btn_crm_form', 'CRM ACTIONS', user?.role).view && (user?.branch === 'All Branches' || user?.branch === vehicle?.branch) && !formData.crmGenerated && (
             <div style={{
               marginTop: '20px',
               padding: '16px',
@@ -164,25 +197,10 @@ export default function VehicleDrawer({ vehicle, branches, onClose, onSaved, isB
               borderRadius: '8px'
             }}>
               <h4 style={{ margin: 0, marginBottom: '12px', color: 'var(--primary-navy)', fontSize: '0.95rem' }}>Generate CRM Delivery Entry</h4>
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569' }}>Real Chassis Number *</label>
-                  <input
-                    type="text"
-                    value={crmChassisNumber}
-                    onChange={(e) => setCrmChassisNumber(e.target.value.toUpperCase())}
-                    placeholder="Enter real chassis number..."
-                    style={{
-                      padding: '8px 12px',
-                      border: '1.5px solid #003b71',
-                      borderRadius: '6px',
-                      backgroundColor: '#ffffff'
-                    }}
-                  />
-                </div>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 <button
                   type="button"
-                  disabled={!checkBookingFieldsFilled(formData) || !crmChassisNumber.trim() || submitting}
+                  disabled={!checkBookingFieldsFilled(formData) || submitting}
                   onClick={handleGenerateCrm}
                   className="btn-primary"
                   style={{ height: '38px' }}

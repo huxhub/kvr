@@ -9,8 +9,9 @@ export const getAuditLogs = async (req, res) => {
     const activeLimit = Math.min(25, Math.max(1, limit));
 
     const sessionUser = req.session.user;
+    const sessionRoles = sessionUser?.role ? sessionUser.role.split(',').map(r => r.trim()) : [];
     const isBranchRestricted = 
-      (sessionUser?.role === 'BRANCH_MANAGER' || sessionUser?.role === 'FINANCE' || sessionUser?.role === 'TMA' || sessionUser?.role === 'ACCOUNTS' || sessionUser?.role === 'INSURANCE' || sessionUser?.role === 'REGISTRATION') && 
+      sessionRoles.some(r => ['BRANCH_MANAGER', 'FINANCE', 'TMA', 'ACCOUNTS', 'INSURANCE', 'REGISTRATION'].includes(r)) && 
       sessionUser?.branch && 
       sessionUser?.branch !== 'All Branches';
     const userBranch = sessionUser?.branch;

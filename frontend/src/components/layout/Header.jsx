@@ -36,7 +36,8 @@ export default function Header({
   const displayTitle = tabTitles[activeTab] || 'Dashboard';
   const displaySubtitle = tabSubtitles[activeTab] || 'System Overview & Department Bottlenecks';
 
-  const isBranchRestricted = user?.role !== 'ADMIN' && user?.branch && user?.branch !== 'All Branches';
+  const userRoles = user?.role ? user.role.split(',').map(r => r.trim()) : [];
+  const isBranchRestricted = !userRoles.includes('ADMIN') && user?.branch && user?.branch !== 'All Branches';
 
   // Restricted roles see only their branch; other roles see 'All Branches' + full list
   const dropdownOptions = isBranchRestricted

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { DEPARTMENT_KEYS, SECTIONS, STATUS_VALUES } from '../../models/apiModel.js';
 import CustomDropdown from '../ui/DropdownMenu.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -7,25 +7,49 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 const TODAY = new Date().toISOString().slice(0, 10); // e.g. "2026-07-13"
 
 export default function DashboardKPIs({ vehicles, activeBranch, setSelectedBranch, branches = [] }) {
+  const [allVehicles, setAllVehicles] = useState(vehicles);
+
+  useEffect(() => {
+    setAllVehicles(vehicles);
+    
+    async function fetchAll() {
+      try {
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
+        const res = await fetch(`${apiBaseUrl}/api/vehicles?limit=10000`, { credentials: 'include' });
+        if (res.ok) {
+          const fetched = await res.json();
+          if (Array.isArray(fetched)) {
+            setAllVehicles(fetched);
+          }
+        }
+      } catch (err) {
+        console.error("DashboardKPIs: Failed to fetch complete vehicles dataset:", err);
+      }
+    }
+    fetchAll();
+  }, [vehicles]);
+
   const filteredVehicles = useMemo(() => {
-    return vehicles.filter(v => {
+    return allVehicles.filter(v => {
       const vBranch = v.branch || 'Perinthalmanna';
       return !activeBranch || vBranch === activeBranch;
     });
-  }, [vehicles, activeBranch]);
+  }, [allVehicles, activeBranch]);
 
   const kpis = useMemo(() => {
+    const bookingVehicles = filteredVehicles.filter(v => v.vehicleStatus === 'Booked');
+
     const deliveredToday = filteredVehicles.filter(v => v.actualDeliveryDate === TODAY).length;
     const deliveredThisMonth = filteredVehicles.filter(v => v.actualDeliveryDate?.startsWith(TODAY.slice(0, 7))).length;
     const readyForDelivery = filteredVehicles.filter(v => v.vehicleStatus === 'Ready for Delivery').length;
 
     // Today's Activity
-    const bookedToday      = filteredVehicles.filter(v => v.date === TODAY).length;
-    const crmApprovedToday = filteredVehicles.filter(v =>
+    const bookedToday      = bookingVehicles.filter(v => v.date === TODAY).length;
+    const crmApprovedToday = bookingVehicles.filter(v =>
       v.crmBookingStatus === 'CRM /RETAIL DONE' && v.date === TODAY
     ).length;
-    const financeApprovedToday = filteredVehicles.filter(v =>
-      v.financeStatus === 'LOAN APPROVED' && v.financeTimestamp?.startsWith(TODAY)
+    const registeredToday = filteredVehicles.filter(v =>
+      v.registrationStatus === 'Approved' && v.registrationTimestamp?.startsWith(TODAY)
     ).length;
 
     const crmGeneratedToday = filteredVehicles.filter(v => {
@@ -54,13 +78,13 @@ export default function DashboardKPIs({ vehicles, activeBranch, setSelectedBranc
     });
 
     return {
-      total: filteredVehicles.length,
+      total: bookingVehicles.length,
       deliveredToday,
       deliveredThisMonth,
       readyForDelivery,
       bookedToday,
       crmApprovedToday,
-      financeApprovedToday,
+      registeredToday,
       crmGeneratedToday,
       stats
     };
@@ -68,9 +92,11 @@ export default function DashboardKPIs({ vehicles, activeBranch, setSelectedBranc
 
   // Analytics Data
   const analyticsData = useMemo(() => {
+    const bookingVehicles = filteredVehicles.filter(v => v.vehicleStatus === 'Booked');
+
     // 1. Sales by Product Line
     const plCounts = {};
-    filteredVehicles.forEach(v => {
+    bookingVehicles.forEach(v => {
       const pl = v.pl || 'Other';
       plCounts[pl] = (plCounts[pl] || 0) + 1;
     });
@@ -81,7 +107,7 @@ export default function DashboardKPIs({ vehicles, activeBranch, setSelectedBranc
 
     // 2. Recent Bookings (Top 5)
     // Assuming v.date exists. If not, fallback to chassis as a proxy or just array order.
-    const recentBookings = [...filteredVehicles]
+    const recentBookings = [...bookingVehicles]
       .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
       .slice(0, 5);
 
@@ -89,7 +115,8 @@ export default function DashboardKPIs({ vehicles, activeBranch, setSelectedBranc
   }, [filteredVehicles]);
 
   const { user } = useAuth();
-  const isBranchRestricted = user?.role !== 'ADMIN' && user?.branch && user?.branch !== 'All Branches';
+  const userRoles = user?.role ? user.role.split(',').map(r => r.trim()) : [];
+  const isBranchRestricted = !userRoles.includes('ADMIN') && user?.branch && user?.branch !== 'All Branches';
 
   // Colors for the bar chart
   const COLORS = ['#1e293b', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b'];
@@ -180,11 +207,11 @@ export default function DashboardKPIs({ vehicles, activeBranch, setSelectedBranc
           </div>
           <div className="kpi-card">
             <div className="kpi-icon" style={{ color: '#8b5cf6' }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             </div>
             <div className="kpi-info">
-              <div className="kpi-value" style={{ color: '#8b5cf6' }}>{kpis.financeApprovedToday}</div>
-              <div className="kpi-label">Finance Approved Today</div>
+              <div className="kpi-value" style={{ color: '#8b5cf6' }}>{kpis.registeredToday}</div>
+              <div className="kpi-label">Current Day Reg Count</div>
             </div>
           </div>
           <div className="kpi-card">
@@ -238,7 +265,7 @@ export default function DashboardKPIs({ vehicles, activeBranch, setSelectedBranc
         </div>
 
         <div className="analytics-card list-card">
-          <h3 className="analytics-card-title">Recent Registrations</h3>
+          <h3 className="analytics-card-title">Recent Bookings</h3>
           <div className="recent-bookings-list">
             {analyticsData.recentBookings.length > 0 ? (
               analyticsData.recentBookings.map((v, i) => (

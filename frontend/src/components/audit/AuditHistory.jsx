@@ -77,7 +77,10 @@ export default function AuditHistory() {
             >
               {loading ? '⏳' : '🔄'} Refresh
             </button>
-            {user.role === 'ADMIN' && (
+            {(() => {
+              const userRoles = user?.role ? user.role.split(',').map(r => r.trim()) : [];
+              return userRoles.includes('ADMIN');
+            })() && (
               <button className="btn-secondary audit-clear-btn" onClick={handleClear}>
                 Clear Audit Files
               </button>

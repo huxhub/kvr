@@ -141,45 +141,77 @@ export default function CrmSectionBlock({ formData, handleChange, branches = [] 
     const crmSectionKey = SECTION_TITLE_MAP[field.sectionTitle] || field.sectionTitle.toUpperCase();
 
     const isFieldDisabled = (() => {
-      if (user?.role === 'ADMIN') return false;
+      const userRoles = typeof user?.role === 'string' ? user.role.split(',').map(r => r.trim()) : [user?.role];
+      if (userRoles.includes('ADMIN')) return false;
 
       // Check dynamic settings field rule first
-      if (dbSettings?.role_permissions?.crm?.[fieldNameLower]?.[user?.role] !== undefined) {
-        const perm = dbSettings.role_permissions.crm[fieldNameLower][user?.role];
-        return !perm.edit;
+      let hasFieldRule = false;
+      let fieldEdit = false;
+      for (const r of userRoles) {
+        if (dbSettings?.role_permissions?.crm?.[fieldNameLower]?.[r] !== undefined) {
+          hasFieldRule = true;
+          if (dbSettings.role_permissions.crm[fieldNameLower][r].edit) {
+            fieldEdit = true;
+          }
+        }
       }
+      if (hasFieldRule) return !fieldEdit;
 
       // Check dynamic settings section default rule next
-      if (crmSectionKey && dbSettings?.role_permissions?.crm?.[`section:${crmSectionKey}`]?.[user?.role] !== undefined) {
-        const perm = dbSettings.role_permissions.crm[`section:${crmSectionKey}`][user?.role];
-        return !perm.edit;
+      let hasSectionRule = false;
+      let sectionEdit = false;
+      for (const r of userRoles) {
+        if (crmSectionKey && dbSettings?.role_permissions?.crm?.[`section:${crmSectionKey}`]?.[r] !== undefined) {
+          hasSectionRule = true;
+          if (dbSettings.role_permissions.crm[`section:${crmSectionKey}`][r].edit) {
+            sectionEdit = true;
+          }
+        }
       }
+      if (hasSectionRule) return !sectionEdit;
 
       // Check field-level override first
       if (CRM_FIELD_ACCESS[fieldNameLower]) {
-        return !CRM_FIELD_ACCESS[fieldNameLower].includes(user?.role);
+        const allowed = CRM_FIELD_ACCESS[fieldNameLower].some(r => userRoles.includes(r));
+        return !allowed;
       }
 
       // Fall back to section-level access
       const allowedRoles = CRM_SECTION_ACCESS[crmSectionKey];
       if (!allowedRoles) return true;
-      return !allowedRoles.includes(user?.role);
+      const allowed = allowedRoles.some(r => userRoles.includes(r));
+      return !allowed;
     })();
 
     const isFieldHidden = (() => {
-      if (user?.role === 'ADMIN') return false;
+      const userRoles = typeof user?.role === 'string' ? user.role.split(',').map(r => r.trim()) : [user?.role];
+      if (userRoles.includes('ADMIN')) return false;
 
       // Check dynamic settings field rule first
-      if (dbSettings?.role_permissions?.crm?.[fieldNameLower]?.[user?.role] !== undefined) {
-        const perm = dbSettings.role_permissions.crm[fieldNameLower][user?.role];
-        return !perm.view;
+      let hasFieldRule = false;
+      let fieldView = false;
+      for (const r of userRoles) {
+        if (dbSettings?.role_permissions?.crm?.[fieldNameLower]?.[r] !== undefined) {
+          hasFieldRule = true;
+          if (dbSettings.role_permissions.crm[fieldNameLower][r].view) {
+            fieldView = true;
+          }
+        }
       }
+      if (hasFieldRule) return !fieldView;
 
       // Check dynamic settings section default rule next
-      if (crmSectionKey && dbSettings?.role_permissions?.crm?.[`section:${crmSectionKey}`]?.[user?.role] !== undefined) {
-        const perm = dbSettings.role_permissions.crm[`section:${crmSectionKey}`][user?.role];
-        return !perm.view;
+      let hasSectionRule = false;
+      let sectionView = false;
+      for (const r of userRoles) {
+        if (crmSectionKey && dbSettings?.role_permissions?.crm?.[`section:${crmSectionKey}`]?.[r] !== undefined) {
+          hasSectionRule = true;
+          if (dbSettings.role_permissions.crm[`section:${crmSectionKey}`][r].view) {
+            sectionView = true;
+          }
+        }
       }
+      if (hasSectionRule) return !sectionView;
 
       return false; // Default visible
     })();
@@ -187,8 +219,9 @@ export default function CrmSectionBlock({ formData, handleChange, branches = [] 
     if (isFieldHidden) return null;
 
     // Chassis number is locked unless admin / CRM / booking-in-charge
+    const userRoles = typeof user?.role === 'string' ? user.role.split(',').map(r => r.trim()) : [user?.role];
     const isChassisLocked = field.name === 'chassisNumber' &&
-      !(user?.role === 'ADMIN' || user?.role === 'CRM' || user?.role === 'BOOKING IN-CHARGE');
+      !(userRoles.includes('ADMIN') || userRoles.includes('CRM') || userRoles.includes('BOOKING IN-CHARGE'));
 
     const finalDisabled = isFieldDisabled || isChassisLocked;
     const highlightStyle = getHighlightStyle(finalDisabled);
@@ -246,7 +279,7 @@ export default function CrmSectionBlock({ formData, handleChange, branches = [] 
         <input
           type={field.type}
           name={field.name}
-          value={formData[field.name] || ''}
+          value={formData[field.name] ?? ''}
           onChange={handleChange}
           required={field.required && !finalDisabled}
           disabled={finalDisabled}
@@ -265,18 +298,35 @@ export default function CrmSectionBlock({ formData, handleChange, branches = [] 
 
         // Check if all fields in this section are hidden
         const visibleFields = section.fields.filter(field => {
-          if (user?.role === 'ADMIN') return true;
+          const userRoles = typeof user?.role === 'string' ? user.role.split(',').map(r => r.trim()) : [user?.role];
+          if (userRoles.includes('ADMIN')) return true;
           const fieldNameLower = field.name.toLowerCase();
 
           // Field rule view check
-          if (dbSettings?.role_permissions?.crm?.[fieldNameLower]?.[user?.role] !== undefined) {
-            return dbSettings.role_permissions.crm[fieldNameLower][user?.role].view;
+          let hasFieldRule = false;
+          let fieldView = false;
+          for (const r of userRoles) {
+            if (dbSettings?.role_permissions?.crm?.[fieldNameLower]?.[r] !== undefined) {
+              hasFieldRule = true;
+              if (dbSettings.role_permissions.crm[fieldNameLower][r].view) {
+                fieldView = true;
+              }
+            }
           }
+          if (hasFieldRule) return fieldView;
 
           // Section default rule view check
-          if (crmSectionKey && dbSettings?.role_permissions?.crm?.[`section:${crmSectionKey}`]?.[user?.role] !== undefined) {
-            return dbSettings.role_permissions.crm[`section:${crmSectionKey}`][user?.role].view;
+          let hasSectionRule = false;
+          let sectionView = false;
+          for (const r of userRoles) {
+            if (crmSectionKey && dbSettings?.role_permissions?.crm?.[`section:${crmSectionKey}`]?.[r] !== undefined) {
+              hasSectionRule = true;
+              if (dbSettings.role_permissions.crm[`section:${crmSectionKey}`][r].view) {
+                sectionView = true;
+              }
+            }
           }
+          if (hasSectionRule) return sectionView;
 
           return true;
         });

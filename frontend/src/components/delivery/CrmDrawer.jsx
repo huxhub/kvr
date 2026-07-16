@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { calculateFinanceFields } from '../../utils/vehicleUtils.js';
 import { createVehicle as apiCreateVehicle } from '../../models/apiModel.js';
 import { addAuditLog } from '../../models/auditModel.js';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -25,10 +26,31 @@ export default function CrmDrawer({ branches, onClose, onSaved }) {
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({ 
-      ...prev, 
-      [name]: type === 'number' ? (value ? Number(value) : '') : value 
-    }));
+    setFormData(prev => {
+      const updated = { 
+        ...prev, 
+        [name]: type === 'number' ? (value ? Number(value) : '') : value 
+      };
+
+      const STATUS_TIMESTAMP_MAP = {
+        financeStatus: 'financeTimestamp',
+        tmaStatus: 'tmaTimestamp',
+        fileStatus: 'fileTimestamp',
+        accountsStatus: 'accountsTimestamp',
+        insuranceStatus: 'insuranceTimestamp',
+        registrationStatus: 'registrationTimestamp',
+        tmgaStatus: 'tmgaTimestamp',
+        pdiStatus: 'pdiTimestamp',
+        deliveryStatus: 'deliveryTimestamp'
+      };
+
+      if (STATUS_TIMESTAMP_MAP[name] && value === 'Approved') {
+        const nowTimestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        updated[STATUS_TIMESTAMP_MAP[name]] = nowTimestamp;
+      }
+
+      return calculateFinanceFields(updated, name);
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -57,7 +79,8 @@ export default function CrmDrawer({ branches, onClose, onSaved }) {
     }
   };
 
-  const isViewOnly = user.role === 'MANAGEMENT';
+  const userRoles = user?.role ? user.role.split(',').map(r => r.trim()) : [];
+  const isViewOnly = userRoles.includes('MANAGEMENT') && !userRoles.includes('ADMIN');
 
   return (
     <div className="modal-overlay open" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>

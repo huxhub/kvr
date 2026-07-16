@@ -34,3 +34,23 @@ export function getPendingDepartment(vehicle) {
   }
   return { name: 'Completed', status: STATUS_VALUES.APPROVED };
 }
+
+export function calculateFinanceFields(formData, fieldName) {
+  if (fieldName === 'onRoadPrice' || fieldName === 'ip' || fieldName === 'loanAmount') {
+    const updated = { ...formData };
+    const onRoad = Number(updated.onRoadPrice) || 0;
+    const ip = Number(updated.ip) || 0;
+    const loan = Number(updated.loanAmount) || 0;
+
+    updated.balanceAmount = onRoad - (ip + loan);
+
+    if (onRoad > 0) {
+      updated.fundPercentage = parseFloat((((ip + loan) / onRoad) * 100).toFixed(2));
+    } else {
+      updated.fundPercentage = 0;
+    }
+    return updated;
+  }
+  return formData;
+}
+

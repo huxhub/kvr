@@ -4,28 +4,31 @@ import DeliveryGridItem from './DeliveryGridItem.jsx';
 import DeliveryTableRow from './DeliveryTableRow.jsx';
 import BookingTableRow from './BookingTableRow.jsx';
 import { DEPARTMENT_KEYS, SECTIONS, STATUS_VALUES } from '../../models/apiModel.js';
+import { getPermission } from '../admin/AccessMatrix.jsx';
 
 import { useAuth } from '../../context/AuthContext.jsx';
 
-export default function DeliveryTable({ 
-  vehicles, 
-  branches, 
+export default function DeliveryTable({
+  vehicles,
+  branches,
   openDrawer,
   openNewBooking,
   openCrm,
-  totalVehicles = 0, 
-  currentPage = 1, 
+  totalVehicles = 0,
+  currentPage = 1,
   fetchVehicles,
-  isBookingPage = false
+  isBookingPage = false,
+  settings
 }) {
   const { user } = useAuth();
-  const isBranchRestricted = user?.role !== 'ADMIN' && user?.branch !== 'All Branches';
+  const userRoles = user?.role ? user.role.split(',').map(r => r.trim()) : [];
+  const isBranchRestricted = !userRoles.includes('ADMIN') && user?.branch !== 'All Branches';
 
   const [viewMode, setViewMode] = useState('list'); // 'grid' or 'list'
   const [filters, setFilters] = useState({
-    global: '', 
-    branch: isBranchRestricted && user?.branch ? user.branch : '', 
-    status: '', 
+    global: '',
+    branch: isBranchRestricted && user?.branch ? user.branch : '',
+    status: '',
     pending: '',
     ca: '', tl: '',
     finStatus: '', tmaStatus: '', accStatus: '', regStatus: '', pdiStatus: '',
@@ -43,11 +46,11 @@ export default function DeliveryTable({
         const matchText = `${v.customerName} ${v.mobileNumber} ${v.orderNumber} ${v.chassisNumber} ${v.variant} ${v.ca} ${v.tl}`.toLowerCase();
         if (!matchText.includes(term)) return false;
       }
-      
+
       const vBranch = v.branch || 'Perinthalmanna';
       if (filters.branch && vBranch !== filters.branch) return false;
       if (filters.status && v.vehicleStatus !== filters.status) return false;
-      
+
       if (filters.pending) {
         if (v.vehicleStatus === 'Delivered' || v.vehicleStatus === 'Cancelled') return false;
         if (filters.pending === 'any') {
@@ -61,44 +64,127 @@ export default function DeliveryTable({
       }
       if (filters.ca && v.ca !== filters.ca) return false;
       if (filters.tl && v.tl !== filters.tl) return false;
-      
+
       const checkDept = (filterVal, field) => {
         if (!filterVal) return true;
         const val = v[field] || STATUS_VALUES.NOT_ATTENDED;
         return val === filterVal;
       };
-      
+
       if (!checkDept(filters.finStatus, SECTIONS.finance.statusField)) return false;
       if (!checkDept(filters.tmaStatus, SECTIONS.tma.statusField)) return false;
       if (!checkDept(filters.accStatus, SECTIONS.accounts.statusField)) return false;
       if (!checkDept(filters.regStatus, SECTIONS.registration.statusField)) return false;
       if (!checkDept(filters.pdiStatus, SECTIONS.pdi.statusField)) return false;
-
+ 
       if (isBookingPage && filters.crmGenerated) {
         if (filters.crmGenerated === 'generated' && !v.crmGenerated) return false;
         if (filters.crmGenerated === 'pending' && v.crmGenerated) return false;
       }
-
+ 
       return true;
     });
   }, [vehicles, filters, isBookingPage]);
 
+  const showDownloadBtn = user && [
+    'ADMIN',
+    'FINANCE',
+    'CRM',
+    'BOOKING IN-CHARGE',
+    'MANAGEMENT'
+  ].includes(user.role);
+
+  const handleDownloadCSV = () => {
+    const listToExport = filteredVehicles;
+    if (listToExport.length === 0) {
+      alert("No data available to download with current filters.");
+      return;
+    }
+
+    const columns = isBookingPage ? [
+      { key: 'date', label: 'Booking Date' },
+      { key: 'customerName', label: 'Customer Name' },
+      { key: 'mobileNumber', label: 'Mobile Number' },
+      { key: 'optyId', label: 'OPTY ID' },
+      { key: 'pl', label: 'PPL' },
+      { key: 'variant', label: 'Variant' },
+      { key: 'colour', label: 'Color' },
+      { key: 'boStatus', label: 'BO Status' },
+      { key: 'boDate', label: 'BO Date' },
+      { key: 'orderNumber', label: 'BKB Order No' },
+      { key: 'sapOrderNo', label: 'SAP Order No' },
+      { key: 'crmBookingStatus', label: 'CRM Booking Status' },
+      { key: 'ca', label: 'CA' },
+      { key: 'tl', label: 'TL' },
+      { key: 'branch', label: 'Branch' },
+      { key: 'region', label: 'Region' },
+      { key: 'branchStatus', label: 'Branch Status' },
+      { key: 'branchRemark', label: 'Branch Remark' },
+      { key: 'financeStatus', label: 'Finance Status' },
+      { key: 'financeRemark', label: 'Finance Remark' }
+    ] : [
+      { key: 'customerName', label: 'Customer Name' },
+      { key: 'pl', label: 'PL' },
+      { key: 'variant', label: 'Variant' },
+      { key: 'branch', label: 'Branch' },
+      { key: 'financeStatus', label: 'Finance Status' },
+      { key: 'financeRemark', label: 'Finance Remark' },
+      { key: 'tmaStatus', label: 'TMA Status' },
+      { key: 'tmaRemark', label: 'TMA Remark' },
+      { key: 'accountsStatus', label: 'Accounts Status' },
+      { key: 'accountsRemark', label: 'Accounts Remark' },
+      { key: 'registrationStatus', label: 'Registration Status' },
+      { key: 'registrationRemark', label: 'Registration Remark' },
+      { key: 'pdiStatus', label: 'PDI Status' },
+      { key: 'pdiRemark', label: 'PDI Remark' },
+      { key: 'deliveryStatus', label: 'Delivery Status' },
+      { key: 'cxoRemark', label: 'CXO Remark' }
+    ];
+
+    const headerRow = columns.map(col => `"${col.label.replace(/"/g, '""')}"`).join(',');
+    const dataRows = listToExport.map(v => {
+      return columns.map(col => {
+        const val = v[col.key] !== undefined && v[col.key] !== null ? String(v[col.key]) : '';
+        return `"${val.replace(/"/g, '""')}"`;
+      }).join(',');
+    });
+
+    const csvContent = '\uFEFF' + [headerRow, ...dataRows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", url);
+    const filename = isBookingPage ? 'bookings_export.csv' : 'crm_deliveries_export.csv';
+    downloadAnchor.setAttribute("download", filename);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div id="vehicles-view" className="tab-content active">
       <DeliveryFilters filters={filters} setFilters={setFilters} branches={branches} vehicles={vehicles} isBookingPage={isBookingPage} />
-      
+
       <div className="list-header-controls">
         <div className="list-info-text">
           Showing <span id="lbl-result-count">{filteredVehicles.length}</span> of <span id="lbl-total-count">{totalVehicles || vehicles.length}</span> Vehicles
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          {(isBookingPage 
-            ? (user?.role === 'ADMIN' || user?.role === 'BRANCH_MANAGER' || user?.role === 'BRANCH' || user?.role === 'BOOKING IN-CHARGE')
-            : (user?.role === 'ADMIN' || user?.role === 'BOOKING IN-CHARGE' || user?.role === 'CRM')
-          ) && (
+          {getPermission(settings, isBookingPage ? 'booking' : 'crm', isBookingPage ? 'btn_new_booking' : 'btn_crm_form', isBookingPage ? 'BOOKING ACTIONS' : 'CRM ACTIONS', user?.role).view && (
             <button className="btn-primary" onClick={() => isBookingPage ? openNewBooking() : openCrm()}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
               {isBookingPage ? 'New Booking' : 'CRM'}
+            </button>
+          )}
+          {showDownloadBtn && (
+            <button className="btn-secondary" onClick={handleDownloadCSV} title="Download CSV" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}>
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Download
             </button>
           )}
           <div className="view-toggles">
@@ -190,24 +276,24 @@ export default function DeliveryTable({
       {/* Pagination Controls */}
       {totalVehicles > 25 && (
         <div className="pagination-controls" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '24px', padding: '10px 0' }}>
-          <button 
+          <button
             type="button"
-            className="btn-secondary" 
-            disabled={currentPage === 1} 
+            className="btn-secondary"
+            disabled={currentPage === 1}
             onClick={() => fetchVehicles(currentPage - 1, 25)}
             style={{ padding: '8px 16px', fontSize: '0.8rem', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', opacity: currentPage === 1 ? 0.5 : 1 }}
           >
             Previous
           </button>
-          
+
           <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600 }}>
             Page {currentPage} of {Math.ceil(totalVehicles / 25)}
           </span>
-          
-          <button 
+
+          <button
             type="button"
-            className="btn-secondary" 
-            disabled={currentPage >= Math.ceil(totalVehicles / 25)} 
+            className="btn-secondary"
+            disabled={currentPage >= Math.ceil(totalVehicles / 25)}
             onClick={() => fetchVehicles(currentPage + 1, 25)}
             style={{ padding: '8px 16px', fontSize: '0.8rem', cursor: currentPage >= Math.ceil(totalVehicles / 25) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', opacity: currentPage >= Math.ceil(totalVehicles / 25) ? 0.5 : 1 }}
           >
