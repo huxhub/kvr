@@ -95,6 +95,8 @@ export default function CrmSectionBlock({ formData, handleChange, branches = [] 
   const { user } = useAuth();
   const containerRef = useRef(null);
   const [dbSettings, setDbSettings] = useState(null);
+  const [pplOptions, setPplOptions] = useState(['Tiago', 'Tigor', 'Altroz', 'Punch', 'Nexon', 'Harrier', 'Safari']);
+  const [isPplOpen, setIsPplOpen] = useState(false);
 
   useEffect(() => {
     async function loadSettings() {
@@ -110,6 +112,25 @@ export default function CrmSectionBlock({ formData, handleChange, branches = [] 
       }
     }
     loadSettings();
+  }, []);
+
+  useEffect(() => {
+    async function fetchPpls() {
+      try {
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
+        const res = await fetch(`${apiBaseUrl}/api/vehicles/ppls`, { credentials: 'include' });
+        if (res.ok) {
+          const dbPpls = await res.json();
+          setPplOptions(prev => {
+            const merged = [...new Set([...prev, ...dbPpls])];
+            return merged.filter(Boolean);
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch PPLs:', err);
+      }
+    }
+    fetchPpls();
   }, []);
 
   const getHighlightStyle = (isDisabled) => {
@@ -225,6 +246,96 @@ export default function CrmSectionBlock({ formData, handleChange, branches = [] 
 
     const finalDisabled = isFieldDisabled || isChassisLocked;
     const highlightStyle = getHighlightStyle(finalDisabled);
+
+    if (field.name === 'pl') {
+      return (
+        <div key={field.name} className="form-field" style={{ position: 'relative' }}>
+          <label>{field.label} {field.required ? '*' : ''}</label>
+          <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+            <input
+              type="text"
+              name={field.name}
+              value={formData[field.name] || ''}
+              onChange={handleChange}
+              required={field.required && !finalDisabled}
+              disabled={finalDisabled}
+              style={{ ...highlightStyle, paddingRight: '36px', width: '100%' }}
+              placeholder="Select or type PPL..."
+            />
+            {!finalDisabled && (
+              <button
+                type="button"
+                onClick={() => setIsPplOpen(!isPplOpen)}
+                style={{
+                  position: 'absolute',
+                  right: '4px',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#64748b',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '8px',
+                  height: '32px',
+                  width: '32px'
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: isPplOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }}>
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </button>
+            )}
+          </div>
+          {isPplOpen && !finalDisabled && (
+            <>
+              <div 
+                onClick={() => setIsPplOpen(false)} 
+                style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000 }} 
+              />
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  backgroundColor: '#ffffff',
+                  border: '1.5px solid #003b71',
+                  borderRadius: '6px',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                  zIndex: 1001,
+                  maxHeight: '180px',
+                  overflowY: 'auto',
+                  marginTop: '4px',
+                  padding: '4px 0'
+                }}
+              >
+                {pplOptions.map(opt => (
+                  <div
+                    key={opt}
+                    onClick={() => {
+                      handleChange({ target: { name: field.name, value: opt } });
+                      setIsPplOpen(false);
+                    }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#f1f5f9'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                    style={{
+                      padding: '8px 12px',
+                      cursor: 'pointer',
+                      fontSize: '0.9rem',
+                      color: '#1e293b',
+                      transition: 'background-color 0.1s ease'
+                    }}
+                  >
+                    {opt}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      );
+    }
 
     if (field.type === 'status' || field.type === 'select' || field.name === 'branch') {
       let options = field.options || Object.values(STATUS_VALUES);
