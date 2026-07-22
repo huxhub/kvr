@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
   password    VARCHAR(255) NOT NULL,
   role        VARCHAR(50)  NOT NULL,
   name        VARCHAR(100) NOT NULL,
-  branch      VARCHAR(100) NOT NULL DEFAULT 'Perinthalmanna',
+  branch      VARCHAR(100) NOT NULL DEFAULT '',
   email       VARCHAR(100) DEFAULT '',
   created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS vehicles (
   -- Sales Details
   ca                  VARCHAR(80)  DEFAULT '',
   tl                  VARCHAR(80)  DEFAULT '',
-  branch              VARCHAR(80)  NOT NULL DEFAULT 'Perinthalmanna',
+  branch              VARCHAR(80)  NOT NULL DEFAULT '',
   region              TEXT,
   crmBookingStatus    TEXT,
   branchStatus        TEXT,
@@ -170,9 +170,9 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 CREATE TABLE IF NOT EXISTS settings (
   setting_key     VARCHAR(50)  NOT NULL PRIMARY KEY,
   companyName     VARCHAR(255) NOT NULL DEFAULT 'KVR TATA',
-  companyPhone    VARCHAR(50)  DEFAULT '+91 98470 12345',
-  companyEmail    VARCHAR(100) DEFAULT 'support@kvrgroup.com',
-  companyAddress  VARCHAR(500) DEFAULT 'KVR Group, NH 66, Perinthalmanna, Kerala',
+  companyPhone    VARCHAR(50)  DEFAULT '',
+  companyEmail    VARCHAR(100) DEFAULT '',
+  companyAddress  VARCHAR(500) DEFAULT '',
   branches        JSON         DEFAULT NULL,
   theme           VARCHAR(20)  DEFAULT 'light',
   enableAlerts    TINYINT(1)   DEFAULT 1,

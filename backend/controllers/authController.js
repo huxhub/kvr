@@ -58,8 +58,24 @@ export const login = async (req, res) => {
 };
 
 // GET /api/auth/me — restore session on page refresh
-export const me = (req, res) => {
+export const me = async (req, res) => {
   if (req.session && req.session.user) {
+    try {
+      const dbUser = await User.findByUsername(req.session.user.username);
+      if (dbUser) {
+        const sessionUser = {
+          username: dbUser.username,
+          role: dbUser.role,
+          name: dbUser.name,
+          branch: dbUser.branch || '',
+          email: dbUser.email || '',
+        };
+        req.session.user = sessionUser;
+        return res.json(sessionUser);
+      }
+    } catch (err) {
+      console.error('[Auth Me Error]:', err);
+    }
     return res.json(req.session.user);
   }
   return res.status(401).json({ error: 'Not authenticated' });

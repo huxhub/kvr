@@ -1,7 +1,7 @@
 import React from 'react';
 import { calculateCardBorderClass, calculateProgress, getPendingDepartment } from '../../utils/vehicleUtils.js';
 
-export default function DeliveryGridItem({ vehicle, openDrawer, index }) {
+export default function DeliveryGridItem({ vehicle, openDrawer, index, isAdmin, onDelete }) {
   const borderClass = calculateCardBorderClass(vehicle);
   const progress = calculateProgress(vehicle);
   const pendingDept = getPendingDepartment(vehicle);
@@ -26,7 +26,7 @@ export default function DeliveryGridItem({ vehicle, openDrawer, index }) {
         </div>
         <div className="card-detail-item">
           <span className="card-detail-label">Branch</span>
-          <span className="card-detail-value">{vehicle.branch || 'Perinthalmanna'}</span>
+          <span className="card-detail-value">{vehicle.branch || '-'}</span>
         </div>
         <div className="card-detail-item">
           <span className="card-detail-label">Advisor (CA)</span>
@@ -47,11 +47,25 @@ export default function DeliveryGridItem({ vehicle, openDrawer, index }) {
           <div className={`progress-bar-fill ${progress === 100 ? 'all-approved' : ''}`} style={{ width: `${progress}%` }}></div>
         </div>
         
-        <div className="card-pending-dept-wrapper">
-          <span className="pending-dept-label">Current Pipeline:</span>
-          <span className={`pending-dept-value ${pendingDept.status.toLowerCase().replace(' ', '-')}`}>
-            {pendingDept.name} ({pendingDept.status})
-          </span>
+        <div className="card-pending-dept-wrapper" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <span className="pending-dept-label">Current Pipeline: </span>
+            <span className={`pending-dept-value ${pendingDept.status.toLowerCase().replace(' ', '-')}`}>
+              {pendingDept.name} ({pendingDept.status})
+            </span>
+          </div>
+          {isAdmin && (
+            <div onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                className="btn-danger-mini"
+                onClick={() => onDelete && onDelete(vehicle)}
+                title="Delete Record"
+              >
+                Delete
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

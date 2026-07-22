@@ -47,7 +47,7 @@ export default function Settings({ branches, settings, setSettings, companyName,
       setCompanyPhone(settings.companyPhone || '');
       setCompanyEmail(settings.companyEmail || '');
       setCompanyAddress(settings.companyAddress || '');
-      setCustomBranches(settings.branches?.filter(b => b !== 'Perinthalmanna') || []);
+      setCustomBranches(settings.branches || []);
       setTheme(settings.theme || 'light');
       setEnableAlerts(settings.enableAlerts !== false);
     }
@@ -92,7 +92,7 @@ export default function Settings({ branches, settings, setSettings, companyName,
       showToast('Warning', 'Branch already exists.', 'warning');
       return;
     }
-    const updatedBranches = [...(settings.branches || ['Perinthalmanna']), trimmed];
+    const updatedBranches = [...(settings.branches || []), trimmed];
     try {
       const updated = await saveBackendSettings({
         ...settings,
@@ -107,7 +107,7 @@ export default function Settings({ branches, settings, setSettings, companyName,
   };
 
   const handleRemoveBranch = async (branchToRemove) => {
-    const updatedBranches = (settings.branches || ['Perinthalmanna']).filter(b => b !== branchToRemove);
+    const updatedBranches = (settings.branches || []).filter(b => b !== branchToRemove);
     try {
       const updated = await saveBackendSettings({
         ...settings,
@@ -431,11 +431,7 @@ export default function Settings({ branches, settings, setSettings, companyName,
                   <div style={{ maxWidth: '600px' }}>
                     <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', marginBottom: '10px', marginTop: 0 }}>Current Branch List</h4>
                     <div style={{ display: 'flex', flexDirection: 'column', border: '1px solid var(--border-light)', borderRadius: '8px', overflow: 'hidden' }}>
-                      {/* Default branch */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid var(--border-light)', background: '#f8fafc' }}>
-                        <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#0f172a' }}>Perinthalmanna (Default)</span>
-                        <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600, background: '#e2e8f0', padding: '2px 8px', borderRadius: '12px' }}>System Locked</span>
-                      </div>
+
                       
                       {/* Custom branches */}
                       {customBranches.map(b => (
@@ -453,7 +449,7 @@ export default function Settings({ branches, settings, setSettings, companyName,
                       ))}
                       {customBranches.length === 0 && (
                         <div style={{ padding: '16px', textAlign: 'center', color: '#64748b', fontSize: '0.85rem', background: '#ffffff' }}>
-                          No custom branches added yet. Use the field above to add one.
+                          No branches added yet. Use the field above to add one.
                         </div>
                       )}
                     </div>

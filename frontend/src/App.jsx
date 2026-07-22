@@ -1,17 +1,15 @@
 import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import './index.css';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
-import { ToastProvider } from './context/ToastContext.jsx';
+import { ToastProvider, useToast } from './context/ToastContext.jsx';
 import LoginOverlay from './components/auth/LoginOverlay.jsx';
 import Header from './components/layout/Header.jsx';
 import Sidebar from './components/layout/Sidebar.jsx';
 import { useVehicles } from './hooks/useVehicles.js';
+import AlertDialog from './components/ui/AlertDialog.jsx';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
-// Lazy-load all heavy route-level components — they are not needed until the user
-// is authenticated and actively navigates to that tab. This removes recharts (4.8MB)
-// and other large chunks from the initial JS bundle entirely.
 const DashboardKPIs = lazy(() => import('./components/dashboard/DashboardKPIs.jsx'));
 const DeliveryTable = lazy(() => import('./components/delivery/DeliveryTable.jsx'));
 const AuditHistory = lazy(() => import('./components/audit/AuditHistory.jsx'));
@@ -70,10 +68,52 @@ class ChunkErrorBoundary extends React.Component {
 
 function AppContent() {
   const { user, loading: authLoading } = useAuth();
+  const { showToast } = useToast();
   const userRoles = useMemo(() => user?.role ? user.role.split(',').map(r => r.trim()) : [], [user?.role]);
-  const { vehicles, totalVehicles, currentPage, fetchVehicles } = useVehicles();
+  const { vehicles, totalVehicles, currentPage, fetchVehicles, deleteVehicle } = useVehicles();
   const [activeTab, setActiveTab] = useState(() => localStorage.getItem('activeTab') || 'dashboard');
   const [activeSubTab, setActiveSubTab] = useState(() => localStorage.getItem('activeSubTab') || 'profile');
+
+  const [alertDialog, setAlertDialog] = useState({
+    isOpen: false,
+    title: '',
+    description: '',
+    confirmText: 'Continue',
+    cancelText: 'Cancel',
+    variant: 'warning',
+    onConfirm: () => {}
+  });
+
+  const triggerAlertDialog = ({ title, description, confirmText, cancelText, variant, onConfirm }) => {
+    setAlertDialog({
+      isOpen: true,
+      title,
+      description,
+      confirmText: confirmText || 'Continue',
+      cancelText: cancelText || 'Cancel',
+      variant: variant || 'warning',
+      onConfirm: onConfirm || (() => {})
+    });
+  };
+
+  const handleDeleteVehicle = (vehicle) => {
+    const customer = vehicle.customerName || vehicle.chassisNumber || 'this vehicle';
+    triggerAlertDialog({
+      title: 'Delete Vehicle Record',
+      description: `Are you sure you want to delete the vehicle record for "${customer}"? This action cannot be undone.`,
+      confirmText: 'Delete Record',
+      cancelText: 'Cancel',
+      variant: 'danger',
+      onConfirm: async () => {
+        const res = await deleteVehicle(vehicle.chassisNumber);
+        if (res?.success) {
+          showToast('Success', 'Vehicle record deleted successfully');
+        } else {
+          showToast('Error', res?.error || 'Failed to delete vehicle record', 'error');
+        }
+      }
+    });
+  };
 
   // Synchronize tab state with localStorage
   useEffect(() => {
@@ -164,10 +204,10 @@ function AppContent() {
   const [companyName, setCompanyName] = useState('KVR TATA');
   const [settings, setSettings] = useState({
     companyName: 'KVR TATA',
-    companyPhone: '+91 98470 12345',
-    companyEmail: 'support@kvrgroup.com',
-    companyAddress: 'KVR Group, NH 66, Perinthalmanna, Kerala',
-    branches: ['Perinthalmanna'],
+    companyPhone: '',
+    companyEmail: '',
+    companyAddress: '',
+    branches: [],
     theme: 'light',
     enableAlerts: true
   });
@@ -200,8 +240,8 @@ function AppContent() {
   }, [user, fetchVehicles, userRoles]);
 
   const allBranches = useMemo(() => {
-    const branchesSet = new Set(['Perinthalmanna', ...(settings.branches || [])]);
-    if (user && user.branch && user.branch !== 'All Branches') branchesSet.add(user.branch);
+    const branchesSet = new Set([...(settings.branches || [])]);
+    if (user && user.role !== 'ADMIN' && user.branch && user.branch !== 'All Branches') branchesSet.add(user.branch);
     vehicles.forEach(v => { if (v.branch && v.branch !== 'All Branches') branchesSet.add(v.branch); });
     return Array.from(branchesSet).sort();
   }, [vehicles, user, settings.branches]);
@@ -239,6 +279,21 @@ function AppContent() {
   };
 
   const handleOpenNewBooking = () => {
+    const hasBranches = (settings.branches && settings.branches.length > 0) || (allBranches && allBranches.length > 0);
+    if (!hasBranches) {
+      triggerAlertDialog({
+        title: 'No Sales Branches Found',
+        description: 'You must add at least one sales branch before creating a new booking. Would you like to go to Manage Branches now to add one?',
+        confirmText: 'Go to Manage Branches',
+        cancelText: 'Cancel',
+        variant: 'warning',
+        onConfirm: () => {
+          setActiveTab('settings');
+          setActiveSubTab('branches');
+        }
+      });
+      return;
+    }
     setIsNewBookingOpen(true);
   };
 
@@ -247,6 +302,21 @@ function AppContent() {
   };
 
   const handleOpenCrm = () => {
+    const hasBranches = (settings.branches && settings.branches.length > 0) || (allBranches && allBranches.length > 0);
+    if (!hasBranches) {
+      triggerAlertDialog({
+        title: 'No Sales Branches Found',
+        description: 'You must add at least one sales branch before registering a new CRM entry. Would you like to go to Manage Branches now to add one?',
+        confirmText: 'Go to Manage Branches',
+        cancelText: 'Cancel',
+        variant: 'warning',
+        onConfirm: () => {
+          setActiveTab('settings');
+          setActiveSubTab('branches');
+        }
+      });
+      return;
+    }
     setIsCrmOpen(true);
   };
 
@@ -266,7 +336,11 @@ function AppContent() {
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
         companyName={companyName}
-        onNewBooking={() => { setActiveTab('bookings'); handleOpenNewBooking(); }}
+        onNewBooking={() => {
+          const hasB = (settings.branches && settings.branches.length > 0) || (allBranches && allBranches.length > 0);
+          if (hasB) setActiveTab('bookings');
+          handleOpenNewBooking();
+        }}
       />
 
       <div className="main-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflowY: 'auto' }}>
@@ -302,6 +376,7 @@ function AppContent() {
                   fetchVehicles={fetchVehicles}
                   isBookingPage={true}
                   settings={settings}
+                  onDeleteVehicle={handleDeleteVehicle}
                 />
               )}
               {activeTab === 'delivery' && (
@@ -316,6 +391,7 @@ function AppContent() {
                   fetchVehicles={fetchVehicles}
                   isBookingPage={false}
                   settings={settings}
+                  onDeleteVehicle={handleDeleteVehicle}
                 />
               )}
               {activeTab === 'audit' && <AuditHistory />}
@@ -356,6 +432,17 @@ function AppContent() {
           </Suspense>
         )}
       </ChunkErrorBoundary>
+
+      <AlertDialog
+        isOpen={alertDialog.isOpen}
+        onClose={() => setAlertDialog(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={alertDialog.onConfirm}
+        title={alertDialog.title}
+        description={alertDialog.description}
+        confirmText={alertDialog.confirmText}
+        cancelText={alertDialog.cancelText}
+        variant={alertDialog.variant}
+      />
     </div>
 
   );

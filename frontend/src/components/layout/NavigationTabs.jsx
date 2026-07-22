@@ -10,7 +10,7 @@ export default function NavigationTabs({ activeTab, setActiveTab }) {
     <section className="main-header" id="app-nav">
       <div className="brand-details">
         <h2>Delivery Master Control</h2>
-        <p>Real-time vehicle tracking from booking to home visit - <b>{user.branch || 'Perinthalmanna'} Branch</b></p>
+        <p>Real-time vehicle tracking from booking to home visit - <b>{user.branch || 'All Branches'} Branch</b></p>
       </div>
       <nav className="nav-tabs" id="main-navigation">
         <button 

@@ -36,6 +36,13 @@ const connectDB = async () => {
       console.log(`✅ MySQL Connected: ${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || 3306}/${process.env.DB_NAME || 'kvr'}`);
       connection.release();
 
+      // Convert vehicles table to DYNAMIC row format and timestamps to TEXT
+      // to avoid MySQL 8126-byte row size limits on utf8mb4 VARCHAR columns.
+      await pool.execute("ALTER TABLE vehicles ROW_FORMAT=DYNAMIC");
+      try {
+        await pool.execute("ALTER TABLE vehicles MODIFY COLUMN financeTimestamp TEXT, MODIFY COLUMN tmaTimestamp TEXT, MODIFY COLUMN fileTimestamp TEXT, MODIFY COLUMN accountsTimestamp TEXT, MODIFY COLUMN insuranceTimestamp TEXT, MODIFY COLUMN registrationTimestamp TEXT, MODIFY COLUMN tmgaTimestamp TEXT, MODIFY COLUMN pdiTimestamp TEXT, MODIFY COLUMN deliveryTimestamp TEXT");
+      } catch (_) {}
+
       // Ensure crmGenerated column exists
       const dbName = process.env.DB_NAME || 'kvr';
       const [columns] = await pool.execute(

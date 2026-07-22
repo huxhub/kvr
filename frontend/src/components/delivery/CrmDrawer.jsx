@@ -58,6 +58,11 @@ export default function CrmDrawer({ branches, onClose, onSaved }) {
     setSubmitting(true);
     
     try {
+      if (!formData.branch) {
+        showToast('Error', 'Please select or create a sales branch in Settings first', 'error');
+        setSubmitting(false);
+        return;
+      }
       const submissionData = {
         ...formData,
         chassisNumber: formData.chassisNumber || `TEMP-${formData.orderNumber || Math.random().toString(36).substring(2, 10).toUpperCase()}`,

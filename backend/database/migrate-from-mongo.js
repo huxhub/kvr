@@ -65,7 +65,7 @@ async function migrate() {
             u.password || '',
             u.role || '',
             u.name || '',
-            u.branch || 'Perinthalmanna',
+            u.branch || '',
           ]
         );
         usersOk++;
@@ -156,7 +156,7 @@ async function migrate() {
     for (const s of settingsDocs) {
       try {
         const key = s.key || 'global';
-        const branches = JSON.stringify(s.branches || ['Perinthalmanna']);
+        const branches = JSON.stringify(s.branches || []);
         await mysqlConn.execute(
           `INSERT INTO settings (setting_key, companyName, companyPhone, companyEmail, companyAddress, branches, theme, enableAlerts)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -164,9 +164,9 @@ async function migrate() {
           [
             key,
             s.companyName || 'KVR TATA',
-            s.companyPhone || '+91 98470 12345',
-            s.companyEmail || 'support@kvrgroup.com',
-            s.companyAddress || 'KVR Group, NH 66, Perinthalmanna, Kerala',
+            s.companyPhone || '',
+            s.companyEmail || '',
+            s.companyAddress || '',
             branches,
             s.theme || 'light',
             s.enableAlerts !== false ? 1 : 0,

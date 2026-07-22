@@ -56,7 +56,7 @@ export async function countAll(branch = null) {
 }
 
 /** Create a new user */
-export async function create({ username, password, role, name, branch = 'Perinthalmanna', email = '' }) {
+export async function create({ username, password, role, name, branch = '', email = '' }) {
   const [result] = await pool.execute(
     'INSERT INTO users (username, password, role, name, branch, email) VALUES (?, ?, ?, ?, ?, ?)',
     [username.toLowerCase(), password, role, name, branch, email]

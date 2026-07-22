@@ -1,7 +1,7 @@
 import React from 'react';
 import { calculateProgress } from '../../utils/vehicleUtils.js';
 
-export default function DeliveryTableRow({ vehicle, openDrawer, index }) {
+export default function DeliveryTableRow({ vehicle, openDrawer, index, isAdmin, onDelete }) {
   const progress = calculateProgress(vehicle);
 
   const renderStatusPill = (status, remark) => {
@@ -34,7 +34,7 @@ export default function DeliveryTableRow({ vehicle, openDrawer, index }) {
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{vehicle.variant}</span>
         </div>
       </td>
-      <td>{vehicle.branch || 'Perinthalmanna'}</td>
+      <td>{vehicle.branch || '-'}</td>
       <td>{renderStatusPill(vehicle.financeStatus, vehicle.financeRemark)}</td>
       <td>{renderStatusPill(vehicle.tmaStatus, vehicle.tmaRemark)}</td>
       <td>{renderStatusPill(vehicle.accountsStatus, vehicle.accountsRemark)}</td>
@@ -46,6 +46,18 @@ export default function DeliveryTableRow({ vehicle, openDrawer, index }) {
           {progress}%
         </span>
       </td>
+      {isAdmin && (
+        <td onClick={(e) => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+          <button
+            type="button"
+            className="btn-danger-mini"
+            onClick={() => onDelete && onDelete(vehicle)}
+            title="Delete Record"
+          >
+            Delete
+          </button>
+        </td>
+      )}
     </tr>
   );
 }

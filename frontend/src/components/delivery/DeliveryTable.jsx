@@ -18,11 +18,13 @@ export default function DeliveryTable({
   currentPage = 1,
   fetchVehicles,
   isBookingPage = false,
-  settings
+  settings,
+  onDeleteVehicle
 }) {
   const { user } = useAuth();
-  const userRoles = user?.role ? user.role.split(',').map(r => r.trim()) : [];
-  const isBranchRestricted = !userRoles.includes('ADMIN') && user?.branch !== 'All Branches';
+  const userRoles = useMemo(() => user?.role ? user.role.split(',').map(r => r.trim()) : [], [user?.role]);
+  const isAdmin = userRoles.includes('ADMIN');
+  const isBranchRestricted = !isAdmin && user?.branch !== 'All Branches';
 
   const [viewMode, setViewMode] = useState('list'); // 'grid' or 'list'
   const [filters, setFilters] = useState({
@@ -47,7 +49,7 @@ export default function DeliveryTable({
         if (!matchText.includes(term)) return false;
       }
 
-      const vBranch = v.branch || 'Perinthalmanna';
+      const vBranch = v.branch || '';
       if (filters.branch && vBranch !== filters.branch) return false;
       if (filters.status && v.vehicleStatus !== filters.status) return false;
 
@@ -205,7 +207,7 @@ export default function DeliveryTable({
               <p style={{ fontWeight: 600 }}>No vehicle records match current filters.</p>
             </div>
           ) : (
-            filteredVehicles.map((v, i) => <DeliveryGridItem key={v.chassisNumber} vehicle={v} openDrawer={openDrawer} index={(currentPage - 1) * 25 + i + 1} />)
+            filteredVehicles.map((v, i) => <DeliveryGridItem key={v.chassisNumber} vehicle={v} openDrawer={openDrawer} index={(currentPage - 1) * 25 + i + 1} isAdmin={isAdmin} onDelete={onDeleteVehicle} />)
           )}
         </div>
       ) : (
@@ -235,6 +237,7 @@ export default function DeliveryTable({
                   <th>BRANCH REMARK</th>
                   <th>FINANCE STATUS</th>
                   <th>FINANCE REMARK</th>
+                  {isAdmin && <th style={{ width: '80px' }}>ACTIONS</th>}
                 </tr>
               ) : (
                 <tr>
@@ -249,22 +252,23 @@ export default function DeliveryTable({
                   <th>PDI Status</th>
                   <th>Deliv Status</th>
                   <th>Progress</th>
+                  {isAdmin && <th style={{ width: '80px' }}>ACTIONS</th>}
                 </tr>
               )}
             </thead>
             <tbody>
               {filteredVehicles.length === 0 ? (
                 <tr>
-                  <td colSpan={isBookingPage ? 21 : 12} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '30px' }}>
+                  <td colSpan={isBookingPage ? (isAdmin ? 22 : 21) : (isAdmin ? 12 : 11)} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '30px' }}>
                     No matching vehicle records found.
                   </td>
                 </tr>
               ) : (
                 filteredVehicles.map((v, i) => (
                   isBookingPage ? (
-                    <BookingTableRow key={v.chassisNumber} vehicle={v} openDrawer={openDrawer} index={(currentPage - 1) * 25 + i + 1} />
+                    <BookingTableRow key={v.chassisNumber} vehicle={v} openDrawer={openDrawer} index={(currentPage - 1) * 25 + i + 1} isAdmin={isAdmin} onDelete={onDeleteVehicle} />
                   ) : (
-                    <DeliveryTableRow key={v.chassisNumber} vehicle={v} openDrawer={openDrawer} index={(currentPage - 1) * 25 + i + 1} />
+                    <DeliveryTableRow key={v.chassisNumber} vehicle={v} openDrawer={openDrawer} index={(currentPage - 1) * 25 + i + 1} isAdmin={isAdmin} onDelete={onDeleteVehicle} />
                   )
                 ))
               )}

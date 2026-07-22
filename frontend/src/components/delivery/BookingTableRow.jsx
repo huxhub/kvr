@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function BookingTableRow({ vehicle, openDrawer, index }) {
+export default function BookingTableRow({ vehicle, openDrawer, index, isAdmin, onDelete }) {
   const renderBadge = (text) => {
     if (!text) return <span style={{ color: 'var(--text-muted)' }}>-</span>;
     const t = text.toUpperCase();
@@ -51,7 +51,7 @@ export default function BookingTableRow({ vehicle, openDrawer, index }) {
       <td>{renderBadge(vehicle.crmBookingStatus)}</td>
       <td style={{ whiteSpace: 'nowrap' }}>{vehicle.ca || '-'}</td>
       <td style={{ whiteSpace: 'nowrap' }}>{vehicle.tl || '-'}</td>
-      <td style={{ whiteSpace: 'nowrap' }}>{vehicle.branch || 'Perinthalmanna'}</td>
+      <td style={{ whiteSpace: 'nowrap' }}>{vehicle.branch || '-'}</td>
       <td style={{ whiteSpace: 'nowrap' }}>{vehicle.region || '-'}</td>
       <td>{renderBadge(vehicle.branchStatus)}</td>
       <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={vehicle.branchRemark}>
@@ -61,6 +61,18 @@ export default function BookingTableRow({ vehicle, openDrawer, index }) {
       <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={vehicle.financeRemark}>
         {vehicle.financeRemark || '-'}
       </td>
+      {isAdmin && (
+        <td onClick={(e) => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+          <button
+            type="button"
+            className="btn-danger-mini"
+            onClick={() => onDelete && onDelete(vehicle)}
+            title="Delete Record"
+          >
+            Delete
+          </button>
+        </td>
+      )}
     </tr>
   );
 }

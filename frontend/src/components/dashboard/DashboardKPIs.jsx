@@ -31,7 +31,7 @@ export default function DashboardKPIs({ vehicles, activeBranch, setSelectedBranc
 
   const filteredVehicles = useMemo(() => {
     return allVehicles.filter(v => {
-      const vBranch = v.branch || 'Perinthalmanna';
+      const vBranch = v.branch || '';
       return !activeBranch || vBranch === activeBranch;
     });
   }, [allVehicles, activeBranch]);
@@ -229,7 +229,7 @@ export default function DashboardKPIs({ vehicles, activeBranch, setSelectedBranc
       <div className="dept-bottleneck-section">
         <div className="section-title-bar">
           <h3>Department Bottlenecks & Tasks</h3>
-          <span className="list-info-text">Pending attention or approvals in {activeBranch || 'Perinthalmanna'}</span>
+          <span className="list-info-text">Pending attention or approvals in {activeBranch || 'All Branches'}</span>
         </div>
         <div className="dept-kpi-grid">
           {DEPARTMENT_KEYS.map(key => (

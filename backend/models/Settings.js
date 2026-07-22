@@ -40,9 +40,9 @@ export async function findByKey(key = 'global') {
   // Safely parse branches: mysql2 parses JSON columns automatically,
   // but if the column is TEXT, it comes back as a string — parse manually.
   if (typeof row.branches === 'string') {
-    try { row.branches = JSON.parse(row.branches); } catch { row.branches = ['Perinthalmanna']; }
+    try { row.branches = JSON.parse(row.branches); } catch { row.branches = []; }
   }
-  if (!Array.isArray(row.branches)) row.branches = ['Perinthalmanna'];
+  if (!Array.isArray(row.branches)) row.branches = [];
 
   // Parse role_permissions safely
   if (typeof row.role_permissions === 'string') {
@@ -58,7 +58,7 @@ export async function findByKey(key = 'global') {
 export async function createDefault(key = 'global') {
   await pool.execute(
     `INSERT IGNORE INTO settings (setting_key, branches) VALUES (?, ?)`,
-    [key, JSON.stringify(['Perinthalmanna'])]
+    [key, JSON.stringify([])]
   );
   return findByKey(key);
 }
