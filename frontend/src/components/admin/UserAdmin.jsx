@@ -4,6 +4,8 @@ import { useToast } from '../../context/ToastContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import UserTable from './UserTable.jsx';
 
+import AlertDialog from '../ui/AlertDialog.jsx';
+
 export default function UserAdmin({ branches }) {
   const { users, totalUsers, currentPage, fetchUsers, createUser, updateUser, deleteUser, loading } = useUsers();
   const { showToast } = useToast();
@@ -11,6 +13,7 @@ export default function UserAdmin({ branches }) {
   const [formData, setFormData] = useState({ name: '', username: '', role: '', branch: '', email: '', password: '' });
   const [originalUsername, setOriginalUsername] = useState('');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   
   const isReadOnly = user?.role !== 'ADMIN';
   
@@ -43,12 +46,16 @@ export default function UserAdmin({ branches }) {
     }
   };
 
-  const handleDelete = async (username) => {
-    if (window.confirm(`Delete user ${username}?`)) {
-      const result = await deleteUser(username);
-      if (result.success) showToast('Success', 'User deleted');
-      else showToast('Error', result.error, 'error');
-    }
+  const handleDelete = (username) => {
+    setDeleteTarget(username);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    const result = await deleteUser(deleteTarget);
+    if (result.success) showToast('Success', 'User deleted');
+    else showToast('Error', result.error, 'error');
+    setDeleteTarget(null);
   };
 
   const handleEdit = (user) => {
@@ -240,6 +247,17 @@ export default function UserAdmin({ branches }) {
           </form>
         </div>
       )}
+
+      <AlertDialog
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete User Account"
+        description={`Are you sure you want to delete the employee account for "${deleteTarget}"? This action cannot be undone.`}
+        confirmText="Delete Account"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 }
