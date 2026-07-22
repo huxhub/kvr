@@ -143,7 +143,7 @@ export async function createUser(userData, activeRole) {
 }
 
 export async function updateUser(username, userData, activeRole) {
-  const res = await fetch(`${API_BASE_URL}/api/users/${username}`, {
+  const res = await fetch(`${API_BASE_URL}/api/users/${encodeURIComponent(username)}`, {
     method: 'PUT',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', 'X-Role': activeRole },
@@ -156,7 +156,7 @@ export async function updateUser(username, userData, activeRole) {
 }
 
 export async function deleteUser(username, activeRole) {
-  const res = await fetch(`${API_BASE_URL}/api/users/${username}`, {
+  const res = await fetch(`${API_BASE_URL}/api/users/${encodeURIComponent(username)}`, {
     method: 'DELETE',
     credentials: 'include',
     headers: { 'X-Role': activeRole }

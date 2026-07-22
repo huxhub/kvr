@@ -70,7 +70,8 @@ export const createUser = async (req, res) => {
 
 export const updateUser = async (req, res) => {
   try {
-    const { username } = req.params;
+    const rawUsername = req.params.username || req.params[0] || '';
+    const username = decodeURIComponent(rawUsername);
     const isSelfUpdate = req.session.user && req.session.user.username.toLowerCase() === username.toLowerCase();
     const userRoles = req.session.user?.role ? req.session.user.role.split(',').map(r => r.trim()) : [];
     const isAdmin = userRoles.includes('ADMIN');
@@ -119,7 +120,8 @@ export const deleteUser = async (req, res) => {
       return res.status(403).json({ error: 'Forbidden: Only Administrator can manage users' });
     }
 
-    const { username } = req.params;
+    const rawUsername = req.params.username || req.params[0] || '';
+    const username = decodeURIComponent(rawUsername);
     const deleted = await User.deleteByUsername(username);
 
     if (!deleted) {
