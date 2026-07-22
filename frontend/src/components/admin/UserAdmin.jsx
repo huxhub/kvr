@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useUsers } from '../../hooks/useUsers.js';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 import UserTable from './UserTable.jsx';
 
 export default function UserAdmin({ branches }) {
