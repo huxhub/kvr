@@ -3,7 +3,7 @@ import DeliveryFilters from './DeliveryFilters.jsx';
 import DeliveryGridItem from './DeliveryGridItem.jsx';
 import DeliveryTableRow from './DeliveryTableRow.jsx';
 import BookingTableRow from './BookingTableRow.jsx';
-import { DEPARTMENT_KEYS, SECTIONS, STATUS_VALUES, createVehicle as apiCreateVehicle } from '../../models/apiModel.js';
+import { DEPARTMENT_KEYS, SECTIONS, STATUS_VALUES, createVehicle as apiCreateVehicle, getVehicles as apiGetVehicles } from '../../models/apiModel.js';
 import { getPermission } from '../admin/AccessMatrix.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -230,55 +230,58 @@ export default function DeliveryTable({
     }
   };
 
+  const [isExporting, setIsExporting] = useState(false);
+
+  const filterRecord = (v, currentFilters, isBooking) => {
+    if (isBooking && v.vehicleStatus !== 'Booked') return false;
+    if (!isBooking && v.vehicleStatus === 'Booked') return false;
+
+    if (currentFilters.global) {
+      const term = currentFilters.global.toLowerCase();
+      const matchText = `${v.customerName || ''} ${v.mobileNumber || ''} ${v.orderNumber || ''} ${v.chassisNumber || ''} ${v.variant || ''} ${v.ca || ''} ${v.tl || ''}`.toLowerCase();
+      if (!matchText.includes(term)) return false;
+    }
+
+    const vBranch = v.branch || '';
+    if (currentFilters.branch && vBranch !== currentFilters.branch) return false;
+    if (currentFilters.status && v.vehicleStatus !== currentFilters.status) return false;
+
+    if (currentFilters.pending) {
+      if (v.vehicleStatus === 'Delivered' || v.vehicleStatus === 'Cancelled') return false;
+      if (currentFilters.pending === 'any') {
+        const statuses = DEPARTMENT_KEYS.map(key => v[SECTIONS[key].statusField] || STATUS_VALUES.NOT_ATTENDED);
+        if (statuses.every(s => s === STATUS_VALUES.APPROVED)) return false;
+      } else {
+        const statusField = SECTIONS[currentFilters.pending].statusField;
+        const deptStatus = v[statusField] || STATUS_VALUES.NOT_ATTENDED;
+        if (deptStatus !== STATUS_VALUES.PENDING && deptStatus !== STATUS_VALUES.NOT_ATTENDED) return false;
+      }
+    }
+    if (currentFilters.ca && v.ca !== currentFilters.ca) return false;
+    if (currentFilters.tl && v.tl !== currentFilters.tl) return false;
+
+    const checkDept = (filterVal, field) => {
+      if (!filterVal) return true;
+      const val = v[field] || STATUS_VALUES.NOT_ATTENDED;
+      return val === filterVal;
+    };
+
+    if (!checkDept(currentFilters.finStatus, SECTIONS.finance.statusField)) return false;
+    if (!checkDept(currentFilters.tmaStatus, SECTIONS.tma.statusField)) return false;
+    if (!checkDept(currentFilters.accStatus, SECTIONS.accounts.statusField)) return false;
+    if (!checkDept(currentFilters.regStatus, SECTIONS.registration.statusField)) return false;
+    if (!checkDept(currentFilters.pdiStatus, SECTIONS.pdi.statusField)) return false;
+
+    if (isBooking && currentFilters.crmGenerated) {
+      if (currentFilters.crmGenerated === 'generated' && !v.crmGenerated) return false;
+      if (currentFilters.crmGenerated === 'pending' && v.crmGenerated) return false;
+    }
+
+    return true;
+  };
+
   const filteredVehicles = useMemo(() => {
-    return vehicles.filter(v => {
-      // Split bookings vs deliveries
-      if (isBookingPage && v.vehicleStatus !== 'Booked') return false;
-      if (!isBookingPage && v.vehicleStatus === 'Booked') return false;
-
-      if (filters.global) {
-        const term = filters.global.toLowerCase();
-        const matchText = `${v.customerName} ${v.mobileNumber} ${v.orderNumber} ${v.chassisNumber} ${v.variant} ${v.ca} ${v.tl}`.toLowerCase();
-        if (!matchText.includes(term)) return false;
-      }
-
-      const vBranch = v.branch || '';
-      if (filters.branch && vBranch !== filters.branch) return false;
-      if (filters.status && v.vehicleStatus !== filters.status) return false;
-
-      if (filters.pending) {
-        if (v.vehicleStatus === 'Delivered' || v.vehicleStatus === 'Cancelled') return false;
-        if (filters.pending === 'any') {
-          const statuses = DEPARTMENT_KEYS.map(key => v[SECTIONS[key].statusField] || STATUS_VALUES.NOT_ATTENDED);
-          if (statuses.every(s => s === STATUS_VALUES.APPROVED)) return false;
-        } else {
-          const statusField = SECTIONS[filters.pending].statusField;
-          const deptStatus = v[statusField] || STATUS_VALUES.NOT_ATTENDED;
-          if (deptStatus !== STATUS_VALUES.PENDING && deptStatus !== STATUS_VALUES.NOT_ATTENDED) return false;
-        }
-      }
-      if (filters.ca && v.ca !== filters.ca) return false;
-      if (filters.tl && v.tl !== filters.tl) return false;
-
-      const checkDept = (filterVal, field) => {
-        if (!filterVal) return true;
-        const val = v[field] || STATUS_VALUES.NOT_ATTENDED;
-        return val === filterVal;
-      };
-
-      if (!checkDept(filters.finStatus, SECTIONS.finance.statusField)) return false;
-      if (!checkDept(filters.tmaStatus, SECTIONS.tma.statusField)) return false;
-      if (!checkDept(filters.accStatus, SECTIONS.accounts.statusField)) return false;
-      if (!checkDept(filters.regStatus, SECTIONS.registration.statusField)) return false;
-      if (!checkDept(filters.pdiStatus, SECTIONS.pdi.statusField)) return false;
- 
-      if (isBookingPage && filters.crmGenerated) {
-        if (filters.crmGenerated === 'generated' && !v.crmGenerated) return false;
-        if (filters.crmGenerated === 'pending' && v.crmGenerated) return false;
-      }
- 
-      return true;
-    });
+    return vehicles.filter(v => filterRecord(v, filters, isBookingPage));
   }, [vehicles, filters, isBookingPage]);
 
   const showDownloadBtn = user && [
@@ -289,72 +292,90 @@ export default function DeliveryTable({
     'MANAGEMENT'
   ].includes(user.role);
 
-  const handleDownloadCSV = () => {
-    const listToExport = filteredVehicles;
-    if (listToExport.length === 0) {
-      alert("No data available to download with current filters.");
-      return;
+  const handleDownloadCSV = async () => {
+    setIsExporting(true);
+    try {
+      let recordsToExportSource = vehicles;
+      try {
+        const { vehicles: fetchedAll } = await apiGetVehicles(1, 10000);
+        if (fetchedAll && fetchedAll.length > 0) {
+          recordsToExportSource = fetchedAll;
+        }
+      } catch (err) {
+        console.warn('Fallback to loaded page vehicles for CSV export:', err);
+      }
+
+      const listToExport = recordsToExportSource.filter(v => filterRecord(v, filters, isBookingPage));
+
+      if (listToExport.length === 0) {
+        alert("No data available to download with current filters.");
+        return;
+      }
+
+      const columns = isBookingPage ? [
+        { key: 'date', label: 'Booking Date' },
+        { key: 'customerName', label: 'Customer Name' },
+        { key: 'mobileNumber', label: 'Mobile Number' },
+        { key: 'optyId', label: 'OPTY ID' },
+        { key: 'pl', label: 'PPL' },
+        { key: 'variant', label: 'Variant' },
+        { key: 'colour', label: 'Color' },
+        { key: 'boStatus', label: 'BO Status' },
+        { key: 'boDate', label: 'BO Date' },
+        { key: 'orderNumber', label: 'BKB Order No' },
+        { key: 'sapOrderNo', label: 'SAP Order No' },
+        { key: 'crmBookingStatus', label: 'CRM Booking Status' },
+        { key: 'ca', label: 'CA' },
+        { key: 'tl', label: 'TL' },
+        { key: 'branch', label: 'Branch' },
+        { key: 'region', label: 'Region' },
+        { key: 'branchStatus', label: 'Branch Status' },
+        { key: 'branchRemark', label: 'Branch Remark' },
+        { key: 'financeStatus', label: 'Finance Status' },
+        { key: 'financeRemark', label: 'Finance Remark' }
+      ] : [
+        { key: 'customerName', label: 'Customer Name' },
+        { key: 'pl', label: 'PL' },
+        { key: 'variant', label: 'Variant' },
+        { key: 'branch', label: 'Branch' },
+        { key: 'financeStatus', label: 'Finance Status' },
+        { key: 'financeRemark', label: 'Finance Remark' },
+        { key: 'tmaStatus', label: 'TMA Status' },
+        { key: 'tmaRemark', label: 'TMA Remark' },
+        { key: 'accountsStatus', label: 'Accounts Status' },
+        { key: 'accountsRemark', label: 'Accounts Remark' },
+        { key: 'registrationStatus', label: 'Registration Status' },
+        { key: 'registrationRemark', label: 'Registration Remark' },
+        { key: 'pdiStatus', label: 'PDI Status' },
+        { key: 'pdiRemark', label: 'PDI Remark' },
+        { key: 'deliveryStatus', label: 'Delivery Status' },
+        { key: 'cxoRemark', label: 'CXO Remark' }
+      ];
+
+      const headerRow = columns.map(col => `"${col.label.replace(/"/g, '""')}"`).join(',');
+      const dataRows = listToExport.map(v => {
+        return columns.map(col => {
+          const val = v[col.key] !== undefined && v[col.key] !== null ? String(v[col.key]) : '';
+          return `"${val.replace(/"/g, '""')}"`;
+        }).join(',');
+      });
+
+      const csvContent = '\uFEFF' + [headerRow, ...dataRows].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", url);
+      const filename = isBookingPage ? 'bookings_export.csv' : 'crm_deliveries_export.csv';
+      downloadAnchor.setAttribute("download", filename);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error downloading CSV:', err);
+    } finally {
+      setIsExporting(false);
     }
-
-    const columns = isBookingPage ? [
-      { key: 'date', label: 'Booking Date' },
-      { key: 'customerName', label: 'Customer Name' },
-      { key: 'mobileNumber', label: 'Mobile Number' },
-      { key: 'optyId', label: 'OPTY ID' },
-      { key: 'pl', label: 'PPL' },
-      { key: 'variant', label: 'Variant' },
-      { key: 'colour', label: 'Color' },
-      { key: 'boStatus', label: 'BO Status' },
-      { key: 'boDate', label: 'BO Date' },
-      { key: 'orderNumber', label: 'BKB Order No' },
-      { key: 'sapOrderNo', label: 'SAP Order No' },
-      { key: 'crmBookingStatus', label: 'CRM Booking Status' },
-      { key: 'ca', label: 'CA' },
-      { key: 'tl', label: 'TL' },
-      { key: 'branch', label: 'Branch' },
-      { key: 'region', label: 'Region' },
-      { key: 'branchStatus', label: 'Branch Status' },
-      { key: 'branchRemark', label: 'Branch Remark' },
-      { key: 'financeStatus', label: 'Finance Status' },
-      { key: 'financeRemark', label: 'Finance Remark' }
-    ] : [
-      { key: 'customerName', label: 'Customer Name' },
-      { key: 'pl', label: 'PL' },
-      { key: 'variant', label: 'Variant' },
-      { key: 'branch', label: 'Branch' },
-      { key: 'financeStatus', label: 'Finance Status' },
-      { key: 'financeRemark', label: 'Finance Remark' },
-      { key: 'tmaStatus', label: 'TMA Status' },
-      { key: 'tmaRemark', label: 'TMA Remark' },
-      { key: 'accountsStatus', label: 'Accounts Status' },
-      { key: 'accountsRemark', label: 'Accounts Remark' },
-      { key: 'registrationStatus', label: 'Registration Status' },
-      { key: 'registrationRemark', label: 'Registration Remark' },
-      { key: 'pdiStatus', label: 'PDI Status' },
-      { key: 'pdiRemark', label: 'PDI Remark' },
-      { key: 'deliveryStatus', label: 'Delivery Status' },
-      { key: 'cxoRemark', label: 'CXO Remark' }
-    ];
-
-    const headerRow = columns.map(col => `"${col.label.replace(/"/g, '""')}"`).join(',');
-    const dataRows = listToExport.map(v => {
-      return columns.map(col => {
-        const val = v[col.key] !== undefined && v[col.key] !== null ? String(v[col.key]) : '';
-        return `"${val.replace(/"/g, '""')}"`;
-      }).join(',');
-    });
-
-    const csvContent = '\uFEFF' + [headerRow, ...dataRows].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", url);
-    const filename = isBookingPage ? 'bookings_export.csv' : 'crm_deliveries_export.csv';
-    downloadAnchor.setAttribute("download", filename);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
-    URL.revokeObjectURL(url);
   };
 
   return (
@@ -397,13 +418,13 @@ export default function DeliveryTable({
             </>
           )}
           {showDownloadBtn && (
-            <button className="btn-secondary" onClick={handleDownloadCSV} title="Download CSV" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px' }}>
+            <button className="btn-secondary" disabled={isExporting} onClick={handleDownloadCSV} title="Download CSV" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}>
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
-              Download
+              {isExporting ? 'Downloading...' : 'Download'}
             </button>
           )}
           <div className="view-toggles">
