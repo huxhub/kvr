@@ -1,12 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import DeliveryFilters from './DeliveryFilters.jsx';
 import DeliveryGridItem from './DeliveryGridItem.jsx';
 import DeliveryTableRow from './DeliveryTableRow.jsx';
 import BookingTableRow from './BookingTableRow.jsx';
-import { DEPARTMENT_KEYS, SECTIONS, STATUS_VALUES } from '../../models/apiModel.js';
+import { DEPARTMENT_KEYS, SECTIONS, STATUS_VALUES, createVehicle as apiCreateVehicle } from '../../models/apiModel.js';
 import { getPermission } from '../admin/AccessMatrix.jsx';
-
 import { useAuth } from '../../context/AuthContext.jsx';
+import { useToast } from '../../context/ToastContext.jsx';
+import { addAuditLog } from '../../models/auditModel.js';
 
 export default function DeliveryTable({
   vehicles,
@@ -26,6 +27,11 @@ export default function DeliveryTable({
   const isAdmin = userRoles.includes('ADMIN');
   const isBranchRestricted = !isAdmin && user?.branch !== 'All Branches';
 
+  const { showToast } = useToast();
+  const fileInputRef = useRef(null);
+  const [csvPreviewRows, setCsvPreviewRows] = useState(null);
+  const [isImporting, setIsImporting] = useState(false);
+
   const [viewMode, setViewMode] = useState('list'); // 'grid' or 'list'
   const [filters, setFilters] = useState({
     global: '',
@@ -36,6 +42,193 @@ export default function DeliveryTable({
     finStatus: '', tmaStatus: '', accStatus: '', regStatus: '', pdiStatus: '',
     crmGenerated: ''
   });
+
+  const parseCSV = (text) => {
+    const lines = [];
+    let cur = '';
+    let inQuotes = false;
+    let row = [];
+
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      const next = text[i + 1];
+
+      if (c === '"') {
+        if (inQuotes && next === '"') {
+          cur += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (c === ',' && !inQuotes) {
+        row.push(cur.trim());
+        cur = '';
+      } else if ((c === '\r' || c === '\n') && !inQuotes) {
+        if (c === '\r' && next === '\n') i++;
+        row.push(cur.trim());
+        if (row.some(cell => cell !== '')) {
+          lines.push(row);
+        }
+        row = [];
+        cur = '';
+      } else {
+        cur += c;
+      }
+    }
+    if (cur || row.length > 0) {
+      row.push(cur.trim());
+      if (row.some(cell => cell !== '')) {
+        lines.push(row);
+      }
+    }
+
+    if (lines.length === 0) return [];
+    const rawHeaders = lines[0];
+    const dataRows = lines.slice(1);
+
+    const headerKeyMap = {
+      'booking date': 'date',
+      'date': 'date',
+      'customer name': 'customerName',
+      'full name': 'customerName',
+      'name': 'customerName',
+      'mobile number': 'mobileNumber',
+      'mobile no': 'mobileNumber',
+      'mobile': 'mobileNumber',
+      'opty id': 'optyId',
+      'optyid': 'optyId',
+      'ppl': 'pl',
+      'pl': 'pl',
+      'variant': 'variant',
+      'color': 'colour',
+      'colour': 'colour',
+      'bo status': 'boStatus',
+      'bostatus': 'boStatus',
+      'bo date': 'boDate',
+      'bodate': 'boDate',
+      'bkb order no': 'orderNumber',
+      'bkg order no': 'orderNumber',
+      'order number': 'orderNumber',
+      'ordernumber': 'orderNumber',
+      'sap order no': 'sapOrderNo',
+      'saporderno': 'sapOrderNo',
+      'crm booking status': 'crmBookingStatus',
+      'crm - booking status': 'crmBookingStatus',
+      'crmbookingstatus': 'crmBookingStatus',
+      'ca': 'ca',
+      'tl': 'tl',
+      'branch': 'branch',
+      'region': 'region',
+      'branch status': 'branchStatus',
+      'branchstatus': 'branchStatus',
+      'branch remark': 'branchRemark',
+      'branchremark': 'branchRemark',
+      'finance status': 'financeStatus',
+      'financestatus': 'financeStatus',
+      'finance remark': 'financeRemark',
+      'financeremark': 'financeRemark',
+      'chassis number': 'chassisNumber',
+      'chassis': 'chassisNumber',
+      'chassisnumber': 'chassisNumber',
+    };
+
+    const cleanHeaders = rawHeaders.map(h => h.replace(/^[\uFEFF\s'"]+|[\s'"]+$/g, '').toLowerCase());
+    const hasPplHeader = cleanHeaders.includes('ppl');
+
+    const keys = cleanHeaders.map(clean => {
+      if (clean === 'pl') {
+        return hasPplHeader ? 'variant' : 'pl';
+      }
+      return headerKeyMap[clean] || clean;
+    });
+
+    return dataRows.map(r => {
+      const obj = {};
+      keys.forEach((key, idx) => {
+        if (r[idx] !== undefined) {
+          obj[key] = r[idx];
+        }
+      });
+      return obj;
+    });
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result || '';
+        const rows = parseCSV(text);
+        if (!rows || rows.length === 0) {
+          if (showToast) showToast('Error', 'No valid rows found in CSV file.', 'error');
+          else alert('No valid rows found in CSV file.');
+          return;
+        }
+        setCsvPreviewRows(rows);
+      } catch (err) {
+        if (showToast) showToast('Error', 'Failed to parse CSV file: ' + err.message, 'error');
+        else alert('Failed to parse CSV file: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const handleApproveImport = async () => {
+    if (!csvPreviewRows || csvPreviewRows.length === 0) return;
+    setIsImporting(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < csvPreviewRows.length; i++) {
+      const row = csvPreviewRows[i];
+      const submissionData = {
+        ...row,
+        chassisNumber: row.chassisNumber || `TEMP-${row.orderNumber || Math.random().toString(36).substring(2, 10).toUpperCase()}-${Date.now()}-${i}`,
+        fuel: row.fuel || 'Petrol',
+        vehicleStatus: 'Booked',
+        year: row.year || new Date().getFullYear(),
+        branch: row.branch || user?.branch || (branches && branches[0]) || 'Perinthalmanna',
+        ca: row.ca || user?.name || '',
+      };
+
+      try {
+        await apiCreateVehicle(submissionData, user?.role);
+        try {
+          await addAuditLog({
+            chassisNumber: submissionData.chassisNumber,
+            customerName: submissionData.customerName || '',
+            updatedBy: user?.role || 'ADMIN',
+            department: 'Customer Booking',
+            previousStatus: 'None',
+            newStatus: 'Booked',
+            remarks: 'CSV Bulk booking import'
+          });
+        } catch (_) {}
+        successCount++;
+      } catch (err) {
+        console.error(`Failed to import row ${i + 1}:`, err);
+        failCount++;
+      }
+    }
+
+    setIsImporting(false);
+    setCsvPreviewRows(null);
+
+    if (successCount > 0) {
+      if (showToast) showToast('Success', `${successCount} booking(s) successfully added.`);
+      else alert(`${successCount} booking(s) successfully added.`);
+      if (fetchVehicles) fetchVehicles(currentPage);
+    }
+
+    if (failCount > 0) {
+      if (showToast) showToast('Warning', `${failCount} row(s) failed to import (e.g. duplicate entry).`, 'error');
+      else alert(`${failCount} row(s) failed to import.`);
+    }
+  };
 
   const filteredVehicles = useMemo(() => {
     return vehicles.filter(v => {
@@ -179,6 +372,30 @@ export default function DeliveryTable({
               {isBookingPage ? 'New Booking' : 'CRM'}
             </button>
           )}
+          {isBookingPage && getPermission(settings, 'booking', 'btn_upload_csv', 'BOOKING ACTIONS', user?.role).view && (
+            <>
+              <button 
+                className="btn-secondary" 
+                onClick={() => fileInputRef.current?.click()} 
+                title="Upload CSV Booking Data" 
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px' }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}>
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Upload CSV
+              </button>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                accept=".csv" 
+                onChange={handleFileChange} 
+                style={{ display: 'none' }} 
+              />
+            </>
+          )}
           {showDownloadBtn && (
             <button className="btn-secondary" onClick={handleDownloadCSV} title="Download CSV" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}>
@@ -222,7 +439,7 @@ export default function DeliveryTable({
                   <th>Mobile No</th>
                   <th>OPTY ID</th>
                   <th>PPL</th>
-                  <th>PL</th>
+                  <th>VARIANT</th>
                   <th>Color</th>
                   <th>BO STATUS</th>
                   <th>BO DATE</th>
@@ -303,6 +520,88 @@ export default function DeliveryTable({
           >
             Next
           </button>
+        </div>
+      )}
+
+      {csvPreviewRows && (
+        <div className="modal-overlay open" onClick={(e) => { if (e.target === e.currentTarget && !isImporting) setCsvPreviewRows(null); }}>
+          <div className="modal-drawer" style={{ maxWidth: '950px', width: '90%', maxHeight: '85vh', height: 'auto', display: 'flex', flexDirection: 'column', margin: 'auto' }}>
+            <div className="modal-header">
+              <div>
+                <h3>Preview CSV Booking Data</h3>
+                <p style={{ margin: 0, marginTop: '4px', fontSize: '0.85rem', color: '#64748b' }}>
+                  {csvPreviewRows.length} record(s) parsed from CSV. Review and approve to add to booking database.
+                </p>
+              </div>
+              <button type="button" className="close-btn" disabled={isImporting} onClick={() => setCsvPreviewRows(null)}>×</button>
+            </div>
+
+            <div className="modal-body" style={{ overflowY: 'auto', overflowX: 'auto', padding: '16px 24px', flex: 1 }}>
+              <table className="table-master" style={{ width: '100%', fontSize: '0.8rem', minWidth: '1600px' }}>
+                <thead>
+                  <tr>
+                    <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>#</th>
+                    <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Booking Date</th>
+                    <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Full Name</th>
+                    <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Mobile No</th>
+                    <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>OPTY ID</th>
+                    <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>PPL</th>
+                    <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>VARIANT</th>
+                    <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>Color</th>
+                    <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>BO STATUS</th>
+                    <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>BO DATE</th>
+                    <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>BKB ORDER NO</th>
+                    <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>SAP ORDER NO</th>
+                    <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>CRM - booking status</th>
+                    <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>CA</th>
+                    <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>TL</th>
+                    <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>BRANCH</th>
+                    <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>REGION</th>
+                    <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>BRANCH STATUS</th>
+                    <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>BRANCH REMARK</th>
+                    <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>FINANCE STATUS</th>
+                    <th style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>FINANCE REMARK</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {csvPreviewRows.map((row, idx) => (
+                    <tr key={idx}>
+                      <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>{idx + 1}</td>
+                      <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>{row.date || '-'}</td>
+                      <td style={{ padding: '8px 12px', fontWeight: 600, whiteSpace: 'nowrap' }}>{row.customerName || '-'}</td>
+                      <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>{row.mobileNumber || '-'}</td>
+                      <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>{row.optyId || '-'}</td>
+                      <td style={{ padding: '8px 12px', fontWeight: 600, whiteSpace: 'nowrap' }}>{row.pl || '-'}</td>
+                      <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>{row.variant || '-'}</td>
+                      <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>{row.colour || '-'}</td>
+                      <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>{row.boStatus || '-'}</td>
+                      <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>{row.boDate || '-'}</td>
+                      <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>{row.orderNumber || '-'}</td>
+                      <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>{row.sapOrderNo || '-'}</td>
+                      <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>{row.crmBookingStatus || '-'}</td>
+                      <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>{row.ca || '-'}</td>
+                      <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>{row.tl || '-'}</td>
+                      <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>{row.branch || user?.branch || 'Perinthalmanna'}</td>
+                      <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>{row.region || '-'}</td>
+                      <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>{row.branchStatus || '-'}</td>
+                      <td style={{ padding: '8px 12px', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={row.branchRemark}>{row.branchRemark || '-'}</td>
+                      <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>{row.financeStatus || '-'}</td>
+                      <td style={{ padding: '8px 12px', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={row.financeRemark}>{row.financeRemark || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="modal-footer" style={{ borderTop: '1px solid var(--border-light)', padding: '16px 24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button type="button" className="btn-secondary" disabled={isImporting} onClick={() => setCsvPreviewRows(null)}>
+                Cancel
+              </button>
+              <button type="button" className="btn-primary" disabled={isImporting} onClick={handleApproveImport}>
+                {isImporting ? 'Adding Bookings...' : `Approve & Add ${csvPreviewRows.length} Booking(s)`}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -50,6 +50,7 @@ const BOOKING_FIELD_ACCESS = {
   'financestatus': ['FINANCE'],
   'financeremark': ['FINANCE'],
   'btn_new_booking': ['BOOKING IN-CHARGE', 'BRANCH', 'BRANCH_MANAGER'],
+  'btn_upload_csv': ['BOOKING IN-CHARGE', 'BRANCH', 'BRANCH_MANAGER'],
 };
 
 const BOOKING_GROUPS = [
@@ -57,7 +58,8 @@ const BOOKING_GROUPS = [
     section: 'BOOKING ACTIONS',
     title: 'Booking Quick Actions',
     fields: [
-      { key: 'btn_new_booking', label: 'New Booking Button' }
+      { key: 'btn_new_booking', label: 'New Booking Button' },
+      { key: 'btn_upload_csv', label: 'Upload CSV Button' }
     ]
   },
   {
@@ -370,7 +372,7 @@ export function getPermission(settings, formType, fieldKey, sectionKey, role, fi
   // By default, everyone has View access to all fields unless overridden.
   // Action buttons, however, are hidden by default unless the role is an allowed editor.
   let canViewDefault = true;
-  if (fieldKey === 'btn_new_booking' || fieldKey === 'btn_crm_form') {
+  if (fieldKey === 'btn_new_booking' || fieldKey === 'btn_upload_csv' || fieldKey === 'btn_crm_form') {
     canViewDefault = userRoles.includes('ADMIN') || editRoles.some(r => userRoles.includes(r));
   }
 
@@ -543,14 +545,16 @@ function MatrixTable({ formType, groups, fieldAccessMap, sectionAccessMap, setti
                       </td>
                       {ALL_ROLES.map(role => {
                         const cellPerm = getPermission(settings, formType, field.key, group.section, role, fieldAccessMap, sectionAccessMap);
+                        const isActionButton = field.key === 'btn_new_booking' || field.key === 'btn_upload_csv' || field.key === 'btn_crm_form';
+
                         return (
                           <td key={role} style={{ padding: '8px 10px', borderBottom: '1px solid #f1f5f9', width: ROLE_COL_WIDTH, minWidth: ROLE_COL_WIDTH, maxWidth: ROLE_COL_WIDTH }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', alignItems: 'center' }}>
                               <button
-                                disabled={isReadOnly || (role === 'ADMIN' && field.key !== 'btn_new_booking' && field.key !== 'btn_crm_form')}
+                                disabled={isReadOnly || (role === 'ADMIN' && !isActionButton)}
                                 onClick={() => handleToggle(field.key, group.section, role, 'view')}
                                 style={{
-                                  padding: '2px 6px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 700, border: '1px solid', cursor: (isReadOnly || (role === 'ADMIN' && field.key !== 'btn_new_booking' && field.key !== 'btn_crm_form')) ? 'default' : 'pointer', width: '70px', textAlign: 'center',
+                                  padding: '2px 6px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 700, border: '1px solid', cursor: (isReadOnly || (role === 'ADMIN' && !isActionButton)) ? 'default' : 'pointer', width: '70px', textAlign: 'center',
                                   backgroundColor: cellPerm.view ? 'rgba(59,130,246,0.08)' : '#f1f5f9',
                                   color: cellPerm.view ? '#2563eb' : '#64748b',
                                   borderColor: cellPerm.view ? '#93c5fd' : '#cbd5e1',
@@ -559,12 +563,12 @@ function MatrixTable({ formType, groups, fieldAccessMap, sectionAccessMap, setti
                               >
                                 {cellPerm.view ? '👁 View' : '✕ Hide'}
                               </button>
-                              {field.key !== 'btn_new_booking' && field.key !== 'btn_crm_form' && (
+                              {!isActionButton && (
                                 <button
-                                  disabled={isReadOnly || (role === 'ADMIN' && field.key !== 'btn_new_booking' && field.key !== 'btn_crm_form')}
+                                  disabled={isReadOnly || (role === 'ADMIN' && !isActionButton)}
                                   onClick={() => handleToggle(field.key, group.section, role, 'edit')}
                                   style={{
-                                    padding: '2px 6px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 700, border: '1px solid', cursor: (isReadOnly || (role === 'ADMIN' && field.key !== 'btn_new_booking' && field.key !== 'btn_crm_form')) ? 'default' : 'pointer', width: '70px', textAlign: 'center',
+                                    padding: '2px 6px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 700, border: '1px solid', cursor: (isReadOnly || (role === 'ADMIN' && !isActionButton)) ? 'default' : 'pointer', width: '70px', textAlign: 'center',
                                     backgroundColor: cellPerm.edit ? 'rgba(34,197,94,0.08)' : '#f1f5f9',
                                     color: cellPerm.edit ? '#16a34a' : '#64748b',
                                     borderColor: cellPerm.edit ? '#86efac' : '#cbd5e1',
