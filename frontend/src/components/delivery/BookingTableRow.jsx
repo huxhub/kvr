@@ -40,6 +40,8 @@ export default function BookingTableRow({ vehicle, openDrawer, index, isAdmin, o
       <td style={{ whiteSpace: 'nowrap' }}>{vehicle.date || '-'}</td>
       <td style={{ fontWeight: 600, color: 'var(--primary-navy)', whiteSpace: 'nowrap' }}>{vehicle.customerName || '-'}</td>
       <td style={{ whiteSpace: 'nowrap' }}>{vehicle.mobileNumber || '-'}</td>
+      <td style={{ whiteSpace: 'nowrap' }}>{vehicle.emailId || '-'}</td>
+      <td style={{ whiteSpace: 'nowrap' }}>{vehicle.bookingAmount ? `₹${Number(vehicle.bookingAmount).toLocaleString('en-IN')}` : '-'}</td>
       <td style={{ whiteSpace: 'nowrap' }}>{vehicle.optyId || '-'}</td>
       <td style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{vehicle.pl || '-'}</td>
       <td style={{ whiteSpace: 'nowrap' }}>{vehicle.variant || '-'}</td>

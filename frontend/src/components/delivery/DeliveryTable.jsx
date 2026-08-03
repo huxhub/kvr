@@ -540,6 +540,8 @@ export default function DeliveryTable({
                   <th>Booking Date</th>
                   <th>Full Name</th>
                   <th>Mobile No</th>
+                  <th>Email ID</th>
+                  <th>Booking Amount</th>
                   <th>OPTY ID</th>
                   <th>PPL</th>
                   <th>VARIANT</th>
@@ -579,7 +581,7 @@ export default function DeliveryTable({
             <tbody>
               {filteredVehicles.length === 0 ? (
                 <tr>
-                  <td colSpan={isBookingPage ? (isAdmin ? 22 : 21) : (isAdmin ? 12 : 11)} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '30px' }}>
+                  <td colSpan={isBookingPage ? (isAdmin ? 24 : 23) : (isAdmin ? 12 : 11)} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '30px' }}>
                     No matching vehicle records found.
                   </td>
                 </tr>
