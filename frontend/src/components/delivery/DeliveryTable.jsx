@@ -324,6 +324,8 @@ export default function DeliveryTable({
         { key: 'date', label: 'Booking Date' },
         { key: 'customerName', label: 'Customer Name' },
         { key: 'mobileNumber', label: 'Mobile Number' },
+        { key: 'emailId', label: 'Email ID' },
+        { key: 'bookingAmount', label: 'Booking Amount' },
         { key: 'optyId', label: 'OPTY ID' },
         { key: 'pl', label: 'PPL' },
         { key: 'variant', label: 'Variant' },
