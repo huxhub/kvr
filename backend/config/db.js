@@ -84,6 +84,26 @@ const connectDB = async () => {
         console.log("Added column 'boDate' to 'vehicles' table.");
       }
 
+      // Ensure emailId column exists
+      const [emailCols] = await pool.execute(
+        "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'vehicles' AND COLUMN_NAME = 'emailId'",
+        [dbName]
+      );
+      if (emailCols.length === 0) {
+        await pool.execute("ALTER TABLE vehicles ADD COLUMN emailId VARCHAR(255) DEFAULT NULL");
+        console.log("Added column 'emailId' to 'vehicles' table.");
+      }
+
+      // Ensure bookingAmount column exists
+      const [amountCols] = await pool.execute(
+        "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'vehicles' AND COLUMN_NAME = 'bookingAmount'",
+        [dbName]
+      );
+      if (amountCols.length === 0) {
+        await pool.execute("ALTER TABLE vehicles ADD COLUMN bookingAmount DECIMAL(12,2) DEFAULT NULL");
+        console.log("Added column 'bookingAmount' to 'vehicles' table.");
+      }
+
       // Ensure audit_logs columns previousStatus and newStatus can hold long text
       await pool.execute("ALTER TABLE audit_logs MODIFY COLUMN previousStatus TEXT DEFAULT NULL");
       await pool.execute("ALTER TABLE audit_logs MODIFY COLUMN newStatus TEXT DEFAULT NULL");

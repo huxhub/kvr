@@ -29,6 +29,10 @@ const BOOKING_FIELD_ACCESS = {
   'mobilenumber': ['BOOKING IN-CHARGE', 'BRANCH'],
   // Booking OPTY ID
   'optyid':       ['BOOKING IN-CHARGE', 'BRANCH'],
+  // Email ID
+  'emailid':       ['BOOKING IN-CHARGE', 'BRANCH'],
+  // Booking Amount
+  'bookingamount': ['BOOKING IN-CHARGE', 'BRANCH'],
   // Booking Order Number (BKG ORDER NO) — only CRM can edit
   'ordernumber':  ['CRM'],
   // Booking SAP Order No
@@ -72,7 +76,7 @@ const BOOKING_FIELD_ACCESS = {
 
 // Fields shown in the booking form (whitelist from all SECTIONS)
 const BOOKING_FIELD_WHITELIST = [
-  'date', 'customername', 'mobilenumber', 'optyid',
+  'date', 'customername', 'mobilenumber', 'emailid', 'bookingamount', 'optyid',
   'ordernumber', 'saporderno',
   'pl', 'variant', 'colour', 'bostatus', 'bodate',
   'crmbookingstatus', 'ca', 'tl', 'branch', 'region',
@@ -82,7 +86,7 @@ const BOOKING_FIELD_WHITELIST = [
 
 // Display order for booking form fields
 const BOOKING_FIELD_ORDER = [
-  'date', 'customername', 'mobilenumber', 'optyid',
+  'date', 'customername', 'mobilenumber', 'emailid', 'bookingamount', 'optyid',
   'pl', 'variant', 'colour',
   'bostatus', 'bodate', 'ordernumber', 'saporderno',
   'crmbookingstatus', 'ca', 'tl',
@@ -102,7 +106,7 @@ const BOOKING_SECTION_TITLE_MAP = {
 const BOOKING_GROUPS = [
   {
     title: 'Customer & Booking Details',
-    fields: ['date', 'customername', 'mobilenumber', 'optyid']
+    fields: ['date', 'customername', 'mobilenumber', 'emailid', 'bookingamount', 'optyid']
   },
   {
     title: 'Vehicle Details',
@@ -403,6 +407,25 @@ export default function BookingSectionBlock({ formData, handleChange, forceEdita
             <option value="" disabled>Select...</option>
             {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
           </select>
+        </div>
+      );
+    }
+
+    if (field.type === 'timestamp' || field.name.toLowerCase().endsWith('timestamp')) {
+      const displayVal = formData[field.name] || '';
+      return (
+        <div key={field.name} className="form-field">
+          <label>Booking {field.label} {field.required ? '*' : ''}</label>
+          <input
+            type="text"
+            name={field.name}
+            value={displayVal}
+            onChange={handleChange}
+            required={field.required && !disabledState}
+            disabled={disabledState}
+            placeholder="Auto-generated on status update"
+            style={{ ...highlightStyle, backgroundColor: disabledState ? '#f8fafc' : '#ffffff', color: '#1e293b', fontWeight: 500 }}
+          />
         </div>
       );
     }

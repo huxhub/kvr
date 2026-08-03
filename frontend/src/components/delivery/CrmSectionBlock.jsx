@@ -384,6 +384,25 @@ export default function CrmSectionBlock({ formData, handleChange, branches = [] 
       );
     }
 
+    if (field.type === 'timestamp' || field.name.toLowerCase().endsWith('timestamp')) {
+      const displayVal = formData[field.name] || '';
+      return (
+        <div key={field.name} className="form-field">
+          <label>{field.label} {field.required ? '*' : ''}</label>
+          <input
+            type="text"
+            name={field.name}
+            value={displayVal}
+            onChange={handleChange}
+            required={field.required && !finalDisabled}
+            disabled={finalDisabled}
+            placeholder="Auto-generated on status update"
+            style={{ ...highlightStyle, backgroundColor: finalDisabled ? '#f8fafc' : '#ffffff', color: '#1e293b', fontWeight: 500 }}
+          />
+        </div>
+      );
+    }
+
     return (
       <div key={field.name} className="form-field">
         <label>{field.label} {field.required ? '*' : ''}</label>

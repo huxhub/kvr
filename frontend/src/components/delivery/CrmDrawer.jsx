@@ -44,9 +44,26 @@ export default function CrmDrawer({ branches, onClose, onSaved }) {
         deliveryStatus: 'deliveryTimestamp'
       };
 
-      if (STATUS_TIMESTAMP_MAP[name] && value === 'Approved') {
-        const nowTimestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+      if (STATUS_TIMESTAMP_MAP[name] && value) {
+        const d = new Date();
+        const nowTimestamp = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
         updated[STATUS_TIMESTAMP_MAP[name]] = nowTimestamp;
+      }
+
+      if ((name === 'boStatus' || name === 'bostatus') && value && !updated.boDate) {
+        updated.boDate = new Date().toISOString().substring(0, 10);
+      }
+
+      if (name === 'accountsStatus' && value && !updated.tallyDate) {
+        updated.tallyDate = new Date().toISOString().substring(0, 10);
+      }
+
+      if (name === 'registrationStatus' && value && !updated.taxPaidDate) {
+        updated.taxPaidDate = new Date().toISOString().substring(0, 10);
+      }
+
+      if (name === 'deliveryStatus' && (value === 'Approved' || value === 'Delivered') && !updated.actualDeliveryDate) {
+        updated.actualDeliveryDate = new Date().toISOString().substring(0, 10);
       }
 
       return calculateFinanceFields(updated, name);

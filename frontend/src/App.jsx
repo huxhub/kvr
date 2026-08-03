@@ -239,6 +239,13 @@ function AppContent() {
     setSelectedBranch(isBranchRestricted ? user.branch : '');
   }, [user, fetchVehicles, userRoles]);
 
+  useEffect(() => {
+    if (!user) return;
+    if (activeTab === 'bookings' || activeTab === 'delivery') {
+      fetchVehicles(1, 25, activeTab === 'bookings');
+    }
+  }, [activeTab, user, fetchVehicles]);
+
   const allBranches = useMemo(() => {
     const branchesSet = new Set([...(settings.branches || [])]);
     if (user && user.role !== 'ADMIN' && user.branch && user.branch !== 'All Branches') branchesSet.add(user.branch);
@@ -416,19 +423,19 @@ function AppContent() {
       <ChunkErrorBoundary>
         {isDrawerOpen && (
           <Suspense fallback={null}>
-            <VehicleDrawer vehicle={selectedVehicle} branches={allBranches} onClose={handleCloseDrawer} onSaved={() => fetchVehicles(currentPage)} isBookingPage={activeTab === 'bookings'} />
+            <VehicleDrawer vehicle={selectedVehicle} branches={allBranches} onClose={handleCloseDrawer} onSaved={() => fetchVehicles(currentPage, 25, activeTab === 'bookings')} isBookingPage={activeTab === 'bookings'} />
           </Suspense>
         )}
 
         {isNewBookingOpen && (
           <Suspense fallback={null}>
-            <NewBookingDrawer branches={allBranches} onClose={handleCloseNewBooking} onSaved={() => fetchVehicles(1)} />
+            <NewBookingDrawer branches={allBranches} onClose={handleCloseNewBooking} onSaved={() => fetchVehicles(1, 25, true)} />
           </Suspense>
         )}
 
         {isCrmOpen && (
           <Suspense fallback={null}>
-            <CrmDrawer branches={allBranches} onClose={handleCloseCrm} onSaved={() => fetchVehicles(currentPage)} />
+            <CrmDrawer branches={allBranches} onClose={handleCloseCrm} onSaved={() => fetchVehicles(currentPage, 25, false)} />
           </Suspense>
         )}
       </ChunkErrorBoundary>

@@ -14,7 +14,9 @@ export default function NewBookingDrawer({ branches, onClose, onSaved }) {
   const { showToast } = useToast();
 
   useEffect(() => {
+    const todayStr = new Date().toISOString().substring(0, 10);
     setFormData({
+      date: todayStr,
       branch: user.branch || (branches && branches[0]) || '',
       ca: user.name,
       vehicleStatus: 'Booked',

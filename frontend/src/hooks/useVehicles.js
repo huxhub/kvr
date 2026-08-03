@@ -11,10 +11,10 @@ export function useVehicles() {
   const [error, setError] = useState(null);
   const { user } = useAuth();
 
-  const fetchVehicles = useCallback(async (page = 1, limit = 25) => {
+  const fetchVehicles = useCallback(async (page = 1, limit = 25, isBookingPage) => {
     setLoading(true);
     try {
-      const { vehicles: fetchedVehicles, totalCount } = await apiGetVehicles(page, limit);
+      const { vehicles: fetchedVehicles, totalCount } = await apiGetVehicles(page, limit, isBookingPage);
       setVehicles(fetchedVehicles);
       setTotalVehicles(totalCount);
       setCurrentPage(page);

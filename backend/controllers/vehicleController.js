@@ -51,6 +51,7 @@ export const getVehicles = async (req, res) => {
   try {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 25;
+    const isBookingPage = req.query.isBookingPage !== undefined ? req.query.isBookingPage : (req.query.type === 'booking' ? 'true' : req.query.type === 'crm' ? 'false' : undefined);
     
     // Allow larger limit for dashboard metrics (up to 10000)
     const activeLimit = Math.min(10000, Math.max(1, limit));
@@ -61,23 +62,12 @@ export const getVehicles = async (req, res) => {
       sessionRoles.some(r => ['BRANCH_MANAGER', 'FINANCE', 'TMA', 'ACCOUNTS', 'INSURANCE', 'REGISTRATION'].includes(r)) && 
       sessionUser?.branch && 
       sessionUser?.branch !== 'All Branches';
-    const userBranch = sessionUser?.branch;
+    const userBranch = isBranchRestricted ? sessionUser.branch : undefined;
 
-    let vehicles, totalCount;
-
-    if (isBranchRestricted) {
-      // BRANCH_MANAGER or FINANCE: only see their own branch's vehicles
-      [vehicles, totalCount] = await Promise.all([
-        Vehicle.findByBranch(userBranch, page, activeLimit),
-        Vehicle.countByBranch(userBranch)
-      ]);
-    } else {
-      // ADMIN, CRM, etc.: see all vehicles
-      [vehicles, totalCount] = await Promise.all([
-        Vehicle.findAll(page, activeLimit),
-        Vehicle.countAll()
-      ]);
-    }
+    const [vehicles, totalCount] = await Promise.all([
+      Vehicle.findFiltered({ branch: userBranch, isBookingPage, page, limit: activeLimit }),
+      Vehicle.countFiltered({ branch: userBranch, isBookingPage })
+    ]);
 
     // Expose headers for cross-origin or local clients
     res.setHeader('Access-Control-Expose-Headers', 'X-Total-Count, X-Page, X-Limit');

@@ -95,6 +95,12 @@ export default function DeliveryTable({
       'mobile number': 'mobileNumber',
       'mobile no': 'mobileNumber',
       'mobile': 'mobileNumber',
+      'email id': 'emailId',
+      'email': 'emailId',
+      'emailid': 'emailId',
+      'booking amount': 'bookingAmount',
+      'bookingamount': 'bookingAmount',
+      'amount': 'bookingAmount',
       'opty id': 'optyId',
       'optyid': 'optyId',
       'ppl': 'pl',
@@ -142,13 +148,15 @@ export default function DeliveryTable({
       return headerKeyMap[clean] || clean;
     });
 
+    const todayStr = new Date().toISOString().substring(0, 10);
     return dataRows.map(r => {
-      const obj = {};
+      const obj = { date: todayStr };
       keys.forEach((key, idx) => {
-        if (r[idx] !== undefined) {
+        if (r[idx] !== undefined && r[idx] !== '') {
           obj[key] = r[idx];
         }
       });
+      if (!obj.date) obj.date = todayStr;
       return obj;
     });
   };
@@ -221,7 +229,7 @@ export default function DeliveryTable({
     if (successCount > 0) {
       if (showToast) showToast('Success', `${successCount} booking(s) successfully added.`);
       else alert(`${successCount} booking(s) successfully added.`);
-      if (fetchVehicles) fetchVehicles(currentPage);
+      if (fetchVehicles) fetchVehicles(currentPage, 25, isBookingPage);
     }
 
     if (failCount > 0) {
@@ -334,22 +342,94 @@ export default function DeliveryTable({
         { key: 'financeStatus', label: 'Finance Status' },
         { key: 'financeRemark', label: 'Finance Remark' }
       ] : [
+        { key: 'date', label: 'Booking Date' },
         { key: 'customerName', label: 'Customer Name' },
-        { key: 'pl', label: 'PL' },
-        { key: 'variant', label: 'Variant' },
+        { key: 'mobileNumber', label: 'Mobile Number' },
+        { key: 'emailId', label: 'Email ID' },
+        { key: 'bookingAmount', label: 'Booking Amount' },
+        { key: 'optyId', label: 'OPTY ID' },
+        { key: 'orderNumber', label: 'BKG ORDER NO' },
+        { key: 'sapOrderNo', label: 'SAP ORDER NO' },
+        { key: 'invoiceNumber', label: 'Invoice Number' },
+        { key: 'source', label: 'Booking Source' },
+        { key: 'year', label: 'Manufacturing Year' },
+        { key: 'vehicleStatus', label: 'Vehicle Status' },
+        { key: 'chassisNumber', label: 'Chassis Number' },
+        { key: 'realChassisNumber', label: 'Real Chassis Number' },
+        { key: 'fuel', label: 'Fuel Type' },
+        { key: 'pl', label: 'PPL' },
+        { key: 'variant', label: 'PL (Variant)' },
+        { key: 'colour', label: 'Color' },
+        { key: 'boStatus', label: 'BO Status' },
+        { key: 'boDate', label: 'BO Date' },
+        { key: 'vc', label: 'Vehicle Code (VC)' },
+        { key: 'ca', label: 'Customer Advisor (CA)' },
+        { key: 'tl', label: 'Team Leader (TL)' },
         { key: 'branch', label: 'Branch' },
+        { key: 'region', label: 'Region' },
+        { key: 'crmBookingStatus', label: 'CRM - Booking Status' },
+        { key: 'branchStatus', label: 'Branch Status' },
+        { key: 'branchRemark', label: 'Branch Remark' },
+        { key: 'hypothecation', label: 'Hypothecation' },
+        { key: 'cashDiscount', label: 'Cash Discount' },
+        { key: 'exchangeLoyalty', label: 'Exchange / Loyalty' },
+        { key: 'corporate', label: 'Corporate Discount' },
+        { key: 'sss', label: 'SSS Discount' },
+        { key: 'kpkb', label: 'KPKB Special Scheme' },
+        { key: 'solarOffer', label: 'Solar Offer' },
+        { key: 'priceDifference', label: 'Price Difference' },
+        { key: 'offerRemark', label: 'Offer Remark' },
+        { key: 'financeType', label: 'Finance Type' },
+        { key: 'onRoadPrice', label: 'On Road Price' },
+        { key: 'ip', label: 'Initial Payment (IP)' },
+        { key: 'loanAmount', label: 'Loan Amount' },
+        { key: 'balanceAmount', label: 'Balance Amount' },
+        { key: 'fundPercentage', label: 'Fund Percentage (%)' },
+        { key: 'loanAmountStatus', label: 'Loan Amount Status' },
         { key: 'financeStatus', label: 'Finance Status' },
         { key: 'financeRemark', label: 'Finance Remark' },
+        { key: 'financeTimestamp', label: 'Finance Timestamp' },
+        { key: 'exchangeYesNo', label: 'Exchange (Yes/No)' },
+        { key: 'tmaType', label: 'TMA Type' },
+        { key: 'makeAndModel', label: 'Make and Model' },
+        { key: 'regNumber', label: 'Reg Number' },
         { key: 'tmaStatus', label: 'TMA Status' },
         { key: 'tmaRemark', label: 'TMA Remark' },
+        { key: 'tmaTimestamp', label: 'TMA Timestamp' },
+        { key: 'fileStatus', label: 'Tally File Status' },
+        { key: 'fileTimestamp', label: 'File Timestamp' },
+        { key: 'tallyDate', label: 'Tally Voucher Date' },
         { key: 'accountsStatus', label: 'Accounts Status' },
         { key: 'accountsRemark', label: 'Accounts Remark' },
+        { key: 'accountsTimestamp', label: 'Accounts Timestamp' },
+        { key: 'insuranceType', label: 'Insurance Type' },
+        { key: 'insuranceName', label: 'Insurance Company Name' },
+        { key: 'insurancePremium', label: 'Insurance Premium' },
+        { key: 'insuranceStatus', label: 'Insurance Status' },
+        { key: 'insuranceRemark', label: 'Insurance Remark' },
+        { key: 'insuranceTimestamp', label: 'Insurance Timestamp' },
+        { key: 'registrationType', label: 'Registration Type' },
+        { key: 'applicationNumber', label: 'Application Number' },
+        { key: 'taxPaidDate', label: 'Tax Paid Date' },
+        { key: 'registerNumber', label: 'Registration Number' },
+        { key: 'hsrpStatus', label: 'HSRP Status' },
         { key: 'registrationStatus', label: 'Registration Status' },
         { key: 'registrationRemark', label: 'Registration Remark' },
+        { key: 'registrationTimestamp', label: 'Registration Timestamp' },
+        { key: 'tmgaValue', label: 'TMGA Value' },
+        { key: 'vasValue', label: 'VAS Value' },
+        { key: 'tmgaStatus', label: 'TMGA Status' },
+        { key: 'tmgaRemark', label: 'TMGA Remark' },
+        { key: 'tmgaTimestamp', label: 'TMGA Timestamp' },
         { key: 'pdiStatus', label: 'PDI Status' },
-        { key: 'pdiRemark', label: 'PDI Remark' },
+        { key: 'pdiRemark', label: 'PDI Assessment Remark' },
+        { key: 'pdiTimestamp', label: 'PDI Timestamp' },
+        { key: 'cxoRemark', label: 'CXO Delivery Remark' },
+        { key: 'expectedDeliveryDate', label: 'Expected Delivery Date' },
+        { key: 'actualDeliveryDate', label: 'Actual Delivery Date' },
+        { key: 'homeVisit14DayStatus', label: '14 Day Home Visit Status' },
         { key: 'deliveryStatus', label: 'Delivery Status' },
-        { key: 'cxoRemark', label: 'CXO Remark' }
+        { key: 'deliveryTimestamp', label: 'Delivery Timestamp' }
       ];
 
       const headerRow = columns.map(col => `"${col.label.replace(/"/g, '""')}"`).join(',');
@@ -417,7 +497,7 @@ export default function DeliveryTable({
               />
             </>
           )}
-          {showDownloadBtn && (
+          {getPermission(settings, isBookingPage ? 'booking' : 'crm', 'btn_download_csv', isBookingPage ? 'BOOKING ACTIONS' : 'CRM ACTIONS', user?.role).view && (
             <button className="btn-secondary" disabled={isExporting} onClick={handleDownloadCSV} title="Download CSV" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}>
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -522,7 +602,7 @@ export default function DeliveryTable({
             type="button"
             className="btn-secondary"
             disabled={currentPage === 1}
-            onClick={() => fetchVehicles(currentPage - 1, 25)}
+            onClick={() => fetchVehicles(currentPage - 1, 25, isBookingPage)}
             style={{ padding: '8px 16px', fontSize: '0.8rem', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', opacity: currentPage === 1 ? 0.5 : 1 }}
           >
             Previous
@@ -536,7 +616,7 @@ export default function DeliveryTable({
             type="button"
             className="btn-secondary"
             disabled={currentPage >= Math.ceil(totalVehicles / 25)}
-            onClick={() => fetchVehicles(currentPage + 1, 25)}
+            onClick={() => fetchVehicles(currentPage + 1, 25, isBookingPage)}
             style={{ padding: '8px 16px', fontSize: '0.8rem', cursor: currentPage >= Math.ceil(totalVehicles / 25) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', opacity: currentPage >= Math.ceil(totalVehicles / 25) ? 0.5 : 1 }}
           >
             Next

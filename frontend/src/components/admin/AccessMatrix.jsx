@@ -32,6 +32,8 @@ const BOOKING_FIELD_ACCESS = {
   'date': ['BOOKING IN-CHARGE', 'BRANCH'],
   'customername': ['BOOKING IN-CHARGE', 'BRANCH'],
   'mobilenumber': ['BOOKING IN-CHARGE', 'BRANCH'],
+  'emailid': ['BOOKING IN-CHARGE', 'BRANCH'],
+  'bookingamount': ['BOOKING IN-CHARGE', 'BRANCH'],
   'optyid': ['BOOKING IN-CHARGE', 'BRANCH'],
   'ordernumber': ['CRM'],
   'saporderno': ['CRM'],
@@ -43,7 +45,7 @@ const BOOKING_FIELD_ACCESS = {
   'ca': ['BOOKING IN-CHARGE', 'BRANCH'],
   'tl': ['BOOKING IN-CHARGE', 'BRANCH'],
   'branch': ['BOOKING IN-CHARGE'],
-  'region': ['BOOKING IN-CHARGE', 'BRANCH'],
+  'region': ['BOOKING IN-CHARGE'],
   'crmbookingstatus': ['BOOKING IN-CHARGE'],
   'branchstatus': ['BRANCH_MANAGER', 'BRANCH'],
   'branchremark': ['BRANCH_MANAGER', 'BRANCH'],
@@ -51,6 +53,7 @@ const BOOKING_FIELD_ACCESS = {
   'financeremark': ['FINANCE'],
   'btn_new_booking': ['BOOKING IN-CHARGE', 'BRANCH', 'BRANCH_MANAGER'],
   'btn_upload_csv': ['BOOKING IN-CHARGE', 'BRANCH', 'BRANCH_MANAGER'],
+  'btn_download_csv': ['ADMIN', 'FINANCE', 'CRM', 'BOOKING IN-CHARGE', 'MANAGEMENT'],
 };
 
 const BOOKING_GROUPS = [
@@ -59,7 +62,8 @@ const BOOKING_GROUPS = [
     title: 'Booking Quick Actions',
     fields: [
       { key: 'btn_new_booking', label: 'New Booking Button' },
-      { key: 'btn_upload_csv', label: 'Upload CSV Button' }
+      { key: 'btn_upload_csv', label: 'Upload CSV Button' },
+      { key: 'btn_download_csv', label: 'Download CSV Button' }
     ]
   },
   {
@@ -69,6 +73,8 @@ const BOOKING_GROUPS = [
       { key: 'date', label: 'Booking Date' },
       { key: 'customername', label: 'Customer Name' },
       { key: 'mobilenumber', label: 'Mobile Number' },
+      { key: 'emailid', label: 'Email ID' },
+      { key: 'bookingamount', label: 'Booking Amount' },
       { key: 'optyid', label: 'OPTY ID' },
     ],
   },
@@ -167,6 +173,7 @@ const CRM_FIELD_ACCESS = {
   'financestatus': ['FINANCE', 'CRM'],
   'financeremark': ['FINANCE', 'CRM'],
   'btn_crm_form': ['BOOKING IN-CHARGE', 'CRM'],
+  'btn_download_csv': ['ADMIN', 'FINANCE', 'CRM', 'BOOKING IN-CHARGE', 'MANAGEMENT'],
 };
 
 const CRM_GROUPS = [
@@ -174,7 +181,8 @@ const CRM_GROUPS = [
     section: 'CRM ACTIONS',
     title: 'CRM Quick Actions',
     fields: [
-      { key: 'btn_crm_form', label: 'CRM Button' }
+      { key: 'btn_crm_form', label: 'CRM Button' },
+      { key: 'btn_download_csv', label: 'Download CSV Button' }
     ]
   },
   {
@@ -372,7 +380,7 @@ export function getPermission(settings, formType, fieldKey, sectionKey, role, fi
   // By default, everyone has View access to all fields unless overridden.
   // Action buttons, however, are hidden by default unless the role is an allowed editor.
   let canViewDefault = true;
-  if (fieldKey === 'btn_new_booking' || fieldKey === 'btn_upload_csv' || fieldKey === 'btn_crm_form') {
+  if (fieldKey === 'btn_new_booking' || fieldKey === 'btn_upload_csv' || fieldKey === 'btn_download_csv' || fieldKey === 'btn_crm_form') {
     canViewDefault = userRoles.includes('ADMIN') || editRoles.some(r => userRoles.includes(r));
   }
 
@@ -545,7 +553,7 @@ function MatrixTable({ formType, groups, fieldAccessMap, sectionAccessMap, setti
                       </td>
                       {ALL_ROLES.map(role => {
                         const cellPerm = getPermission(settings, formType, field.key, group.section, role, fieldAccessMap, sectionAccessMap);
-                        const isActionButton = field.key === 'btn_new_booking' || field.key === 'btn_upload_csv' || field.key === 'btn_crm_form';
+                        const isActionButton = field.key === 'btn_new_booking' || field.key === 'btn_upload_csv' || field.key === 'btn_download_csv' || field.key === 'btn_crm_form';
 
                         return (
                           <td key={role} style={{ padding: '8px 10px', borderBottom: '1px solid #f1f5f9', width: ROLE_COL_WIDTH, minWidth: ROLE_COL_WIDTH, maxWidth: ROLE_COL_WIDTH }}>

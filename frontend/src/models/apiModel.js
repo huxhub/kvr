@@ -18,8 +18,12 @@ async function handleResponseError(res, defaultMessage) {
   return new Error(errMsg);
 }
 
-export async function getVehicles(page = 1, limit = 25) {
-  const res = await fetch(`${API_BASE_URL}/api/vehicles?page=${page}&limit=${limit}`, { credentials: 'include' });
+export async function getVehicles(page = 1, limit = 25, isBookingPage) {
+  let url = `${API_BASE_URL}/api/vehicles?page=${page}&limit=${limit}`;
+  if (isBookingPage !== undefined && isBookingPage !== null) {
+    url += `&isBookingPage=${Boolean(isBookingPage)}`;
+  }
+  const res = await fetch(url, { credentials: 'include' });
   if (!res.ok) {
     throw await handleResponseError(res, 'Failed to fetch vehicle records');
   }

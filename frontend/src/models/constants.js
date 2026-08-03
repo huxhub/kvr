@@ -6,6 +6,8 @@ export const SECTIONS = {
       { name: 'date', label: 'Booking Date', type: 'date', required: true },
       { name: 'customerName', label: 'Full Name', type: 'text', required: true },
       { name: 'mobileNumber', label: 'Mobile No', type: 'tel', required: true },
+      { name: 'emailId', label: 'Email ID', type: 'email', required: false },
+      { name: 'bookingAmount', label: 'Booking Amount (₹)', type: 'number', required: false },
       { name: 'optyId', label: 'OPTY ID', type: 'text', required: false },
       { name: 'orderNumber', label: 'BKG ORDER NO', type: 'text', required: true },
       { name: 'sapOrderNo', label: 'SAP ORDER NO', type: 'text', required: false },

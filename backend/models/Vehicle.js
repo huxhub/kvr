@@ -7,7 +7,7 @@ import { pool } from '../config/db.js';
 
 // All vehicle columns (excluding auto-managed created_at/updated_at)
 const VEHICLE_COLUMNS = [
-  'chassisNumber', 'crmGenerated', 'realChassisNumber', 'date', 'customerName', 'mobileNumber', 'optyId', 'orderNumber', 'sapOrderNo',
+  'chassisNumber', 'crmGenerated', 'realChassisNumber', 'date', 'customerName', 'mobileNumber', 'emailId', 'bookingAmount', 'optyId', 'orderNumber', 'sapOrderNo',
   'invoiceNumber', 'source', 'year', 'vehicleStatus', 'fuel', 'pl',
   'variant', 'colour', 'boStatus', 'boDate', 'vc', 'ca', 'tl', 'branch', 'region', 
   'crmBookingStatus', 'branchStatus', 'branchRemark', 'hypothecation',
@@ -27,45 +27,74 @@ const VEHICLE_COLUMNS = [
   'deliveryStatus', 'deliveryTimestamp'
 ];
 
-/** Get all vehicles (paginated) */
-export async function findAll(page = 1, limit = 25) {
+/** Get all vehicles (paginated with status/branch filtering) */
+export async function findFiltered({ branch, isBookingPage, page = 1, limit = 25 }) {
   const activeLimit = Math.min(10000, Math.max(1, parseInt(limit, 10) || 25));
   const activePage = Math.max(1, parseInt(page, 10) || 1);
   const offset = (activePage - 1) * activeLimit;
 
-  // Parameterized limit & offset need to be passed as strings in execute
-  const [rows] = await pool.execute(
-    'SELECT * FROM vehicles ORDER BY created_at DESC LIMIT ? OFFSET ?',
-    [activeLimit.toString(), offset.toString()]
-  );
+  const conditions = [];
+  const params = [];
+
+  if (branch) {
+    conditions.push('branch = ?');
+    params.push(branch);
+  }
+
+  if (isBookingPage === 'true' || isBookingPage === true || isBookingPage === '1') {
+    conditions.push('vehicleStatus = "Booked"');
+  } else if (isBookingPage === 'false' || isBookingPage === false || isBookingPage === '0') {
+    conditions.push('vehicleStatus != "Booked"');
+  }
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  const query = `SELECT * FROM vehicles ${whereClause} ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+  params.push(activeLimit.toString(), offset.toString());
+
+  const [rows] = await pool.execute(query, params);
   return rows;
+}
+
+/** Get total count of filtered vehicles */
+export async function countFiltered({ branch, isBookingPage }) {
+  const conditions = [];
+  const params = [];
+
+  if (branch) {
+    conditions.push('branch = ?');
+    params.push(branch);
+  }
+
+  if (isBookingPage === 'true' || isBookingPage === true || isBookingPage === '1') {
+    conditions.push('vehicleStatus = "Booked"');
+  } else if (isBookingPage === 'false' || isBookingPage === false || isBookingPage === '0') {
+    conditions.push('vehicleStatus != "Booked"');
+  }
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  const query = `SELECT COUNT(*) as count FROM vehicles ${whereClause}`;
+
+  const [rows] = await pool.execute(query, params);
+  return rows[0].count;
+}
+
+/** Get all vehicles (paginated) */
+export async function findAll(page = 1, limit = 25) {
+  return findFiltered({ page, limit });
 }
 
 /** Get total count of vehicles */
 export async function countAll() {
-  const [rows] = await pool.execute('SELECT COUNT(*) as count FROM vehicles');
-  return rows[0].count;
+  return countFiltered({});
 }
 
 export async function findByBranch(branch, page = 1, limit = 25) {
-  const activeLimit = Math.min(10000, Math.max(1, parseInt(limit, 10) || 25));
-  const activePage = Math.max(1, parseInt(page, 10) || 1);
-  const offset = (activePage - 1) * activeLimit;
-
-  const [rows] = await pool.execute(
-    'SELECT * FROM vehicles WHERE branch = ? ORDER BY created_at DESC LIMIT ? OFFSET ?',
-    [branch, activeLimit.toString(), offset.toString()]
-  );
-  return rows;
+  return findFiltered({ branch, page, limit });
 }
 
 /** Get count of vehicles filtered by branch */
 export async function countByBranch(branch) {
-  const [rows] = await pool.execute(
-    'SELECT COUNT(*) as count FROM vehicles WHERE branch = ?',
-    [branch]
-  );
-  return rows[0].count;
+  return countFiltered({ branch });
 }
 
 /** Find a single vehicle by chassisNumber */
