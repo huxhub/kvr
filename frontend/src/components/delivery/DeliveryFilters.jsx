@@ -127,20 +127,53 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
         )}
 
         {isBookingPage && (
+          <div className="filter-group">
+            <label htmlFor="filter-crmGenerated">CRM STATUS</label>
+            <CustomDropdown 
+              id="filter-crmGenerated" 
+              value={filters.crmGenerated || ''} 
+              onChange={handleChange} 
+              options={[
+                { value: '', label: 'All' },
+                { value: 'generated', label: 'CRM Generated' },
+                { value: 'pending', label: 'Pending Generation' }
+              ]} 
+            />
+          </div>
+        )}
+
+        <div className="filter-group">
+          <label htmlFor="filter-ca">CUSTOMER ADVISOR (CA)</label>
+          <CustomDropdown 
+            id="filter-ca" 
+            value={filters.ca} 
+            onChange={handleChange} 
+            options={caOptions} 
+          />
+        </div>
+
+        <div className="filter-group">
+          <label htmlFor="filter-tl">TEAM LEADER (TL)</label>
+          <CustomDropdown 
+            id="filter-tl" 
+            value={filters.tl} 
+            onChange={handleChange} 
+            options={tlOptions} 
+          />
+        </div>
+
+        <div className="filter-group">
+          <label htmlFor="filter-finStatus">FINANCE STATUS</label>
+          <CustomDropdown 
+            id="filter-finStatus" 
+            value={filters.finStatus} 
+            onChange={handleChange} 
+            options={deptOptions} 
+          />
+        </div>
+
+        {isBookingPage && (
           <>
-            <div className="filter-group">
-              <label htmlFor="filter-crmGenerated">CRM STATUS</label>
-              <CustomDropdown 
-                id="filter-crmGenerated" 
-                value={filters.crmGenerated || ''} 
-                onChange={handleChange} 
-                options={[
-                  { value: '', label: 'All' },
-                  { value: 'generated', label: 'CRM Generated' },
-                  { value: 'pending', label: 'Pending Generation' }
-                ]} 
-              />
-            </div>
             <div className="filter-group">
               <label htmlFor="filter-pl">PPL</label>
               <CustomDropdown 
@@ -179,36 +212,6 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
             </div>
           </>
         )}
-
-        <div className="filter-group">
-          <label htmlFor="filter-ca">CUSTOMER ADVISOR (CA)</label>
-          <CustomDropdown 
-            id="filter-ca" 
-            value={filters.ca} 
-            onChange={handleChange} 
-            options={caOptions} 
-          />
-        </div>
-
-        <div className="filter-group">
-          <label htmlFor="filter-tl">TEAM LEADER (TL)</label>
-          <CustomDropdown 
-            id="filter-tl" 
-            value={filters.tl} 
-            onChange={handleChange} 
-            options={tlOptions} 
-          />
-        </div>
-
-        <div className="filter-group">
-          <label htmlFor="filter-finStatus">FINANCE STATUS</label>
-          <CustomDropdown 
-            id="filter-finStatus" 
-            value={filters.finStatus} 
-            onChange={handleChange} 
-            options={deptOptions} 
-          />
-        </div>
 
         {!isBookingPage && (
           <>
