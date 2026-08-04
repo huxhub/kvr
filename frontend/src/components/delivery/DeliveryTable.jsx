@@ -267,6 +267,10 @@ export default function DeliveryTable({
     }
     if (currentFilters.ca && v.ca !== currentFilters.ca) return false;
     if (currentFilters.tl && v.tl !== currentFilters.tl) return false;
+    if (currentFilters.pl && v.pl !== currentFilters.pl) return false;
+    if (currentFilters.variant && v.variant !== currentFilters.variant) return false;
+    if (currentFilters.colour && v.colour !== currentFilters.colour) return false;
+    if (currentFilters.boStatus && v.boStatus !== currentFilters.boStatus) return false;
 
     const checkDept = (filterVal, field) => {
       if (!filterVal) return true;

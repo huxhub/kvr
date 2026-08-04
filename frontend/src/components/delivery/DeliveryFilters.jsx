@@ -20,6 +20,7 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
       status: '', 
       pending: '',
       ca: '', tl: '',
+      pl: '', variant: '', colour: '', boStatus: '',
       finStatus: '', tmaStatus: '', accStatus: '', regStatus: '', pdiStatus: '',
       crmGenerated: ''
     });
@@ -27,6 +28,10 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
 
   const cas = useMemo(() => Array.from(new Set(vehicles.map(v => v.ca).filter(Boolean))).sort(), [vehicles]);
   const tls = useMemo(() => Array.from(new Set(vehicles.map(v => v.tl).filter(Boolean))).sort(), [vehicles]);
+  const ppls = useMemo(() => Array.from(new Set(vehicles.map(v => v.pl).filter(Boolean))).sort(), [vehicles]);
+  const variants = useMemo(() => Array.from(new Set(vehicles.map(v => v.variant).filter(Boolean))).sort(), [vehicles]);
+  const colours = useMemo(() => Array.from(new Set(vehicles.map(v => v.colour).filter(Boolean))).sort(), [vehicles]);
+  const boStatuses = useMemo(() => Array.from(new Set(vehicles.map(v => v.boStatus).filter(Boolean))).sort(), [vehicles]);
 
   // Non-Admin: only show their own branch
   const branchOptions = isBranchRestricted
@@ -56,6 +61,26 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
   const tlOptions = [
     { value: '', label: 'All TLs' },
     ...tls.map(tl => ({ value: tl, label: tl }))
+  ];
+
+  const pplOptions = [
+    { value: '', label: 'All PPLs' },
+    ...ppls.map(p => ({ value: p, label: p }))
+  ];
+
+  const variantOptions = [
+    { value: '', label: 'All Variants' },
+    ...variants.map(v => ({ value: v, label: v }))
+  ];
+
+  const colorOptions = [
+    { value: '', label: 'All Colors' },
+    ...colours.map(c => ({ value: c, label: c }))
+  ];
+
+  const boStatusOptions = [
+    { value: '', label: 'All BO Statuses' },
+    ...boStatuses.map(b => ({ value: b, label: b }))
   ];
 
   const deptOptions = [
@@ -102,19 +127,57 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
         )}
 
         {isBookingPage && (
-          <div className="filter-group">
-            <label htmlFor="filter-crmGenerated">CRM STATUS</label>
-            <CustomDropdown 
-              id="filter-crmGenerated" 
-              value={filters.crmGenerated || ''} 
-              onChange={handleChange} 
-              options={[
-                { value: '', label: 'All' },
-                { value: 'generated', label: 'CRM Generated' },
-                { value: 'pending', label: 'Pending Generation' }
-              ]} 
-            />
-          </div>
+          <>
+            <div className="filter-group">
+              <label htmlFor="filter-crmGenerated">CRM STATUS</label>
+              <CustomDropdown 
+                id="filter-crmGenerated" 
+                value={filters.crmGenerated || ''} 
+                onChange={handleChange} 
+                options={[
+                  { value: '', label: 'All' },
+                  { value: 'generated', label: 'CRM Generated' },
+                  { value: 'pending', label: 'Pending Generation' }
+                ]} 
+              />
+            </div>
+            <div className="filter-group">
+              <label htmlFor="filter-pl">PPL</label>
+              <CustomDropdown 
+                id="filter-pl" 
+                value={filters.pl || ''} 
+                onChange={handleChange} 
+                options={pplOptions} 
+              />
+            </div>
+            <div className="filter-group">
+              <label htmlFor="filter-variant">VARIANT</label>
+              <CustomDropdown 
+                id="filter-variant" 
+                value={filters.variant || ''} 
+                onChange={handleChange} 
+                options={variantOptions} 
+              />
+            </div>
+            <div className="filter-group">
+              <label htmlFor="filter-colour">COLOR</label>
+              <CustomDropdown 
+                id="filter-colour" 
+                value={filters.colour || ''} 
+                onChange={handleChange} 
+                options={colorOptions} 
+              />
+            </div>
+            <div className="filter-group">
+              <label htmlFor="filter-boStatus">BO STATUS</label>
+              <CustomDropdown 
+                id="filter-boStatus" 
+                value={filters.boStatus || ''} 
+                onChange={handleChange} 
+                options={boStatusOptions} 
+              />
+            </div>
+          </>
         )}
 
         <div className="filter-group">
@@ -136,6 +199,7 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
             options={tlOptions} 
           />
         </div>
+
         <div className="filter-group">
           <label htmlFor="filter-finStatus">FINANCE STATUS</label>
           <CustomDropdown 
@@ -146,45 +210,49 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
           />
         </div>
 
-        <div className="filter-group">
-          <label htmlFor="filter-tmaStatus">TMA STATUS</label>
-          <CustomDropdown 
-            id="filter-tmaStatus" 
-            value={filters.tmaStatus} 
-            onChange={handleChange} 
-            options={deptOptions} 
-          />
-        </div>
+        {!isBookingPage && (
+          <>
+            <div className="filter-group">
+              <label htmlFor="filter-tmaStatus">TMA STATUS</label>
+              <CustomDropdown 
+                id="filter-tmaStatus" 
+                value={filters.tmaStatus} 
+                onChange={handleChange} 
+                options={deptOptions} 
+              />
+            </div>
 
-        <div className="filter-group">
-          <label htmlFor="filter-accStatus">ACCOUNTS STATUS</label>
-          <CustomDropdown 
-            id="filter-accStatus" 
-            value={filters.accStatus} 
-            onChange={handleChange} 
-            options={deptOptions} 
-          />
-        </div>
+            <div className="filter-group">
+              <label htmlFor="filter-accStatus">ACCOUNTS STATUS</label>
+              <CustomDropdown 
+                id="filter-accStatus" 
+                value={filters.accStatus} 
+                onChange={handleChange} 
+                options={deptOptions} 
+              />
+            </div>
 
-        <div className="filter-group">
-          <label htmlFor="filter-regStatus">REGISTRATION STATUS</label>
-          <CustomDropdown 
-            id="filter-regStatus" 
-            value={filters.regStatus} 
-            onChange={handleChange} 
-            options={deptOptions} 
-          />
-        </div>
+            <div className="filter-group">
+              <label htmlFor="filter-regStatus">REGISTRATION STATUS</label>
+              <CustomDropdown 
+                id="filter-regStatus" 
+                value={filters.regStatus} 
+                onChange={handleChange} 
+                options={deptOptions} 
+              />
+            </div>
 
-        <div className="filter-group">
-          <label htmlFor="filter-pdiStatus">PDI STATUS</label>
-          <CustomDropdown 
-            id="filter-pdiStatus" 
-            value={filters.pdiStatus} 
-            onChange={handleChange} 
-            options={deptOptions} 
-          />
-        </div>
+            <div className="filter-group">
+              <label htmlFor="filter-pdiStatus">PDI STATUS</label>
+              <CustomDropdown 
+                id="filter-pdiStatus" 
+                value={filters.pdiStatus} 
+                onChange={handleChange} 
+                options={deptOptions} 
+              />
+            </div>
+          </>
+        )}
 
       </div>
     </div>
