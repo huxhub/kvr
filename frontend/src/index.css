@@ -435,6 +435,8 @@ h1, h2, h3, h4, h5, h6 {
   left: 0;
   width: 100%;
   min-width: 180px;
+  max-height: 240px;
+  overflow-y: auto;
   background-color: #ffffff;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
