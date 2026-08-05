@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { getVehicles as apiGetVehicles, saveVehicle as apiSaveVehicle, createVehicle as apiCreateVehicle, deleteVehicle as apiDeleteVehicle } from '../models/apiModel.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { addAuditLog } from '../models/auditModel.js';
@@ -10,11 +10,16 @@ export function useVehicles() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const { user } = useAuth();
+  const lastIsBookingPageRef = useRef(undefined);
 
-  const fetchVehicles = useCallback(async (page = 1, limit = 25, isBookingPage) => {
+  const fetchVehicles = useCallback(async (page = 1, limit = 10000, isBookingPage) => {
     setLoading(true);
+    if (isBookingPage !== undefined) {
+      lastIsBookingPageRef.current = isBookingPage;
+    }
     try {
-      const { vehicles: fetchedVehicles, totalCount } = await apiGetVehicles(page, limit, isBookingPage);
+      const targetIsBooking = isBookingPage !== undefined ? isBookingPage : lastIsBookingPageRef.current;
+      const { vehicles: fetchedVehicles, totalCount } = await apiGetVehicles(page, limit, targetIsBooking);
       setVehicles(fetchedVehicles);
       setTotalVehicles(totalCount);
       setCurrentPage(page);
@@ -37,7 +42,7 @@ export function useVehicles() {
         }
       }
 
-      await fetchVehicles(currentPage);
+      await fetchVehicles(1, 10000, lastIsBookingPageRef.current);
       return { success: true, auditEntries };
     } catch (err) {
       return { success: false, error: err.message };
@@ -64,7 +69,7 @@ export function useVehicles() {
         console.error("Failed to save initial audit log:", auditErr);
       }
 
-      await fetchVehicles(currentPage);
+      await fetchVehicles(1, 10000, lastIsBookingPageRef.current);
       return { success: true };
     } catch (err) {
       return { success: false, error: err.message };
@@ -74,7 +79,7 @@ export function useVehicles() {
   const deleteVehicle = async (chassisNumber) => {
     try {
       await apiDeleteVehicle(chassisNumber, user.role);
-      await fetchVehicles(currentPage);
+      await fetchVehicles(1, 10000, lastIsBookingPageRef.current);
       return { success: true };
     } catch (err) {
       return { success: false, error: err.message };

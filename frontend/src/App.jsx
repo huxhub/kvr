@@ -219,7 +219,7 @@ function AppContent() {
     async function loadInitialData() {
       try {
         const [, settingsData] = await Promise.all([
-          fetchVehicles(1, 25),
+          fetchVehicles(1, 10000),
           fetch(`${API_BASE_URL}/api/settings`, { credentials: 'include' }).then(r => r.ok ? r.json() : null)
         ]);
 
@@ -242,7 +242,7 @@ function AppContent() {
   useEffect(() => {
     if (!user) return;
     if (activeTab === 'bookings' || activeTab === 'delivery') {
-      fetchVehicles(1, 25, activeTab === 'bookings');
+      fetchVehicles(1, 10000, activeTab === 'bookings');
     }
   }, [activeTab, user, fetchVehicles]);
 
@@ -423,19 +423,19 @@ function AppContent() {
       <ChunkErrorBoundary>
         {isDrawerOpen && (
           <Suspense fallback={null}>
-            <VehicleDrawer vehicle={selectedVehicle} branches={allBranches} onClose={handleCloseDrawer} onSaved={() => fetchVehicles(currentPage, 25, activeTab === 'bookings')} isBookingPage={activeTab === 'bookings'} />
+            <VehicleDrawer vehicle={selectedVehicle} branches={allBranches} onClose={handleCloseDrawer} onSaved={() => fetchVehicles(1, 10000, activeTab === 'bookings')} isBookingPage={activeTab === 'bookings'} />
           </Suspense>
         )}
 
         {isNewBookingOpen && (
           <Suspense fallback={null}>
-            <NewBookingDrawer branches={allBranches} onClose={handleCloseNewBooking} onSaved={() => fetchVehicles(1, 25, true)} />
+            <NewBookingDrawer branches={allBranches} onClose={handleCloseNewBooking} onSaved={() => fetchVehicles(1, 10000, true)} />
           </Suspense>
         )}
 
         {isCrmOpen && (
           <Suspense fallback={null}>
-            <CrmDrawer branches={allBranches} onClose={handleCloseCrm} onSaved={() => fetchVehicles(currentPage, 25, false)} />
+            <CrmDrawer branches={allBranches} onClose={handleCloseCrm} onSaved={() => fetchVehicles(1, 10000, false)} />
           </Suspense>
         )}
       </ChunkErrorBoundary>

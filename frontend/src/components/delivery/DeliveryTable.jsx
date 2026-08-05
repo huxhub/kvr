@@ -43,6 +43,13 @@ export default function DeliveryTable({
     crmGenerated: ''
   });
 
+  const [localPage, setLocalPage] = useState(1);
+  const ITEMS_PER_PAGE = 25;
+
+  React.useEffect(() => {
+    setLocalPage(1);
+  }, [filters]);
+
   const parseCSV = (text) => {
     const lines = [];
     let cur = '';
@@ -296,6 +303,15 @@ export default function DeliveryTable({
     return vehicles.filter(v => filterRecord(v, filters, isBookingPage));
   }, [vehicles, filters, isBookingPage]);
 
+  const filteredCount = filteredVehicles.length;
+  const totalPages = Math.max(1, Math.ceil(filteredCount / ITEMS_PER_PAGE));
+  const safePage = Math.min(localPage, totalPages);
+
+  const paginatedVehicles = useMemo(() => {
+    const start = (safePage - 1) * ITEMS_PER_PAGE;
+    return filteredVehicles.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredVehicles, safePage]);
+
   const showDownloadBtn = user && [
     'ADMIN',
     'FINANCE',
@@ -526,12 +542,12 @@ export default function DeliveryTable({
 
       {viewMode === 'grid' ? (
         <div className="vehicle-grid">
-          {filteredVehicles.length === 0 ? (
+          {paginatedVehicles.length === 0 ? (
             <div style={{ gridColumn: '1/-1', padding: '40px', textAlign: 'center', background: 'white', borderRadius: '8px', border: '1px dashed var(--border-light)', color: 'var(--text-muted)' }}>
               <p style={{ fontWeight: 600 }}>No vehicle records match current filters.</p>
             </div>
           ) : (
-            filteredVehicles.map((v, i) => <DeliveryGridItem key={v.chassisNumber} vehicle={v} openDrawer={openDrawer} index={(currentPage - 1) * 25 + i + 1} isAdmin={isAdmin} onDelete={onDeleteVehicle} />)
+            paginatedVehicles.map((v, i) => <DeliveryGridItem key={v.chassisNumber} vehicle={v} openDrawer={openDrawer} index={(safePage - 1) * ITEMS_PER_PAGE + i + 1} isAdmin={isAdmin} onDelete={onDeleteVehicle} />)
           )}
         </div>
       ) : (
@@ -583,18 +599,18 @@ export default function DeliveryTable({
               )}
             </thead>
             <tbody>
-              {filteredVehicles.length === 0 ? (
+              {paginatedVehicles.length === 0 ? (
                 <tr>
                   <td colSpan={isBookingPage ? (isAdmin ? 24 : 23) : (isAdmin ? 12 : 11)} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '30px' }}>
                     No matching vehicle records found.
                   </td>
                 </tr>
               ) : (
-                filteredVehicles.map((v, i) => (
+                paginatedVehicles.map((v, i) => (
                   isBookingPage ? (
-                    <BookingTableRow key={v.chassisNumber} vehicle={v} openDrawer={openDrawer} index={(currentPage - 1) * 25 + i + 1} isAdmin={isAdmin} onDelete={onDeleteVehicle} />
+                    <BookingTableRow key={v.chassisNumber} vehicle={v} openDrawer={openDrawer} index={(safePage - 1) * ITEMS_PER_PAGE + i + 1} isAdmin={isAdmin} onDelete={onDeleteVehicle} />
                   ) : (
-                    <DeliveryTableRow key={v.chassisNumber} vehicle={v} openDrawer={openDrawer} index={(currentPage - 1) * 25 + i + 1} isAdmin={isAdmin} onDelete={onDeleteVehicle} />
+                    <DeliveryTableRow key={v.chassisNumber} vehicle={v} openDrawer={openDrawer} index={(safePage - 1) * ITEMS_PER_PAGE + i + 1} isAdmin={isAdmin} onDelete={onDeleteVehicle} />
                   )
                 ))
               )}
@@ -604,28 +620,28 @@ export default function DeliveryTable({
       )}
 
       {/* Pagination Controls */}
-      {totalVehicles > 25 && (
+      {filteredCount > ITEMS_PER_PAGE && (
         <div className="pagination-controls" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '24px', padding: '10px 0' }}>
           <button
             type="button"
             className="btn-secondary"
-            disabled={currentPage === 1}
-            onClick={() => fetchVehicles(currentPage - 1, 25, isBookingPage)}
-            style={{ padding: '8px 16px', fontSize: '0.8rem', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', opacity: currentPage === 1 ? 0.5 : 1 }}
+            disabled={safePage === 1}
+            onClick={() => setLocalPage(prev => Math.max(1, prev - 1))}
+            style={{ padding: '8px 16px', fontSize: '0.8rem', cursor: safePage === 1 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', opacity: safePage === 1 ? 0.5 : 1 }}
           >
             Previous
           </button>
 
           <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600 }}>
-            Page {currentPage} of {Math.ceil(totalVehicles / 25)}
+            Page {safePage} of {totalPages}
           </span>
 
           <button
             type="button"
             className="btn-secondary"
-            disabled={currentPage >= Math.ceil(totalVehicles / 25)}
-            onClick={() => fetchVehicles(currentPage + 1, 25, isBookingPage)}
-            style={{ padding: '8px 16px', fontSize: '0.8rem', cursor: currentPage >= Math.ceil(totalVehicles / 25) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', opacity: currentPage >= Math.ceil(totalVehicles / 25) ? 0.5 : 1 }}
+            disabled={safePage >= totalPages}
+            onClick={() => setLocalPage(prev => Math.min(totalPages, prev + 1))}
+            style={{ padding: '8px 16px', fontSize: '0.8rem', cursor: safePage >= totalPages ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', opacity: safePage >= totalPages ? 0.5 : 1 }}
           >
             Next
           </button>
