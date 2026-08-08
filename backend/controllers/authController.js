@@ -10,7 +10,10 @@ export const login = async (req, res) => {
       return res.status(400).json({ error: 'Missing email or password' });
     }
 
-    const user = await User.findByEmail(email);
+    let user = await User.findByEmail(email);
+    if (!user) {
+      user = await User.findByUsername(email);
+    }
 
     if (!user) {
       return res.status(401).json({ error: 'Invalid email or password' });
