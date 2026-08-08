@@ -1,27 +1,40 @@
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Ensure env vars are loaded before pool creation
-// (ES module imports run before dotenv.config() in server.js)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Ensure env vars are loaded regardless of current working directory
 dotenv.config({ override: true });
+dotenv.config({ path: path.resolve(__dirname, '../.env'), override: true });
+dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: true });
 
 const rawHost = process.env.DB_HOST || '127.0.0.1';
-// Force IPv4 127.0.0.1 if DB_HOST is 'localhost' to prevent Node.js from resolving to Hostinger IPv6 address (2a02:4780:...)
 const dbHost = (rawHost === 'localhost') ? '127.0.0.1' : rawHost;
+
+// Print non-sensitive DB CONFIG on server startup for diagnostics
+console.log('🔌 DB CONFIG Loaded:', {
+  host: dbHost,
+  user: process.env.DB_USER || 'root (default)',
+  database: process.env.DB_NAME || 'kvr (default)',
+  passwordSet: !!process.env.DB_PASSWORD,
+});
 
 // MySQL connection pool — shared across the entire application
 const pool = mysql.createPool({
-  host:            dbHost,
-  port:            parseInt(process.env.DB_PORT, 10) || 3306,
-  user:            process.env.DB_USER || 'root',
-  password:        process.env.DB_PASSWORD || '',
-  database:        process.env.DB_NAME || 'kvr',
+  host: dbHost,
+  port: parseInt(process.env.DB_PORT, 10) || 3306,
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'kvr',
   waitForConnections: true,
   connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT, 10) || 10,
-  queueLimit:      0,
+  queueLimit: 0,
   // Return DATETIME / TIMESTAMP as JS strings instead of Date objects
   // to match the previous Mongoose string-based timestamp behavior
-  dateStrings:     true,
+  dateStrings: true,
 });
 
 /**
@@ -45,7 +58,7 @@ const connectDB = async () => {
       await pool.execute("ALTER TABLE vehicles ROW_FORMAT=DYNAMIC");
       try {
         await pool.execute("ALTER TABLE vehicles MODIFY COLUMN financeTimestamp TEXT, MODIFY COLUMN tmaTimestamp TEXT, MODIFY COLUMN fileTimestamp TEXT, MODIFY COLUMN accountsTimestamp TEXT, MODIFY COLUMN insuranceTimestamp TEXT, MODIFY COLUMN registrationTimestamp TEXT, MODIFY COLUMN tmgaTimestamp TEXT, MODIFY COLUMN pdiTimestamp TEXT, MODIFY COLUMN deliveryTimestamp TEXT");
-      } catch (_) {}
+      } catch (_) { }
 
       // Ensure crmGenerated column exists
       const dbName = process.env.DB_NAME || 'kvr';
