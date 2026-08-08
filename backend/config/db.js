@@ -11,12 +11,14 @@ dotenv.config({ override: true });
 dotenv.config({ path: path.resolve(__dirname, '../.env'), override: true });
 dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: true });
 
+// Force IPv4 127.0.0.1 if DB_HOST is 'localhost' or Hostinger server domain to prevent IPv6 access denied errors
 const rawHost = process.env.DB_HOST || '127.0.0.1';
-const dbHost = (rawHost === 'localhost') ? '127.0.0.1' : rawHost;
+const dbHost = (rawHost === 'localhost' || rawHost.endsWith('.hstgr.io')) ? '127.0.0.1' : rawHost;
 
 // Print non-sensitive DB CONFIG on server startup for diagnostics
 console.log('🔌 DB CONFIG Loaded:', {
-  host: dbHost,
+  rawHost: process.env.DB_HOST,
+  resolvedHost: dbHost,
   user: process.env.DB_USER || 'root (default)',
   database: process.env.DB_NAME || 'kvr (default)',
   passwordSet: !!process.env.DB_PASSWORD,

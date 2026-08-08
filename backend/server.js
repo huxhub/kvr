@@ -86,8 +86,28 @@ app.use('/api/vehicles',   requireSession, vehicleRoutes);
 app.use('/api/audit_logs', requireSession, auditRoutes);
 app.use('/api/settings',   requireSession, settingsRoutes);
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Backend is running with MySQL' });
+app.get('/api/health', async (req, res) => {
+  try {
+    const connection = await pool.getConnection();
+    connection.release();
+    res.json({
+      status: 'ok',
+      db: 'connected',
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      database: process.env.DB_NAME,
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      db: 'failed',
+      error: err.message,
+      code: err.code,
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      database: process.env.DB_NAME,
+    });
+  }
 });
 
 app.listen(PORT, () => {
