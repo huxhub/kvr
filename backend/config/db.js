@@ -5,9 +5,13 @@ import dotenv from 'dotenv';
 // (ES module imports run before dotenv.config() in server.js)
 dotenv.config({ override: true });
 
+const rawHost = process.env.DB_HOST || '127.0.0.1';
+// Force IPv4 127.0.0.1 if DB_HOST is 'localhost' to prevent Node.js from resolving to Hostinger IPv6 address (2a02:4780:...)
+const dbHost = (rawHost === 'localhost') ? '127.0.0.1' : rawHost;
+
 // MySQL connection pool — shared across the entire application
 const pool = mysql.createPool({
-  host:            process.env.DB_HOST || 'localhost',
+  host:            dbHost,
   port:            parseInt(process.env.DB_PORT, 10) || 3306,
   user:            process.env.DB_USER || 'root',
   password:        process.env.DB_PASSWORD || '',
