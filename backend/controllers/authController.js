@@ -53,7 +53,13 @@ export const login = async (req, res) => {
       res.json(sessionUser);
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('[Auth Login Error]:', error);
+    const isDbError = error.code === 'ER_ACCESS_DENIED_ERROR' || error.code === 'ECONNREFUSED' || (error.message && error.message.includes('Access denied'));
+    res.status(500).json({
+      error: isDbError
+        ? 'Database connection error. Please contact administrator.'
+        : (error.message || 'Internal server error')
+    });
   }
 };
 
