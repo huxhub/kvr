@@ -19,6 +19,7 @@ export default function DeliveryTable({
   currentPage = 1,
   fetchVehicles,
   isBookingPage = false,
+  isDeliveredPage = false,
   settings,
   onDeleteVehicle
 }) {
@@ -247,9 +248,16 @@ export default function DeliveryTable({
 
   const [isExporting, setIsExporting] = useState(false);
 
-  const filterRecord = (v, currentFilters, isBooking) => {
-    if (isBooking && v.vehicleStatus !== 'Booked') return false;
-    if (!isBooking && v.vehicleStatus === 'Booked') return false;
+  const filterRecord = (v, currentFilters, isBooking, isDelivered) => {
+    const isVehicleDelivered = v.vehicleStatus === 'Delivered' || v.deliveryStatus === 'Approved' || v.deliveryStatus === 'Delivered';
+
+    if (isDelivered) {
+      if (!isVehicleDelivered) return false;
+    } else if (isBooking) {
+      if (v.vehicleStatus !== 'Booked' || isVehicleDelivered) return false;
+    } else {
+      if (v.vehicleStatus === 'Booked' || isVehicleDelivered) return false;
+    }
 
     if (currentFilters.global) {
       const term = currentFilters.global.toLowerCase();
@@ -300,8 +308,8 @@ export default function DeliveryTable({
   };
 
   const filteredVehicles = useMemo(() => {
-    return vehicles.filter(v => filterRecord(v, filters, isBookingPage));
-  }, [vehicles, filters, isBookingPage]);
+    return vehicles.filter(v => filterRecord(v, filters, isBookingPage, isDeliveredPage));
+  }, [vehicles, filters, isBookingPage, isDeliveredPage]);
 
   const filteredCount = filteredVehicles.length;
   const totalPages = Math.max(1, Math.ceil(filteredCount / ITEMS_PER_PAGE));
@@ -333,7 +341,7 @@ export default function DeliveryTable({
         console.warn('Fallback to loaded page vehicles for CSV export:', err);
       }
 
-      const listToExport = recordsToExportSource.filter(v => filterRecord(v, filters, isBookingPage));
+      const listToExport = recordsToExportSource.filter(v => filterRecord(v, filters, isBookingPage, isDeliveredPage));
 
       if (listToExport.length === 0) {
         alert("No data available to download with current filters.");
@@ -482,14 +490,14 @@ export default function DeliveryTable({
 
   return (
     <div id="vehicles-view" className="tab-content active">
-      <DeliveryFilters filters={filters} setFilters={setFilters} branches={branches} vehicles={vehicles} isBookingPage={isBookingPage} />
+      <DeliveryFilters filters={filters} setFilters={setFilters} branches={branches} vehicles={vehicles} isBookingPage={isBookingPage} isDeliveredPage={isDeliveredPage} />
 
       <div className="list-header-controls">
         <div className="list-info-text">
           Showing <span id="lbl-result-count">{filteredVehicles.length}</span> of <span id="lbl-total-count">{totalVehicles || vehicles.length}</span> Vehicles
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          {getPermission(settings, isBookingPage ? 'booking' : 'crm', isBookingPage ? 'btn_new_booking' : 'btn_crm_form', isBookingPage ? 'BOOKING ACTIONS' : 'CRM ACTIONS', user?.role).view && (
+          {!isDeliveredPage && getPermission(settings, isBookingPage ? 'booking' : 'crm', isBookingPage ? 'btn_new_booking' : 'btn_crm_form', isBookingPage ? 'BOOKING ACTIONS' : 'CRM ACTIONS', user?.role).view && (
             <button className="btn-primary" onClick={() => isBookingPage ? openNewBooking() : openCrm()}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
               {isBookingPage ? 'New Booking' : 'CRM'}

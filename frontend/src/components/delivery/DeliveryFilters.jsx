@@ -3,7 +3,7 @@ import { DEPARTMENT_KEYS, SECTIONS } from '../../models/constants.js';
 import CustomDropdown from '../ui/DropdownMenu.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 
-export default function DeliveryFilters({ filters, setFilters, branches, vehicles, isBookingPage = false }) {
+export default function DeliveryFilters({ filters, setFilters, branches, vehicles, isBookingPage = false, isDeliveredPage = false }) {
   const handleChange = (e) => {
     const { id, value } = e.target;
     setFilters(prev => ({ ...prev, [id.replace('filter-', '')]: value }));
@@ -43,7 +43,8 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
 
   const statusOptions = [
     { value: '', label: 'All Statuses' },
-    ...(isBookingPage ? [{ value: 'Booked', label: 'Booked' }] : [
+    ...(isBookingPage ? [{ value: 'Booked', label: 'Booked' }] : 
+      isDeliveredPage ? [{ value: 'Delivered', label: 'Delivered' }] : [
       { value: 'Allotted', label: 'Allotted' },
       { value: 'In-Transit', label: 'In-Transit' },
       { value: 'PDI Hold', label: 'PDI Hold' },
@@ -114,7 +115,7 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
           </div>
         )}
 
-        {!isBookingPage && (
+        {!isBookingPage && !isDeliveredPage && (
           <div className="filter-group">
             <label htmlFor="filter-status">VEHICLE STATUS</label>
             <CustomDropdown 
@@ -162,15 +163,17 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
           />
         </div>
 
-        <div className="filter-group">
-          <label htmlFor="filter-finStatus">FINANCE STATUS</label>
-          <CustomDropdown 
-            id="filter-finStatus" 
-            value={filters.finStatus} 
-            onChange={handleChange} 
-            options={deptOptions} 
-          />
-        </div>
+        {!isDeliveredPage && (
+          <div className="filter-group">
+            <label htmlFor="filter-finStatus">FINANCE STATUS</label>
+            <CustomDropdown 
+              id="filter-finStatus" 
+              value={filters.finStatus} 
+              onChange={handleChange} 
+              options={deptOptions} 
+            />
+          </div>
+        )}
 
         {isBookingPage && (
           <>
@@ -213,7 +216,7 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
           </>
         )}
 
-        {!isBookingPage && (
+        {!isBookingPage && !isDeliveredPage && (
           <>
             <div className="filter-group">
               <label htmlFor="filter-tmaStatus">TMA STATUS</label>

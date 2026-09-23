@@ -19,6 +19,7 @@ export default function Header({
     dashboard: 'Dashboard',
     bookings: 'Booking Master List',
     delivery: 'Delivery Master List',
+    delivered: 'Delivered Master List',
     audit: 'Audit History Logs',
     users: 'Users List',
     settings: 'System Settings'
@@ -28,6 +29,7 @@ export default function Header({
     dashboard: 'System Overview & Department Bottlenecks',
     bookings: 'Track vehicle bookings, sales, and allocations',
     delivery: 'Complete vehicle records and delivery tracking',
+    delivered: 'Completed vehicle deliveries and delivered records',
     audit: 'Review and track system changes',
     users: 'Registered employees and permissions',
     settings: 'Global configuration and database tools'

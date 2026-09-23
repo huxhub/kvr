@@ -241,7 +241,7 @@ function AppContent() {
 
   useEffect(() => {
     if (!user) return;
-    if (activeTab === 'bookings' || activeTab === 'delivery') {
+    if (activeTab === 'bookings' || activeTab === 'delivery' || activeTab === 'delivered') {
       fetchVehicles(1, 10000, activeTab === 'bookings');
     }
   }, [activeTab, user, fetchVehicles]);
@@ -397,6 +397,23 @@ function AppContent() {
                   currentPage={currentPage}
                   fetchVehicles={fetchVehicles}
                   isBookingPage={false}
+                  isDeliveredPage={false}
+                  settings={settings}
+                  onDeleteVehicle={handleDeleteVehicle}
+                />
+              )}
+              {activeTab === 'delivered' && (
+                <DeliveryTable
+                  vehicles={vehicles}
+                  branches={branches}
+                  openDrawer={handleOpenDrawer}
+                  openNewBooking={handleOpenNewBooking}
+                  openCrm={handleOpenCrm}
+                  totalVehicles={totalVehicles}
+                  currentPage={currentPage}
+                  fetchVehicles={fetchVehicles}
+                  isBookingPage={false}
+                  isDeliveredPage={true}
                   settings={settings}
                   onDeleteVehicle={handleDeleteVehicle}
                 />
