@@ -39,6 +39,8 @@ const CRM_FIELD_ACCESS = {
   'date':         ['BOOKING IN-CHARGE','CRM'],
   'customername': ['BOOKING IN-CHARGE','CRM'],
   'mobilenumber': ['BOOKING IN-CHARGE','CRM'],
+  'emailid':      ['BOOKING IN-CHARGE','CRM'],
+  'bookingamount': ['BOOKING IN-CHARGE','CRM'],
   'optyid':       ['BOOKING IN-CHARGE','CRM'],
   'ordernumber':  ['CRM'],
   'saporderno':   ['CRM'],

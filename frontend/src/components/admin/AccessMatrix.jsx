@@ -148,6 +148,8 @@ const CRM_FIELD_ACCESS = {
   'date': ['BOOKING IN-CHARGE', 'CRM'],
   'customername': ['BOOKING IN-CHARGE', 'CRM'],
   'mobilenumber': ['BOOKING IN-CHARGE', 'CRM'],
+  'emailid': ['BOOKING IN-CHARGE', 'CRM'],
+  'bookingamount': ['BOOKING IN-CHARGE', 'CRM'],
   'optyid': ['BOOKING IN-CHARGE', 'CRM'],
   'ordernumber': ['CRM'],
   'saporderno': ['CRM'],
@@ -192,6 +194,8 @@ const CRM_GROUPS = [
       { key: 'date', label: 'Booking Date' },
       { key: 'customername', label: 'Customer Name' },
       { key: 'mobilenumber', label: 'Mobile Number' },
+      { key: 'emailid', label: 'Email ID' },
+      { key: 'bookingamount', label: 'Booking Amount' },
       { key: 'optyid', label: 'OPTY ID' },
       { key: 'ordernumber', label: 'BKG Order No' },
       { key: 'saporderno', label: 'SAP Order No' },
@@ -395,37 +399,83 @@ const ROLE_COL_WIDTH = '140px';
 
 function SectionHeader({ title, sectionKey, sectionAccessMap }) {
   const editRoles = sectionAccessMap[sectionKey] ?? [];
+
   return (
-    <tr>
-      <td
-        style={{
-          background: 'linear-gradient(90deg, #0f172a 0%, #1e3a5f 100%)',
-          color: '#fff', fontWeight: 700, fontSize: '0.78rem', letterSpacing: '0.6px',
-          padding: '10px 16px', textTransform: 'uppercase',
-          position: 'sticky', left: 0, zIndex: 2,
-          boxShadow: '2px 0 4px rgba(0,0,0,0.06)',
+    <>
+      <tr>
+        <td
+          colSpan={ALL_ROLES.length + 1}
+          style={{
+            background: 'linear-gradient(90deg, #0f172a 0%, #1e3a5f 100%)',
+            color: '#fff',
+            padding: '10px 16px',
+            borderTop: '2px solid #334155',
+            borderBottom: '1px solid #0f172a'
+          }}
+        >
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px',
+            width: 'max-content'
+          }}>
+            <span style={{ fontWeight: 700, fontSize: '0.8rem', letterSpacing: '0.6px', textTransform: 'uppercase' }}>
+              {title}
+            </span>
+            {sectionKey && (
+              <span style={{ fontSize: '0.68rem', color: '#93c5fd', fontWeight: 600 }}>
+                [{sectionKey}]
+              </span>
+            )}
+            <span style={{ color: '#475569' }}>|</span>
+            <span style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.9)', textTransform: 'uppercase' }}>
+              SECTION DEFAULT EDITORS: <strong style={{ color: '#fff' }}>{editRoles.length ? editRoles.join(', ') : 'ADMIN only'}</strong>
+            </span>
+          </div>
+        </td>
+      </tr>
+      <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+        <th style={{
+          padding: '6px 16px',
+          textAlign: 'left',
+          fontWeight: 700,
+          fontSize: '0.7rem',
+          textTransform: 'uppercase',
+          letterSpacing: '0.4px',
+          color: '#475569',
+          position: 'sticky',
+          left: 0,
+          background: '#f8fafc',
+          zIndex: 2,
+          boxShadow: '2px 0 4px rgba(0,0,0,0.04)',
           width: FIELD_COL_WIDTH,
           minWidth: FIELD_COL_WIDTH,
-          maxWidth: FIELD_COL_WIDTH,
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis'
-        }}
-      >
-        {title}
-      </td>
-      <td
-        colSpan={ALL_ROLES.length}
-        style={{
-          background: '#1e3a5f',
-          color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600, fontSize: '0.7rem',
-          padding: '10px 16px', textTransform: 'uppercase',
-          textAlign: 'left'
-        }}
-      >
-        Section default editors: {editRoles.length ? editRoles.join(', ') : 'ADMIN only'}
-      </td>
-    </tr>
+          maxWidth: FIELD_COL_WIDTH
+        }}>
+          Field Name
+        </th>
+        {ALL_ROLES.map(role => (
+          <th
+            key={role}
+            style={{
+              padding: '6px 10px',
+              textAlign: 'center',
+              fontWeight: 700,
+              fontSize: '0.65rem',
+              textTransform: 'uppercase',
+              letterSpacing: '0.3px',
+              color: '#475569',
+              whiteSpace: 'nowrap',
+              width: ROLE_COL_WIDTH,
+              minWidth: ROLE_COL_WIDTH,
+              maxWidth: ROLE_COL_WIDTH
+            }}
+          >
+            {role.replace('_', ' ')}
+          </th>
+        ))}
+      </tr>
+    </>
   );
 }
 

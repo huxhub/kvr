@@ -180,7 +180,7 @@ export default function VehicleDrawer({ vehicle, branches, onClose, onSaved, isB
   };
 
   const userRoles = user?.role ? user.role.split(',').map(r => r.trim()) : [];
-  const isViewOnly = userRoles.includes('MANAGEMENT') || (!isBookingPage && userRoles.includes('CRM') && !userRoles.includes('ADMIN'));
+  const isViewOnly = userRoles.includes('MANAGEMENT') && !userRoles.includes('ADMIN');
 
 
 
@@ -258,8 +258,8 @@ export default function VehicleDrawer({ vehicle, branches, onClose, onSaved, isB
         <div className="modal-footer" style={{ borderTop: '1px solid var(--border-light)', padding: '16px 24px' }}>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginLeft: 'auto' }}>
             <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn-primary" disabled={isViewOnly || submitting || !!formData.crmGenerated}>
-              {isViewOnly ? 'View-Only Mode' : formData.crmGenerated ? 'Booking Locked' : submitting ? 'Saving...' : isNew ? (isBookingPage ? 'Create Booking' : 'Register Vehicle') : 'Save Changes'}
+            <button type="submit" className="btn-primary" disabled={isViewOnly || submitting || (isBookingPage && !!formData.crmGenerated)}>
+              {isViewOnly ? 'View-Only Mode' : (isBookingPage && formData.crmGenerated) ? 'Booking Locked' : submitting ? 'Saving...' : isNew ? (isBookingPage ? 'Create Booking' : 'Register Vehicle') : 'Save Changes'}
             </button>
           </div>
         </div>
