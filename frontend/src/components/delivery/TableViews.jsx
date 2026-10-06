@@ -34,7 +34,7 @@ export default function TableViews({
       <table className="table-master">
         <thead>
           <tr>
-            <th style={{ width: '40px', paddingLeft: '16px' }}>#</th>
+            <th style={{ width: '60px', paddingLeft: '16px' }}>SL NO</th>
             <th>PL / Variant</th>
             <th>Branch</th>
             <th>Expected Delivery</th>

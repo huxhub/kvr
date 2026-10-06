@@ -12,7 +12,7 @@ export default function AuditLogTable({
       <table className="audit-table">
         <thead>
           <tr>
-            <th style={{ width: '40px', paddingLeft: '16px' }}>#</th>
+            <th style={{ width: '60px', paddingLeft: '16px' }}>SL NO</th>
             <th>Timestamp</th>
             <th>Chassis Number</th>
             <th>Customer Name</th>

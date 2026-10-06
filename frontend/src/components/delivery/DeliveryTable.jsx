@@ -565,7 +565,7 @@ export default function DeliveryTable({
             <thead>
               {isBookingPage ? (
                 <tr>
-                  <th style={{ width: '40px', paddingLeft: '16px' }}>SL NO</th>
+                  <th style={{ width: '60px', paddingLeft: '16px' }}>SL NO</th>
                   <th>Booking Date</th>
                   <th>Full Name</th>
                   <th>Mobile No</th>
@@ -592,7 +592,7 @@ export default function DeliveryTable({
                 </tr>
               ) : (
                 <tr>
-                  <th style={{ width: '40px', paddingLeft: '16px' }}>#</th>
+                  <th style={{ width: '60px', paddingLeft: '16px' }}>SL NO</th>
                   <th>Customer Name</th>
                   <th>PL / Variant</th>
                   <th>Branch</th>

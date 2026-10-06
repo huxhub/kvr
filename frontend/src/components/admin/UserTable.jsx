@@ -15,7 +15,7 @@ export default function UserTable({
         <table className="audit-table">
           <thead>
             <tr>
-              <th style={{ width: '45px', textAlign: 'center', paddingLeft: '16px' }}>#</th>
+              <th style={{ width: '60px', textAlign: 'center', paddingLeft: '16px' }}>SL NO</th>
               <th>Name</th>
               <th>Username</th>
               <th>Email</th>
