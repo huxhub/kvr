@@ -92,6 +92,16 @@ export default function FilterInputs({
       </div>
 
       <div className="filter-group">
+        <label htmlFor="filter-tmgaStatus">TMGA STATUS</label>
+        <CustomDropdown 
+          id="filter-tmgaStatus" 
+          value={filters.tmgaStatus} 
+          onChange={handleChange} 
+          options={deptOptions} 
+        />
+      </div>
+
+      <div className="filter-group">
         <label htmlFor="filter-pdiStatus">PDI STATUS</label>
         <CustomDropdown 
           id="filter-pdiStatus" 

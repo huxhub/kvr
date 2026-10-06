@@ -42,6 +42,7 @@ export default function TableViews({
             <th>TMA Status</th>
             <th>Acc Status</th>
             <th>Reg Status</th>
+            <th>TMGA Status</th>
             <th>PDI Status</th>
             <th>Deliv Status</th>
             <th>Progress</th>
@@ -50,7 +51,7 @@ export default function TableViews({
         <tbody>
           {filteredVehicles.length === 0 ? (
             <tr>
-              <td colSpan="12" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '30px' }}>
+              <td colSpan="13" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '30px' }}>
                 No matching vehicle records found.
               </td>
             </tr>

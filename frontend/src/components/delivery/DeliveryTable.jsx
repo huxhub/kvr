@@ -40,7 +40,7 @@ export default function DeliveryTable({
     status: '',
     pending: '',
     ca: '', tl: '',
-    finStatus: '', tmaStatus: '', accStatus: '', regStatus: '', pdiStatus: '',
+    finStatus: '', tmaStatus: '', accStatus: '', regStatus: '', tmgaStatus: '', pdiStatus: '',
     crmGenerated: ''
   });
 
@@ -297,6 +297,7 @@ export default function DeliveryTable({
     if (!checkDept(currentFilters.tmaStatus, SECTIONS.tma.statusField)) return false;
     if (!checkDept(currentFilters.accStatus, SECTIONS.accounts.statusField)) return false;
     if (!checkDept(currentFilters.regStatus, SECTIONS.registration.statusField)) return false;
+    if (!checkDept(currentFilters.tmgaStatus, SECTIONS.tmga.statusField)) return false;
     if (!checkDept(currentFilters.pdiStatus, SECTIONS.pdi.statusField)) return false;
 
     if (isBooking && currentFilters.crmGenerated) {
@@ -599,6 +600,7 @@ export default function DeliveryTable({
                   <th>TMA Status</th>
                   <th>Acc Status</th>
                   <th>Reg Status</th>
+                  <th>TMGA Status</th>
                   <th>PDI Status</th>
                   <th>Deliv Status</th>
                   <th>Progress</th>
@@ -609,7 +611,7 @@ export default function DeliveryTable({
             <tbody>
               {paginatedVehicles.length === 0 ? (
                 <tr>
-                  <td colSpan={isBookingPage ? (isAdmin ? 24 : 23) : (isAdmin ? 12 : 11)} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '30px' }}>
+                  <td colSpan={isBookingPage ? (isAdmin ? 24 : 23) : (isAdmin ? 13 : 12)} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '30px' }}>
                     No matching vehicle records found.
                   </td>
                 </tr>

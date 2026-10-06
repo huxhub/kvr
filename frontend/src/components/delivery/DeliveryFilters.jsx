@@ -21,7 +21,7 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
       pending: '',
       ca: '', tl: '',
       pl: '', variant: '', colour: '', boStatus: '',
-      finStatus: '', tmaStatus: '', accStatus: '', regStatus: '', pdiStatus: '',
+      finStatus: '', tmaStatus: '', accStatus: '', regStatus: '', tmgaStatus: '', pdiStatus: '',
       crmGenerated: ''
     });
   };
@@ -243,6 +243,16 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
               <CustomDropdown 
                 id="filter-regStatus" 
                 value={filters.regStatus} 
+                onChange={handleChange} 
+                options={deptOptions} 
+              />
+            </div>
+
+            <div className="filter-group">
+              <label htmlFor="filter-tmgaStatus">TMGA STATUS</label>
+              <CustomDropdown 
+                id="filter-tmgaStatus" 
+                value={filters.tmgaStatus} 
                 onChange={handleChange} 
                 options={deptOptions} 
               />

@@ -39,6 +39,7 @@ export default function DeliveryTableRow({ vehicle, openDrawer, index, isAdmin, 
       <td>{renderStatusPill(vehicle.tmaStatus, vehicle.tmaRemark)}</td>
       <td>{renderStatusPill(vehicle.accountsStatus, vehicle.accountsRemark)}</td>
       <td>{renderStatusPill(vehicle.registrationStatus, vehicle.registrationRemark)}</td>
+      <td>{renderStatusPill(vehicle.tmgaStatus, vehicle.tmgaRemark)}</td>
       <td>{renderStatusPill(vehicle.pdiStatus, vehicle.pdiRemark)}</td>
       <td>{renderStatusPill(vehicle.deliveryStatus, vehicle.cxoRemark)}</td>
       <td>
