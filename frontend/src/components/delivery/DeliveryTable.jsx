@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useCallback } from 'react';
 import DeliveryFilters from './DeliveryFilters.jsx';
 import DeliveryGridItem from './DeliveryGridItem.jsx';
 import DeliveryTableRow from './DeliveryTableRow.jsx';
@@ -19,6 +19,7 @@ export default function DeliveryTable({
   currentPage = 1,
   fetchVehicles,
   isBookingPage = false,
+  isCrmGeneratedPage = false,
   isDeliveredPage = false,
   settings,
   onDeleteVehicle
@@ -223,7 +224,7 @@ export default function DeliveryTable({
             newStatus: 'Booked',
             remarks: 'CSV Bulk booking import'
           });
-        } catch (_) {}
+        } catch (_) { }
         successCount++;
       } catch (err) {
         console.error(`Failed to import row ${i + 1}:`, err);
@@ -248,13 +249,14 @@ export default function DeliveryTable({
 
   const [isExporting, setIsExporting] = useState(false);
 
-  const filterRecord = (v, currentFilters, isBooking, isDelivered) => {
+  const filterRecord = useCallback((v, currentFilters, isBooking, isDelivered) => {
     const isVehicleDelivered = v.vehicleStatus === 'Delivered' || v.deliveryStatus === 'Approved' || v.deliveryStatus === 'Delivered';
 
     if (isDelivered) {
       if (!isVehicleDelivered) return false;
     } else if (isBooking) {
       if (v.vehicleStatus !== 'Booked' || isVehicleDelivered) return false;
+      if (isCrmGeneratedPage ? !v.crmGenerated : !!v.crmGenerated) return false;
     } else {
       if (v.vehicleStatus === 'Booked' || isVehicleDelivered) return false;
     }
@@ -306,11 +308,11 @@ export default function DeliveryTable({
     }
 
     return true;
-  };
+  }, [isCrmGeneratedPage]);
 
   const filteredVehicles = useMemo(() => {
     return vehicles.filter(v => filterRecord(v, filters, isBookingPage, isDeliveredPage));
-  }, [vehicles, filters, isBookingPage, isDeliveredPage]);
+  }, [vehicles, filters, isBookingPage, isDeliveredPage, filterRecord]);
 
   const filteredCount = filteredVehicles.length;
   const totalPages = Math.max(1, Math.ceil(filteredCount / ITEMS_PER_PAGE));
@@ -408,6 +410,7 @@ export default function DeliveryTable({
         { key: 'sss', label: 'SSS Discount' },
         { key: 'kpkb', label: 'KPKB Special Scheme' },
         { key: 'solarOffer', label: 'Solar Offer' },
+        { key: 'kvrSupport', label: 'KVR Support' },
         { key: 'priceDifference', label: 'Price Difference' },
         { key: 'offerRemark', label: 'Offer Remark' },
         { key: 'financeType', label: 'Finance Type' },
@@ -498,18 +501,18 @@ export default function DeliveryTable({
           Showing <span id="lbl-result-count">{filteredVehicles.length}</span> of <span id="lbl-total-count">{totalVehicles || vehicles.length}</span> Vehicles
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          {!isDeliveredPage && getPermission(settings, isBookingPage ? 'booking' : 'crm', isBookingPage ? 'btn_new_booking' : 'btn_crm_form', isBookingPage ? 'BOOKING ACTIONS' : 'CRM ACTIONS', user?.role).view && (
+          {!isDeliveredPage && !isCrmGeneratedPage && getPermission(settings, isBookingPage ? 'booking' : 'crm', isBookingPage ? 'btn_new_booking' : 'btn_crm_form', isBookingPage ? 'BOOKING ACTIONS' : 'CRM ACTIONS', user?.role).view && (
             <button className="btn-primary" onClick={() => isBookingPage ? openNewBooking() : openCrm()}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
               {isBookingPage ? 'New Booking' : 'CRM'}
             </button>
           )}
-          {isBookingPage && getPermission(settings, 'booking', 'btn_upload_csv', 'BOOKING ACTIONS', user?.role).view && (
+          {isBookingPage && !isCrmGeneratedPage && getPermission(settings, 'booking', 'btn_upload_csv', 'BOOKING ACTIONS', user?.role).view && (
             <>
-              <button 
-                className="btn-secondary" 
-                onClick={() => fileInputRef.current?.click()} 
-                title="Upload CSV Booking Data" 
+              <button
+                className="btn-secondary"
+                onClick={() => fileInputRef.current?.click()}
+                title="Upload CSV Booking Data"
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px' }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}>
@@ -519,12 +522,12 @@ export default function DeliveryTable({
                 </svg>
                 Upload CSV
               </button>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                accept=".csv" 
-                onChange={handleFileChange} 
-                style={{ display: 'none' }} 
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept=".csv"
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
               />
             </>
           )}
@@ -565,7 +568,7 @@ export default function DeliveryTable({
             <thead>
               {isBookingPage ? (
                 <tr>
-                  <th style={{ width: '60px', paddingLeft: '16px' }}>SL NO</th>
+                  <th style={{ width: '40px', paddingLeft: '16px' }}>#</th>
                   <th>Booking Date</th>
                   <th>Full Name</th>
                   <th>Mobile No</th>
@@ -592,7 +595,7 @@ export default function DeliveryTable({
                 </tr>
               ) : (
                 <tr>
-                  <th style={{ width: '60px', paddingLeft: '16px' }}>SL NO</th>
+                  <th style={{ width: '40px', paddingLeft: '16px' }}>SL NO</th>
                   <th>Customer Name</th>
                   <th>PL / Variant</th>
                   <th>Branch</th>
@@ -618,7 +621,7 @@ export default function DeliveryTable({
               ) : (
                 paginatedVehicles.map((v, i) => (
                   isBookingPage ? (
-                    <BookingTableRow key={v.chassisNumber} vehicle={v} openDrawer={openDrawer} index={(safePage - 1) * ITEMS_PER_PAGE + i + 1} isAdmin={isAdmin} onDelete={onDeleteVehicle} />
+                    <BookingTableRow key={v.chassisNumber} vehicle={v} openDrawer={openDrawer} index={(safePage - 1) * ITEMS_PER_PAGE + i + 1} isAdmin={isAdmin && !isCrmGeneratedPage} onDelete={onDeleteVehicle} />
                   ) : (
                     <DeliveryTableRow key={v.chassisNumber} vehicle={v} openDrawer={openDrawer} index={(safePage - 1) * ITEMS_PER_PAGE + i + 1} isAdmin={isAdmin} onDelete={onDeleteVehicle} />
                   )

@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS vehicles (
   sss                 INT          DEFAULT 0,
   kpkb                INT          DEFAULT 0,
   solarOffer          INT          DEFAULT 0,
+  kvrSupport          TEXT,
   priceDifference     INT          DEFAULT 0,
   offerRemark         TEXT,
 

@@ -1,5 +1,6 @@
 import * as Vehicle from '../models/Vehicle.js';
 import * as Audit from '../models/Audit.js';
+import { pool } from '../config/db.js';
 
 // Maps each vehicle field to the department it belongs to (for audit labelling)
 const FIELD_DEPARTMENT_MAP = {
@@ -16,7 +17,7 @@ const FIELD_DEPARTMENT_MAP = {
   // Offer
   hypothecation: 'Offer', cashDiscount: 'Offer', exchangeLoyalty: 'Offer',
   corporate: 'Offer', sss: 'Offer', kpkb: 'Offer', solarOffer: 'Offer',
-  priceDifference: 'Offer', offerRemark: 'Offer',
+  kvrSupport: 'Offer', priceDifference: 'Offer', offerRemark: 'Offer',
   // Finance
   financeType: 'Finance', onRoadPrice: 'Finance', ip: 'Finance',
   loanAmount: 'Finance', balanceAmount: 'Finance', fundPercentage: 'Finance',
@@ -52,6 +53,7 @@ export const getVehicles = async (req, res) => {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 25;
     const isBookingPage = req.query.isBookingPage !== undefined ? req.query.isBookingPage : (req.query.type === 'booking' ? 'true' : req.query.type === 'crm' ? 'false' : undefined);
+    const crmGenerated = req.query.crmGenerated;
     
     // Allow larger limit for dashboard metrics (up to 10000)
     const activeLimit = Math.min(10000, Math.max(1, limit));
@@ -65,8 +67,8 @@ export const getVehicles = async (req, res) => {
     const userBranch = isBranchRestricted ? sessionUser.branch : undefined;
 
     const [vehicles, totalCount] = await Promise.all([
-      Vehicle.findFiltered({ branch: userBranch, isBookingPage, page, limit: activeLimit }),
-      Vehicle.countFiltered({ branch: userBranch, isBookingPage })
+      Vehicle.findFiltered({ branch: userBranch, isBookingPage, crmGenerated, page, limit: activeLimit }),
+      Vehicle.countFiltered({ branch: userBranch, isBookingPage, crmGenerated })
     ]);
 
     // Expose headers for cross-origin or local clients
@@ -219,6 +221,7 @@ export const getDistinctPpls = async (req, res) => {
 };
 
 export const generateCrm = async (req, res) => {
+  let connection;
   try {
     const { originalChassisNumber, newChassisNumber } = req.body;
     console.log('generateCrm: Received body:', req.body);
@@ -229,14 +232,19 @@ export const generateCrm = async (req, res) => {
     }
 
     // 1. Fetch original booking
-    const original = await Vehicle.findByChassis(originalChassisNumber);
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    const original = await Vehicle.findByChassis(originalChassisNumber, connection);
     if (!original) {
       console.warn(`generateCrm: Original booking with chassis number ${originalChassisNumber} not found`);
+      await connection.rollback();
       return res.status(404).json({ error: 'Original booking not found' });
     }
 
     if (original.crmGenerated) {
       console.warn(`generateCrm: Booking ${originalChassisNumber} has already been crmGenerated`);
+      await connection.rollback();
       return res.status(400).json({ error: 'This booking has already been processed' });
     }
 
@@ -244,9 +252,10 @@ export const generateCrm = async (req, res) => {
 
     // 2. Check if new chassis number already exists (only if different)
     if (!isSameChassis) {
-      const existing = await Vehicle.findByChassis(newChassisNumber);
+      const existing = await Vehicle.findByChassis(newChassisNumber, connection);
       if (existing) {
         console.warn(`generateCrm: New chassis number ${newChassisNumber} already exists in database`);
+        await connection.rollback();
         return res.status(400).json({ error: 'New Chassis Number already exists in the system' });
       }
     }
@@ -264,25 +273,25 @@ export const generateCrm = async (req, res) => {
       
       console.log(`generateCrm: Same chassis case. Renaming booking to ${bookingChassis}`);
       // Update original booking: change its chassis number to bookingChassis, set crmGenerated = 1, and link realChassisNumber to originalChassisNumber
-      await Vehicle.updateByChassis(originalChassisNumber, { 
+      await Vehicle.updateByChassis(originalChassisNumber, {
         chassisNumber: bookingChassis, 
         crmGenerated: 1, 
         realChassisNumber: originalChassisNumber 
-      });
+      }, connection);
 
       console.log(`generateCrm: Creating new CRM record with chassis ${originalChassisNumber}`);
       // Create new CRM record with the originalChassisNumber
       duplicatedData.chassisNumber = originalChassisNumber;
       duplicatedData.vehicleStatus = 'Pending';
       duplicatedData.crmGenerated = 0;
-      await Vehicle.create(duplicatedData);
+      await Vehicle.create(duplicatedData, connection);
     } else {
       console.log(`generateCrm: Different chassis case. Renaming to ${newChassisNumber}`);
       duplicatedData.chassisNumber = newChassisNumber;
       duplicatedData.vehicleStatus = 'Pending';
       duplicatedData.crmGenerated = 0;
-      await Vehicle.create(duplicatedData);
-      await Vehicle.updateByChassis(originalChassisNumber, { crmGenerated: 1, realChassisNumber: newChassisNumber });
+      await Vehicle.create(duplicatedData, connection);
+      await Vehicle.updateByChassis(originalChassisNumber, { crmGenerated: 1, realChassisNumber: newChassisNumber }, connection);
     }
 
     // 4. Create Audit Logs
@@ -309,12 +318,17 @@ export const generateCrm = async (req, res) => {
         remarks: `Vehicle entry generated from booking ${bookingChassis}`,
         timestamp: now
       }
-    ]);
+    ], connection);
+
+    await connection.commit();
 
     console.log(`generateCrm: CRM Delivery Record generated successfully`);
     res.status(201).json({ message: 'CRM Delivery Record Generated successfully', newChassisNumber });
   } catch (error) {
+    if (connection) await connection.rollback();
     console.error('CRITICAL ERROR in generateCrm controller:', error);
     res.status(500).json({ error: error.message || String(error) });
+  } finally {
+    if (connection) connection.release();
   }
 };

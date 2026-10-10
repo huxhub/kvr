@@ -197,6 +197,7 @@ export function useSettings({ branches, settings, setSettings, companyName, setC
       { key: 'sss', label: 'SSS Discount' },
       { key: 'kpkb', label: 'KPKB / Special Scheme' },
       { key: 'solarOffer', label: 'Solar Offer' },
+      { key: 'kvrSupport', label: 'KVR Support' },
       { key: 'priceDifference', label: 'Price Difference' },
       { key: 'offerRemark', label: 'Offer Remark' },
       { key: 'financeType', label: 'Finance Type' },

@@ -11,15 +11,24 @@ export function useVehicles() {
   const [error, setError] = useState(null);
   const { user } = useAuth();
   const lastIsBookingPageRef = useRef(undefined);
+  const lastCrmGeneratedRef = useRef(undefined);
 
-  const fetchVehicles = useCallback(async (page = 1, limit = 10000, isBookingPage) => {
+  const fetchVehicles = useCallback(async (page = 1, limit = 10000, isBookingPage, crmGenerated) => {
     setLoading(true);
     if (isBookingPage !== undefined) {
       lastIsBookingPageRef.current = isBookingPage;
     }
+    if (isBookingPage === false) {
+      lastCrmGeneratedRef.current = undefined;
+    } else if (crmGenerated !== undefined) {
+      lastCrmGeneratedRef.current = crmGenerated;
+    }
     try {
       const targetIsBooking = isBookingPage !== undefined ? isBookingPage : lastIsBookingPageRef.current;
-      const { vehicles: fetchedVehicles, totalCount } = await apiGetVehicles(page, limit, targetIsBooking);
+      const targetCrmGenerated = targetIsBooking === false
+        ? undefined
+        : (crmGenerated !== undefined ? crmGenerated : lastCrmGeneratedRef.current);
+      const { vehicles: fetchedVehicles, totalCount } = await apiGetVehicles(page, limit, targetIsBooking, targetCrmGenerated);
       setVehicles(fetchedVehicles);
       setTotalVehicles(totalCount);
       setCurrentPage(page);
@@ -42,7 +51,7 @@ export function useVehicles() {
         }
       }
 
-      await fetchVehicles(1, 10000, lastIsBookingPageRef.current);
+      await fetchVehicles(1, 10000, lastIsBookingPageRef.current, lastCrmGeneratedRef.current);
       return { success: true, auditEntries };
     } catch (err) {
       return { success: false, error: err.message };
@@ -69,7 +78,7 @@ export function useVehicles() {
         console.error("Failed to save initial audit log:", auditErr);
       }
 
-      await fetchVehicles(1, 10000, lastIsBookingPageRef.current);
+      await fetchVehicles(1, 10000, lastIsBookingPageRef.current, lastCrmGeneratedRef.current);
       return { success: true };
     } catch (err) {
       return { success: false, error: err.message };
@@ -79,7 +88,7 @@ export function useVehicles() {
   const deleteVehicle = async (chassisNumber) => {
     try {
       await apiDeleteVehicle(chassisNumber, user.role);
-      await fetchVehicles(1, 10000, lastIsBookingPageRef.current);
+      await fetchVehicles(1, 10000, lastIsBookingPageRef.current, lastCrmGeneratedRef.current);
       return { success: true };
     } catch (err) {
       return { success: false, error: err.message };

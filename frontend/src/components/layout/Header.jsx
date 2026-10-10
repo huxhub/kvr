@@ -18,6 +18,7 @@ export default function Header({
   const tabTitles = {
     dashboard: 'Dashboard',
     bookings: 'Booking Master List',
+    'crm-generated': 'CRM Generated Bookings',
     delivery: 'Delivery Master List',
     delivered: 'Delivered Master List',
     audit: 'Audit History Logs',
@@ -28,6 +29,7 @@ export default function Header({
   const tabSubtitles = {
     dashboard: 'System Overview & Department Bottlenecks',
     bookings: 'Track vehicle bookings, sales, and allocations',
+    'crm-generated': 'Locked bookings successfully transferred to delivery',
     delivery: 'Complete vehicle records and delivery tracking',
     delivered: 'Completed vehicle deliveries and delivered records',
     audit: 'Review and track system changes',

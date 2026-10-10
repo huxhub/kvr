@@ -57,7 +57,7 @@ export async function countByBranch(branch) {
 }
 
 /** Insert one or many audit log records */
-export async function insertMany(logs) {
+export async function insertMany(logs, executor = pool) {
   if (!Array.isArray(logs) || logs.length === 0) return 0;
 
   // Build a multi-row INSERT for efficiency
@@ -71,7 +71,7 @@ export async function insertMany(logs) {
     }
   }
 
-  const [result] = await pool.execute(
+  const [result] = await executor.execute(
     `INSERT INTO audit_logs (${AUDIT_COLUMNS.join(', ')}) VALUES ${allPlaceholders}`,
     values
   );

@@ -58,9 +58,9 @@ export function useAppState() {
     }
     const branchesSet = new Set([...(settings.branches || [])]);
     if (user && user.role !== 'ADMIN' && user.branch && user.branch !== 'All Branches') branchesSet.add(user.branch);
-    vehicles.forEach(v => { if (v.branch && v.branch !== 'All Branches') branchesSet.add(v.branch); });
+
     return Array.from(branchesSet).sort();
-  }, [vehicles, user, settings.branches]);
+  }, [user, settings.branches]);
 
   const handleOpenDrawer = (vehicle) => {
     setSelectedVehicle(vehicle);

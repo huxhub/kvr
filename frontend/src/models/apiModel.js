@@ -18,10 +18,13 @@ async function handleResponseError(res, defaultMessage) {
   return new Error(errMsg);
 }
 
-export async function getVehicles(page = 1, limit = 25, isBookingPage) {
+export async function getVehicles(page = 1, limit = 25, isBookingPage, crmGenerated) {
   let url = `${API_BASE_URL}/api/vehicles?page=${page}&limit=${limit}`;
   if (isBookingPage !== undefined && isBookingPage !== null) {
     url += `&isBookingPage=${Boolean(isBookingPage)}`;
+  }
+  if (crmGenerated !== undefined && crmGenerated !== null) {
+    url += `&crmGenerated=${Boolean(crmGenerated)}`;
   }
   const res = await fetch(url, { credentials: 'include' });
   if (!res.ok) {

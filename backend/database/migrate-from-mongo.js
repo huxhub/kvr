@@ -86,7 +86,7 @@ async function migrate() {
       'invoiceNumber', 'source', 'year', 'vehicleStatus', 'fuel', 'pl',
       'variant', 'colour', 'vc', 'ca', 'tl', 'branch', 'hypothecation',
       'cashDiscount', 'exchangeLoyalty', 'corporate', 'sss', 'kpkb',
-      'solarOffer', 'priceDifference', 'offerRemark', 'financeType',
+      'solarOffer', 'kvrSupport', 'priceDifference', 'offerRemark', 'financeType',
       'onRoadPrice', 'ip', 'loanAmount', 'balanceAmount', 'fundPercentage',
       'loanAmountStatus', 'financeRemark', 'financeStatus', 'financeTimestamp',
       'exchangeYesNo', 'tmaType', 'makeAndModel', 'regNumber', 'tmaRemark',

@@ -52,6 +52,7 @@ export const SECTIONS = {
       { name: 'sss', label: 'SSS Discount (₹)', type: 'number', required: false },
       { name: 'kpkb', label: 'KPKB / Special Scheme (₹)', type: 'number', required: false },
       { name: 'solarOffer', label: 'Solar Offer (₹)', type: 'number', required: false },
+      { name: 'kvrSupport', label: 'KVR Support', type: 'text', required: false },
       { name: 'priceDifference', label: 'Price Difference (₹)', type: 'number', required: false },
       { name: 'offerRemark', label: 'Offer Remark', type: 'text', required: false }
     ]

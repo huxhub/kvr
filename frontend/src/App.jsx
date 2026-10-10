@@ -241,17 +241,19 @@ function AppContent() {
 
   useEffect(() => {
     if (!user) return;
-    if (activeTab === 'bookings' || activeTab === 'delivery' || activeTab === 'delivered') {
-      fetchVehicles(1, 10000, activeTab === 'bookings');
+    if (activeTab === 'bookings' || activeTab === 'crm-generated' || activeTab === 'delivery' || activeTab === 'delivered') {
+      const isBookingList = activeTab === 'bookings' || activeTab === 'crm-generated';
+      const crmGenerated = activeTab === 'crm-generated' ? true : activeTab === 'bookings' ? false : undefined;
+      fetchVehicles(1, 10000, isBookingList, crmGenerated);
     }
   }, [activeTab, user, fetchVehicles]);
 
   const allBranches = useMemo(() => {
     const branchesSet = new Set([...(settings.branches || [])]);
     if (user && user.role !== 'ADMIN' && user.branch && user.branch !== 'All Branches') branchesSet.add(user.branch);
-    vehicles.forEach(v => { if (v.branch && v.branch !== 'All Branches') branchesSet.add(v.branch); });
+
     return Array.from(branchesSet).sort();
-  }, [vehicles, user, settings.branches]);
+  }, [user, settings.branches]);
 
   const branches = useMemo(() => {
     const isBranchRestricted = !userRoles.includes('ADMIN') && user?.branch && user?.branch !== 'All Branches';
@@ -260,6 +262,12 @@ function AppContent() {
     }
     return allBranches;
   }, [user, allBranches, userRoles]);
+
+  useEffect(() => {
+    if (selectedBranch && !branches.includes(selectedBranch)) {
+      setSelectedBranch('');
+    }
+  }, [branches, selectedBranch]);
 
   // While session restore is in progress, show a minimal spinner
   if (authLoading) {
@@ -386,6 +394,22 @@ function AppContent() {
                   onDeleteVehicle={handleDeleteVehicle}
                 />
               )}
+              {activeTab === 'crm-generated' && (
+                <DeliveryTable
+                  vehicles={vehicles}
+                  branches={branches}
+                  openDrawer={handleOpenDrawer}
+                  openNewBooking={handleOpenNewBooking}
+                  openCrm={handleOpenCrm}
+                  totalVehicles={totalVehicles}
+                  currentPage={currentPage}
+                  fetchVehicles={fetchVehicles}
+                  isBookingPage={true}
+                  isCrmGeneratedPage={true}
+                  settings={settings}
+                  onDeleteVehicle={handleDeleteVehicle}
+                />
+              )}
               {activeTab === 'delivery' && (
                 <DeliveryTable
                   vehicles={vehicles}
@@ -440,7 +464,7 @@ function AppContent() {
       <ChunkErrorBoundary>
         {isDrawerOpen && (
           <Suspense fallback={null}>
-            <VehicleDrawer vehicle={selectedVehicle} branches={allBranches} onClose={handleCloseDrawer} onSaved={() => fetchVehicles(1, 10000, activeTab === 'bookings')} isBookingPage={activeTab === 'bookings'} />
+            <VehicleDrawer vehicle={selectedVehicle} branches={allBranches} onClose={handleCloseDrawer} onSaved={() => fetchVehicles(1, 10000, activeTab === 'bookings' || activeTab === 'crm-generated', activeTab === 'crm-generated' ? true : activeTab === 'bookings' ? false : undefined)} isBookingPage={activeTab === 'bookings' || activeTab === 'crm-generated'} />
           </Suspense>
         )}
 

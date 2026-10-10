@@ -7,6 +7,18 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { STATUS_VALUES, SECTIONS } from '../../models/apiModel.js';
 
+const BOOKING_SOURCE_STORAGE_KEY = 'kvr.crmBookingSources';
+const DEFAULT_BOOKING_SOURCES = ['Walk-in', 'Referral', 'Digital Ads', 'Social Media', 'Exchange Event', 'Co-operative Society'];
+
+function loadStoredBookingSources() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(BOOKING_SOURCE_STORAGE_KEY) || '[]');
+    return Array.isArray(stored) ? stored.filter(value => typeof value === 'string' && value.trim()) : [];
+  } catch {
+    return [];
+  }
+}
+
 // ============================================================
 // CRM FORM — ROLE-BASED ACCESS CONTROL CONFIGURATION
 // ============================================================
@@ -99,6 +111,24 @@ export default function CrmSectionBlock({ formData, handleChange, branches = [] 
   const [dbSettings, setDbSettings] = useState(null);
   const [pplOptions, setPplOptions] = useState(['Tiago', 'Tigor', 'Altroz', 'Punch', 'Nexon', 'Harrier', 'Safari']);
   const [isPplOpen, setIsPplOpen] = useState(false);
+  const [bookingSourceOptions, setBookingSourceOptions] = useState(() => [
+    ...new Set([...DEFAULT_BOOKING_SOURCES, ...loadStoredBookingSources()])
+  ]);
+
+  const rememberBookingSource = (value) => {
+    const normalizedValue = value?.trim();
+    if (!normalizedValue) return;
+
+    setBookingSourceOptions(currentOptions => {
+      if (currentOptions.some(option => option.toLowerCase() === normalizedValue.toLowerCase())) {
+        return currentOptions;
+      }
+
+      const nextOptions = [...currentOptions, normalizedValue];
+      localStorage.setItem(BOOKING_SOURCE_STORAGE_KEY, JSON.stringify(nextOptions));
+      return nextOptions;
+    });
+  };
 
   useEffect(() => {
     async function loadSettings() {
@@ -339,6 +369,33 @@ export default function CrmSectionBlock({ formData, handleChange, branches = [] 
       );
     }
 
+    if (field.name === 'source') {
+      return (
+        <div key={field.name} className="form-field">
+          <label htmlFor="crm-booking-source">{field.label} {field.required ? '*' : ''}</label>
+          <input
+            id="crm-booking-source"
+            type="text"
+            name={field.name}
+            list="crm-booking-source-options"
+            value={formData[field.name] || ''}
+            onChange={handleChange}
+            onBlur={(event) => rememberBookingSource(event.target.value)}
+            required={field.required && !finalDisabled}
+            disabled={finalDisabled}
+            placeholder="Select or type a booking source..."
+            autoComplete="off"
+            style={highlightStyle}
+          />
+          <datalist id="crm-booking-source-options">
+            {bookingSourceOptions.map(option => (
+              <option key={option} value={option} />
+            ))}
+          </datalist>
+        </div>
+      );
+    }
+
     if (field.type === 'status' || field.type === 'select' || field.name === 'branch') {
       let options = field.options || Object.values(STATUS_VALUES);
       if (field.name === 'branch') options = branches;
@@ -405,13 +462,18 @@ export default function CrmSectionBlock({ formData, handleChange, branches = [] 
       );
     }
 
+    let inputValue = formData[field.name] ?? '';
+    if (field.type === 'text' && (inputValue === 0 || (field.name === 'kvrSupport' && inputValue === '0'))) {
+      inputValue = '';
+    }
+
     return (
       <div key={field.name} className="form-field">
         <label>{field.label} {field.required ? '*' : ''}</label>
         <input
           type={field.type}
           name={field.name}
-          value={formData[field.name] ?? ''}
+          value={inputValue}
           onChange={handleChange}
           required={field.required && !finalDisabled}
           disabled={finalDisabled}

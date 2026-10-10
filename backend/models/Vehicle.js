@@ -12,7 +12,7 @@ const VEHICLE_COLUMNS = [
   'variant', 'colour', 'boStatus', 'boDate', 'vc', 'ca', 'tl', 'branch', 'region', 
   'crmBookingStatus', 'branchStatus', 'branchRemark', 'hypothecation',
   'cashDiscount', 'exchangeLoyalty', 'corporate', 'sss', 'kpkb',
-  'solarOffer', 'priceDifference', 'offerRemark', 'financeType',
+  'solarOffer', 'kvrSupport', 'priceDifference', 'offerRemark', 'financeType',
   'onRoadPrice', 'ip', 'loanAmount', 'balanceAmount', 'fundPercentage',
   'loanAmountStatus', 'financeRemark', 'financeStatus', 'financeTimestamp',
   'exchangeYesNo', 'tmaType', 'makeAndModel', 'regNumber', 'tmaRemark',
@@ -28,7 +28,7 @@ const VEHICLE_COLUMNS = [
 ];
 
 /** Get all vehicles (paginated with status/branch filtering) */
-export async function findFiltered({ branch, isBookingPage, page = 1, limit = 25 }) {
+export async function findFiltered({ branch, isBookingPage, crmGenerated, page = 1, limit = 25 }) {
   const activeLimit = Math.min(10000, Math.max(1, parseInt(limit, 10) || 25));
   const activePage = Math.max(1, parseInt(page, 10) || 1);
   const offset = (activePage - 1) * activeLimit;
@@ -47,6 +47,12 @@ export async function findFiltered({ branch, isBookingPage, page = 1, limit = 25
     conditions.push('vehicleStatus != "Booked"');
   }
 
+  if (crmGenerated === 'true' || crmGenerated === true || crmGenerated === '1') {
+    conditions.push('crmGenerated = 1');
+  } else if (crmGenerated === 'false' || crmGenerated === false || crmGenerated === '0') {
+    conditions.push('(crmGenerated = 0 OR crmGenerated IS NULL)');
+  }
+
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
   const query = `SELECT * FROM vehicles ${whereClause} ORDER BY created_at DESC LIMIT ? OFFSET ?`;
   params.push(activeLimit.toString(), offset.toString());
@@ -56,7 +62,7 @@ export async function findFiltered({ branch, isBookingPage, page = 1, limit = 25
 }
 
 /** Get total count of filtered vehicles */
-export async function countFiltered({ branch, isBookingPage }) {
+export async function countFiltered({ branch, isBookingPage, crmGenerated }) {
   const conditions = [];
   const params = [];
 
@@ -69,6 +75,12 @@ export async function countFiltered({ branch, isBookingPage }) {
     conditions.push('vehicleStatus = "Booked"');
   } else if (isBookingPage === 'false' || isBookingPage === false || isBookingPage === '0') {
     conditions.push('vehicleStatus != "Booked"');
+  }
+
+  if (crmGenerated === 'true' || crmGenerated === true || crmGenerated === '1') {
+    conditions.push('crmGenerated = 1');
+  } else if (crmGenerated === 'false' || crmGenerated === false || crmGenerated === '0') {
+    conditions.push('(crmGenerated = 0 OR crmGenerated IS NULL)');
   }
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
@@ -98,8 +110,8 @@ export async function countByBranch(branch) {
 }
 
 /** Find a single vehicle by chassisNumber */
-export async function findByChassis(chassisNumber) {
-  const [rows] = await pool.execute(
+export async function findByChassis(chassisNumber, executor = pool) {
+  const [rows] = await executor.execute(
     'SELECT * FROM vehicles WHERE chassisNumber = ? LIMIT 1',
     [chassisNumber]
   );
@@ -107,7 +119,7 @@ export async function findByChassis(chassisNumber) {
 }
 
 /** Create a new vehicle from request body */
-export async function create(data) {
+export async function create(data, executor = pool) {
   // Only pick columns that exist in the table
   const cols = [];
   const placeholders = [];
@@ -121,17 +133,17 @@ export async function create(data) {
     }
   }
 
-  const [result] = await pool.execute(
+  await executor.execute(
     `INSERT INTO vehicles (${cols.join(', ')}) VALUES (${placeholders.join(', ')})`,
     values
   );
 
   // Return the inserted row
-  return findByChassis(data.chassisNumber);
+  return findByChassis(data.chassisNumber, executor);
 }
 
 /** Update a vehicle by chassisNumber. Only updates provided fields. */
-export async function updateByChassis(chassisNumber, data) {
+export async function updateByChassis(chassisNumber, data, executor = pool) {
   const fields = [];
   const values = [];
 
@@ -153,7 +165,7 @@ export async function updateByChassis(chassisNumber, data) {
 
   values.push(chassisNumber);
 
-  const [result] = await pool.execute(
+  const [result] = await executor.execute(
     `UPDATE vehicles SET ${fields.join(', ')} WHERE chassisNumber = ?`,
     values
   );
@@ -161,7 +173,7 @@ export async function updateByChassis(chassisNumber, data) {
   if (result.affectedRows === 0) return null;
 
   const finalChassis = (data.chassisNumber && data.chassisNumber !== chassisNumber) ? data.chassisNumber : chassisNumber;
-  return findByChassis(finalChassis);
+  return findByChassis(finalChassis, executor);
 }
 
 /** Delete a vehicle by chassisNumber */

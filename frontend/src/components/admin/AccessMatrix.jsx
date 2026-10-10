@@ -243,6 +243,7 @@ const CRM_GROUPS = [
       { key: 'sss', label: 'SSS Discount (₹)' },
       { key: 'kpkb', label: 'KPKB / Special Scheme (₹)' },
       { key: 'solaroffer', label: 'Solar Offer (₹)' },
+      { key: 'kvrsupport', label: 'KVR Support' },
       { key: 'pricedifference', label: 'Price Difference (₹)' },
       { key: 'offerremark', label: 'Offer Remark' },
     ],

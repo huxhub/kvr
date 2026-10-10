@@ -123,6 +123,22 @@ const connectDB = async () => {
         console.log("Added column 'bookingAmount' to 'vehicles' table.");
       }
 
+      // Ensure kvrSupport column exists and is TEXT
+      const [kvrSupportCols] = await pool.execute(
+        "SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'vehicles' AND COLUMN_NAME = 'kvrSupport'",
+        [dbName]
+      );
+      if (kvrSupportCols.length === 0) {
+        await pool.execute("ALTER TABLE vehicles ADD COLUMN kvrSupport TEXT DEFAULT NULL");
+        console.log("Added column 'kvrSupport' to 'vehicles' table.");
+      } else if (kvrSupportCols[0].DATA_TYPE !== 'text' && kvrSupportCols[0].DATA_TYPE !== 'varchar') {
+        await pool.execute("ALTER TABLE vehicles MODIFY COLUMN kvrSupport TEXT DEFAULT NULL");
+        console.log("Modified column 'kvrSupport' to TEXT in 'vehicles' table.");
+      }
+      try {
+        await pool.execute("UPDATE vehicles SET kvrSupport = '' WHERE kvrSupport = '0' OR kvrSupport = 0");
+      } catch (_) { }
+
       // Ensure audit_logs columns previousStatus and newStatus can hold long text
       await pool.execute("ALTER TABLE audit_logs MODIFY COLUMN previousStatus TEXT DEFAULT NULL");
       await pool.execute("ALTER TABLE audit_logs MODIFY COLUMN newStatus TEXT DEFAULT NULL");
