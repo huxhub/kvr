@@ -15,11 +15,25 @@ export default function UserAdmin({ branches }) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   
+  const [searchTerm, setSearchTerm] = useState('');
+  
   const isReadOnly = user?.role !== 'ADMIN';
   
   useEffect(() => {
     fetchUsers(1, 15);
   }, [fetchUsers]);
+
+  const filteredUsers = React.useMemo(() => {
+    if (!searchTerm.trim()) return users;
+    const term = searchTerm.toLowerCase().trim();
+    return users.filter(u => 
+      (u.name && u.name.toLowerCase().includes(term)) ||
+      (u.username && u.username.toLowerCase().includes(term)) ||
+      (u.email && u.email.toLowerCase().includes(term)) ||
+      (u.role && u.role.toLowerCase().includes(term)) ||
+      (u.branch && u.branch.toLowerCase().includes(term))
+    );
+  }, [users, searchTerm]);
 
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -74,13 +88,79 @@ export default function UserAdmin({ branches }) {
     <div id="users-view" className="tab-content active">
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         <div className="audit-log-container">
-          <div className="main-header" style={{ backgroundColor: 'transparent', borderBottom: '1px solid var(--border-light)', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="main-header" style={{ backgroundColor: 'transparent', borderBottom: '1px solid var(--border-light)', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
             <h3 style={{ margin: 0 }}>Registered Employees</h3>
-            {!isReadOnly && <button className="btn-primary" onClick={handleAddNew}>+ Add Employee</button>}
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <input
+                  type="text"
+                  placeholder="Search employees..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{
+                    padding: '8px 12px 8px 34px',
+                    borderRadius: '6px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '0.82rem',
+                    fontFamily: 'inherit',
+                    outline: 'none',
+                    width: '220px',
+                    backgroundColor: '#ffffff',
+                    transition: 'border-color 0.15s ease, box-shadow 0.15s ease'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#003b71';
+                    e.target.style.boxShadow = '0 0 0 2px rgba(0, 59, 113, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#cbd5e1';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#64748b"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ position: 'absolute', left: '10px', pointerEvents: 'none' }}
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm('')}
+                    style={{
+                      position: 'absolute',
+                      right: '8px',
+                      background: 'none',
+                      border: 'none',
+                      color: '#94a3b8',
+                      cursor: 'pointer',
+                      padding: '2px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      fontSize: '12px',
+                      fontWeight: 'bold'
+                    }}
+                    title="Clear search"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              {!isReadOnly && <button className="btn-primary" onClick={handleAddNew}>+ Add Employee</button>}
+            </div>
           </div>
 
           <UserTable
-            users={users}
+            users={filteredUsers}
             currentPage={currentPage}
             loading={loading}
             isReadOnly={isReadOnly}
