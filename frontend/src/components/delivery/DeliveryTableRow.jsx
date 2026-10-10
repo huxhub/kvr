@@ -1,7 +1,7 @@
 import React from 'react';
 import { calculateProgress } from '../../utils/vehicleUtils.js';
 
-export default function DeliveryTableRow({ vehicle, openDrawer, index, isAdmin, onDelete }) {
+export default function DeliveryTableRow({ vehicle, openDrawer, index, isAdmin, onDelete, isSelected, onToggleSelect }) {
   const progress = calculateProgress(vehicle);
 
   const renderStatusPill = (status, remark) => {
@@ -25,8 +25,16 @@ export default function DeliveryTableRow({ vehicle, openDrawer, index, isAdmin, 
   };
 
   return (
-    <tr onClick={() => openDrawer(vehicle)} style={{ cursor: 'pointer' }}>
-      <td style={{ color: '#64748b', fontWeight: 600, fontSize: '0.8rem', paddingLeft: '16px' }}>{index}</td>
+    <tr onClick={() => openDrawer(vehicle)} style={{ cursor: 'pointer', backgroundColor: isSelected ? '#f0f7ff' : undefined }}>
+      <td onClick={(e) => e.stopPropagation()} style={{ width: '40px', paddingLeft: '16px', textAlign: 'center' }}>
+        <input
+          type="checkbox"
+          checked={!!isSelected}
+          onChange={() => onToggleSelect && onToggleSelect(vehicle.chassisNumber)}
+          style={{ cursor: 'pointer', width: '15px', height: '15px' }}
+        />
+      </td>
+      <td style={{ color: '#64748b', fontWeight: 600, fontSize: '0.8rem', paddingLeft: '8px' }}>{index}</td>
       <td style={{ fontWeight: 600, color: 'var(--text-main)' }}>{vehicle.customerName || '-'}</td>
       <td>
         <div style={{ display: 'flex', flexDirection: 'column' }}>

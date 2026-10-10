@@ -70,7 +70,7 @@ function AppContent() {
   const { user, loading: authLoading } = useAuth();
   const { showToast } = useToast();
   const userRoles = useMemo(() => user?.role ? user.role.split(',').map(r => r.trim()) : [], [user?.role]);
-  const { vehicles, totalVehicles, currentPage, fetchVehicles, deleteVehicle } = useVehicles();
+  const { vehicles, totalVehicles, currentPage, fetchVehicles, deleteVehicle, deleteMultipleVehicles } = useVehicles();
   const [activeTab, setActiveTab] = useState(() => localStorage.getItem('activeTab') || 'dashboard');
   const [activeSubTab, setActiveSubTab] = useState(() => localStorage.getItem('activeSubTab') || 'profile');
 
@@ -110,6 +110,27 @@ function AppContent() {
           showToast('Success', 'Vehicle record deleted successfully');
         } else {
           showToast('Error', res?.error || 'Failed to delete vehicle record', 'error');
+        }
+      }
+    });
+  };
+
+  const handleDeleteMultipleVehicles = (chassisNumbers, onSuccess) => {
+    if (!chassisNumbers || chassisNumbers.length === 0) return;
+    const count = chassisNumbers.length;
+    triggerAlertDialog({
+      title: 'Delete Selected Records',
+      description: `Are you sure you want to delete the ${count} selected record${count > 1 ? 's' : ''}? This action cannot be undone.`,
+      confirmText: `Delete ${count} Record${count > 1 ? 's' : ''}`,
+      cancelText: 'Cancel',
+      variant: 'danger',
+      onConfirm: async () => {
+        const res = await deleteMultipleVehicles(chassisNumbers);
+        if (res?.success) {
+          showToast('Success', `${count} record${count > 1 ? 's' : ''} deleted successfully`);
+          if (onSuccess) onSuccess();
+        } else {
+          showToast('Error', res?.error || 'Failed to delete records', 'error');
         }
       }
     });
@@ -392,6 +413,7 @@ function AppContent() {
                   isBookingPage={true}
                   settings={settings}
                   onDeleteVehicle={handleDeleteVehicle}
+                  onDeleteMultipleVehicles={handleDeleteMultipleVehicles}
                 />
               )}
               {activeTab === 'crm-generated' && (
@@ -408,6 +430,7 @@ function AppContent() {
                   isCrmGeneratedPage={true}
                   settings={settings}
                   onDeleteVehicle={handleDeleteVehicle}
+                  onDeleteMultipleVehicles={handleDeleteMultipleVehicles}
                 />
               )}
               {activeTab === 'delivery' && (
@@ -424,6 +447,7 @@ function AppContent() {
                   isDeliveredPage={false}
                   settings={settings}
                   onDeleteVehicle={handleDeleteVehicle}
+                  onDeleteMultipleVehicles={handleDeleteMultipleVehicles}
                 />
               )}
               {activeTab === 'delivered' && (
@@ -440,6 +464,7 @@ function AppContent() {
                   isDeliveredPage={true}
                   settings={settings}
                   onDeleteVehicle={handleDeleteVehicle}
+                  onDeleteMultipleVehicles={handleDeleteMultipleVehicles}
                 />
               )}
               {activeTab === 'audit' && <AuditHistory />}

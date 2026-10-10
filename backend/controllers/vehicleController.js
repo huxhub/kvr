@@ -211,6 +211,19 @@ export const deleteVehicle = async (req, res) => {
   }
 };
 
+export const bulkDeleteVehicles = async (req, res) => {
+  try {
+    const { chassisNumbers } = req.body;
+    if (!Array.isArray(chassisNumbers) || chassisNumbers.length === 0) {
+      return res.status(400).json({ error: 'chassisNumbers array is required' });
+    }
+    const count = await Vehicle.deleteMultipleByChassis(chassisNumbers);
+    res.json({ message: `${count} vehicles deleted`, count });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export const getDistinctPpls = async (req, res) => {
   try {
     const ppls = await Vehicle.getDistinctPpls();

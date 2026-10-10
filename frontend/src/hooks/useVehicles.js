@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { getVehicles as apiGetVehicles, saveVehicle as apiSaveVehicle, createVehicle as apiCreateVehicle, deleteVehicle as apiDeleteVehicle } from '../models/apiModel.js';
+import { getVehicles as apiGetVehicles, saveVehicle as apiSaveVehicle, createVehicle as apiCreateVehicle, deleteVehicle as apiDeleteVehicle, bulkDeleteVehicles as apiBulkDeleteVehicles } from '../models/apiModel.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { addAuditLog } from '../models/auditModel.js';
 
@@ -95,5 +95,15 @@ export function useVehicles() {
     }
   };
 
-  return { vehicles, totalVehicles, currentPage, loading, error, fetchVehicles, saveVehicle, createVehicle, deleteVehicle };
+  const deleteMultipleVehicles = async (chassisNumbers) => {
+    try {
+      await apiBulkDeleteVehicles(chassisNumbers, user.role);
+      await fetchVehicles(1, 10000, lastIsBookingPageRef.current, lastCrmGeneratedRef.current);
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  };
+
+  return { vehicles, totalVehicles, currentPage, loading, error, fetchVehicles, saveVehicle, createVehicle, deleteVehicle, deleteMultipleVehicles };
 }

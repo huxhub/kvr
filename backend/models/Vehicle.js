@@ -185,6 +185,16 @@ export async function deleteByChassis(chassisNumber) {
   return result.affectedRows > 0;
 }
 
+export async function deleteMultipleByChassis(chassisNumbers) {
+  if (!Array.isArray(chassisNumbers) || chassisNumbers.length === 0) return 0;
+  const placeholders = chassisNumbers.map(() => '?').join(',');
+  const [result] = await pool.execute(
+    `DELETE FROM vehicles WHERE chassisNumber IN (${placeholders})`,
+    chassisNumbers
+  );
+  return result.affectedRows;
+}
+
 /** Get distinct Product Line (PPL) values */
 export async function getDistinctPpls() {
   const [rows] = await pool.execute(

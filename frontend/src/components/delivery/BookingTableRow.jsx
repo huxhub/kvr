@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function BookingTableRow({ vehicle, openDrawer, index, isAdmin, onDelete }) {
+export default function BookingTableRow({ vehicle, openDrawer, index, isAdmin, onDelete, isSelected, onToggleSelect }) {
   const renderBadge = (text) => {
     if (!text) return <span style={{ color: 'var(--text-muted)' }}>-</span>;
     const t = text.toUpperCase();
@@ -35,8 +35,16 @@ export default function BookingTableRow({ vehicle, openDrawer, index, isAdmin, o
   };
 
   return (
-    <tr onClick={() => openDrawer(vehicle)} style={{ cursor: 'pointer' }}>
-      <td style={{ color: '#64748b', fontWeight: 600, fontSize: '0.8rem', paddingLeft: '16px' }}>{index}</td>
+    <tr onClick={() => openDrawer(vehicle)} style={{ cursor: 'pointer', backgroundColor: isSelected ? '#f0f7ff' : undefined }}>
+      <td onClick={(e) => e.stopPropagation()} style={{ width: '40px', paddingLeft: '16px', textAlign: 'center' }}>
+        <input
+          type="checkbox"
+          checked={!!isSelected}
+          onChange={() => onToggleSelect && onToggleSelect(vehicle.chassisNumber)}
+          style={{ cursor: 'pointer', width: '15px', height: '15px' }}
+        />
+      </td>
+      <td style={{ color: '#64748b', fontWeight: 600, fontSize: '0.8rem', paddingLeft: '8px' }}>{index}</td>
       <td style={{ whiteSpace: 'nowrap' }}>{vehicle.date || '-'}</td>
       <td style={{ fontWeight: 600, color: 'var(--primary-navy)', whiteSpace: 'nowrap' }}>{vehicle.customerName || '-'}</td>
       <td style={{ whiteSpace: 'nowrap' }}>{vehicle.mobileNumber || '-'}</td>

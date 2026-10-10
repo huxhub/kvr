@@ -86,6 +86,23 @@ export async function deleteVehicle(chassisNumber, changedByRole) {
   }
 }
 
+export async function bulkDeleteVehicles(chassisNumbers, changedByRole) {
+  const res = await fetch(`${API_BASE_URL}/api/vehicles/bulk-delete`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Role': changedByRole || ''
+    },
+    body: JSON.stringify({ chassisNumbers })
+  });
+
+  if (!res.ok) {
+    throw await handleResponseError(res, 'Failed to delete selected vehicle records');
+  }
+  return await res.json();
+}
+
 export async function resetDatabase() {
   const res = await fetch(`${API_BASE_URL}/api/reset`, { method: 'POST', credentials: 'include' });
   if (!res.ok) {

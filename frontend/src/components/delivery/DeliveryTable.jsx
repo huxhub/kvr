@@ -22,7 +22,8 @@ export default function DeliveryTable({
   isCrmGeneratedPage = false,
   isDeliveredPage = false,
   settings,
-  onDeleteVehicle
+  onDeleteVehicle,
+  onDeleteMultipleVehicles
 }) {
   const { user } = useAuth();
   const userRoles = useMemo(() => user?.role ? user.role.split(',').map(r => r.trim()) : [], [user?.role]);
@@ -34,6 +35,7 @@ export default function DeliveryTable({
   const [csvPreviewRows, setCsvPreviewRows] = useState(null);
   const [isImporting, setIsImporting] = useState(false);
 
+  const [selectedChassis, setSelectedChassis] = useState([]);
   const [viewMode, setViewMode] = useState('list'); // 'grid' or 'list'
   const [filters, setFilters] = useState({
     global: '',
@@ -323,6 +325,26 @@ export default function DeliveryTable({
     return filteredVehicles.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredVehicles, safePage]);
 
+  const handleToggleSelect = (chassisNumber) => {
+    setSelectedChassis(prev => 
+      prev.includes(chassisNumber) 
+        ? prev.filter(c => c !== chassisNumber) 
+        : [...prev, chassisNumber]
+    );
+  };
+
+  const isAllSelected = filteredVehicles.length > 0 && filteredVehicles.every(v => selectedChassis.includes(v.chassisNumber));
+
+  const handleSelectAll = () => {
+    if (isAllSelected) {
+      const allFilteredChassisSet = new Set(filteredVehicles.map(v => v.chassisNumber));
+      setSelectedChassis(prev => prev.filter(c => !allFilteredChassisSet.has(c)));
+    } else {
+      const allFilteredChassis = filteredVehicles.map(v => v.chassisNumber);
+      setSelectedChassis(prev => Array.from(new Set([...prev, ...allFilteredChassis])));
+    }
+  };
+
   const showDownloadBtn = user && [
     'ADMIN',
     'FINANCE',
@@ -501,6 +523,43 @@ export default function DeliveryTable({
           Showing <span id="lbl-result-count">{filteredVehicles.length}</span> of <span id="lbl-total-count">{totalVehicles || vehicles.length}</span> Vehicles
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          {selectedChassis.length > 0 && isAdmin && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                type="button"
+                className="btn-danger"
+                onClick={() => {
+                  if (onDeleteMultipleVehicles) {
+                    onDeleteMultipleVehicles(selectedChassis, () => setSelectedChassis([]));
+                  }
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '8px 14px',
+                  borderRadius: '6px',
+                  backgroundColor: '#dc2626',
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  fontSize: '0.82rem',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                Delete Selected ({selectedChassis.length})
+              </button>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setSelectedChassis([])}
+                style={{ padding: '8px 12px', fontSize: '0.82rem' }}
+              >
+                Clear
+              </button>
+            </div>
+          )}
           {!isDeliveredPage && !isCrmGeneratedPage && getPermission(settings, isBookingPage ? 'booking' : 'crm', isBookingPage ? 'btn_new_booking' : 'btn_crm_form', isBookingPage ? 'BOOKING ACTIONS' : 'CRM ACTIONS', user?.role).view && (
             <button className="btn-primary" onClick={() => isBookingPage ? openNewBooking() : openCrm()}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -568,7 +627,16 @@ export default function DeliveryTable({
             <thead>
               {isBookingPage ? (
                 <tr>
-                  <th style={{ width: '60px', paddingLeft: '16px' }}>SL NO</th>
+                  <th style={{ width: '40px', paddingLeft: '16px', textAlign: 'center' }}>
+                    <input
+                      type="checkbox"
+                      checked={isAllSelected}
+                      onChange={handleSelectAll}
+                      title={isAllSelected ? "Deselect all records" : `Select all ${filteredVehicles.length} records across all pages`}
+                      style={{ cursor: 'pointer', width: '15px', height: '15px' }}
+                    />
+                  </th>
+                  <th style={{ width: '60px' }}>SL NO</th>
                   <th>Booking Date</th>
                   <th>Full Name</th>
                   <th>Mobile No</th>
@@ -595,7 +663,16 @@ export default function DeliveryTable({
                 </tr>
               ) : (
                 <tr>
-                  <th style={{ width: '60px', paddingLeft: '16px' }}>SL NO</th>
+                  <th style={{ width: '40px', paddingLeft: '16px', textAlign: 'center' }}>
+                    <input
+                      type="checkbox"
+                      checked={isAllSelected}
+                      onChange={handleSelectAll}
+                      title={isAllSelected ? "Deselect all records" : `Select all ${filteredVehicles.length} records across all pages`}
+                      style={{ cursor: 'pointer', width: '15px', height: '15px' }}
+                    />
+                  </th>
+                  <th style={{ width: '60px' }}>SL NO</th>
                   <th>Customer Name</th>
                   <th>PL / Variant</th>
                   <th>Branch</th>
@@ -614,16 +691,34 @@ export default function DeliveryTable({
             <tbody>
               {paginatedVehicles.length === 0 ? (
                 <tr>
-                  <td colSpan={isBookingPage ? (isAdmin ? 24 : 23) : (isAdmin ? 13 : 12)} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '30px' }}>
+                  <td colSpan={isBookingPage ? (isAdmin ? 25 : 24) : (isAdmin ? 14 : 13)} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '30px' }}>
                     No matching vehicle records found.
                   </td>
                 </tr>
               ) : (
                 paginatedVehicles.map((v, i) => (
                   isBookingPage ? (
-                    <BookingTableRow key={v.chassisNumber} vehicle={v} openDrawer={openDrawer} index={(safePage - 1) * ITEMS_PER_PAGE + i + 1} isAdmin={isAdmin && !isCrmGeneratedPage} onDelete={onDeleteVehicle} />
+                    <BookingTableRow
+                      key={v.chassisNumber}
+                      vehicle={v}
+                      openDrawer={openDrawer}
+                      index={(safePage - 1) * ITEMS_PER_PAGE + i + 1}
+                      isAdmin={isAdmin && !isCrmGeneratedPage}
+                      onDelete={onDeleteVehicle}
+                      isSelected={selectedChassis.includes(v.chassisNumber)}
+                      onToggleSelect={handleToggleSelect}
+                    />
                   ) : (
-                    <DeliveryTableRow key={v.chassisNumber} vehicle={v} openDrawer={openDrawer} index={(safePage - 1) * ITEMS_PER_PAGE + i + 1} isAdmin={isAdmin} onDelete={onDeleteVehicle} />
+                    <DeliveryTableRow
+                      key={v.chassisNumber}
+                      vehicle={v}
+                      openDrawer={openDrawer}
+                      index={(safePage - 1) * ITEMS_PER_PAGE + i + 1}
+                      isAdmin={isAdmin}
+                      onDelete={onDeleteVehicle}
+                      isSelected={selectedChassis.includes(v.chassisNumber)}
+                      onToggleSelect={handleToggleSelect}
+                    />
                   )
                 ))
               )}
