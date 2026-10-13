@@ -71,7 +71,7 @@ export const SECTIONS = {
       { name: 'fundPercentage', label: 'Fund Percentage (%)', type: 'number', required: false },
       { name: 'loanAmountStatus', label: 'Loan Amount Status', type: 'select', options: ['Logged In', 'Sanctioned', 'Disbursed', 'Not Applicable'], required: false },
       { name: 'financeRemark', label: 'Finance Remark', type: 'text', required: false },
-      { name: 'financeStatus', label: 'Finance Status', type: 'select', options: ['DOCUMENTS PENDING', 'LOAN APPROVED', 'CASH PURCHASE', 'CIBIL ISSUE'], required: true },
+      { name: 'financeStatus', label: 'Finance Status', type: 'select', options: ['DOCUMENTS PENDING', 'LOAN PROCESSING', 'LOAN APPROVED', 'CASH PURCHASE', 'CIBIL ISSUE'], required: true },
       { name: 'financeTimestamp', label: 'Finance Timestamp', type: 'timestamp', required: false }
     ]
   },
