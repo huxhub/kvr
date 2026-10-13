@@ -41,9 +41,15 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
         ...branches.map(b => ({ value: b, label: b }))
       ];
 
+  // Keep filter values aligned with the select options used by the Booking form.
+  const bookingVehicleStatuses = SECTIONS.vehicle.fields.find(field => field.name === 'vehicleStatus')?.options || [];
+  const bookingPpls = SECTIONS.vehicle.fields.find(field => field.name === 'pl')?.options || [];
+  const bookingBoStatuses = SECTIONS.vehicle.fields.find(field => field.name === 'boStatus')?.options || [];
+  const bookingFinanceStatuses = SECTIONS.finance.fields.find(field => field.name === 'financeStatus')?.options || [];
+
   const statusOptions = [
     { value: '', label: 'All Statuses' },
-    ...(isBookingPage ? [{ value: 'Booked', label: 'Booked' }] : 
+    ...(isBookingPage ? bookingVehicleStatuses.map(status => ({ value: status, label: status })) : 
       isDeliveredPage ? [{ value: 'Delivered', label: 'Delivered' }] : [
       { value: 'Allotted', label: 'Allotted' },
       { value: 'In-Transit', label: 'In-Transit' },
@@ -66,7 +72,7 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
 
   const pplOptions = [
     { value: '', label: 'All PPLs' },
-    ...ppls.map(p => ({ value: p, label: p }))
+    ...(isBookingPage ? bookingPpls : ppls).map(p => ({ value: p, label: p }))
   ];
 
   const variantOptions = [
@@ -81,7 +87,7 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
 
   const boStatusOptions = [
     { value: '', label: 'All BO Statuses' },
-    ...boStatuses.map(b => ({ value: b, label: b }))
+    ...(isBookingPage ? bookingBoStatuses : boStatuses).map(b => ({ value: b, label: b }))
   ];
 
   const deptOptions = [
@@ -89,6 +95,13 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
     { value: 'Not Attended', label: 'Not Attended' },
     { value: 'Pending', label: 'Pending' },
     { value: 'Approved', label: 'Approved' }
+  ];
+
+  const financeStatusOptions = [
+    { value: '', label: 'Any' },
+    ...(isBookingPage
+      ? bookingFinanceStatuses.map(status => ({ value: status, label: status }))
+      : deptOptions.slice(1))
   ];
 
   return (
@@ -170,7 +183,7 @@ export default function DeliveryFilters({ filters, setFilters, branches, vehicle
               id="filter-finStatus" 
               value={filters.finStatus} 
               onChange={handleChange} 
-              options={deptOptions} 
+              options={financeStatusOptions} 
             />
           </div>
         )}

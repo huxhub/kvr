@@ -1247,6 +1247,7 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--primary-navy);
   position: sticky;
   top: 0;
+  z-index: 10;
   text-transform: uppercase;
   font-size: 0.75rem;
   letter-spacing: 0.5px;
@@ -2555,9 +2556,22 @@ body.theme-emerald {
   display: inline-flex;
 }
 
-.status-pill-container:hover .status-tooltip {
+.status-pill-container:hover,
+.status-pill-container:focus-within {
+  z-index: 100;
+}
+
+.status-pill-container:hover .status-tooltip,
+.status-pill-container:focus-within .status-tooltip {
   visibility: visible;
   opacity: 1;
+}
+
+/* Lift the hovered status cell above sticky table headers so the tooltip is not clipped. */
+.table-master td:has(.status-pill-container:hover),
+.table-master td:has(.status-pill-container:focus-within) {
+  position: relative;
+  z-index: 20;
 }
 
 .status-tooltip {
@@ -2567,14 +2581,14 @@ body.theme-emerald {
   bottom: 125%;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #0f172a;
+  background-color: #2563eb;
   color: white;
   text-align: center;
   padding: 6px 12px;
   border-radius: var(--radius-md);
   font-size: 0.75rem;
   font-weight: 500;
-  z-index: 100;
+  z-index: 1000;
   box-shadow: var(--shadow-lg);
   transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out;
   pointer-events: none;
@@ -2585,6 +2599,20 @@ body.theme-emerald {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.status-tooltip.status-tooltip-portal {
+  visibility: visible;
+  opacity: 1;
+  position: fixed;
+  bottom: auto;
+  transform: translate(-50%, calc(-100% - 8px));
+  z-index: 10000;
+}
+
+.status-pill-container .badge-status:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
 .status-tooltip::after {
   content: "";
   position: absolute;
@@ -2593,7 +2621,7 @@ body.theme-emerald {
   transform: translateX(-50%);
   border-width: 6px;
   border-style: solid;
-  border-color: #0f172a transparent transparent transparent;
+  border-color: #2563eb transparent transparent transparent;
 }
 
 /* Audit History View Styles */
